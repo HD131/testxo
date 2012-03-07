@@ -399,6 +399,7 @@ HRESULT CMesh3D::InitialMesh(LPCSTR Name)
 	m_pMeshMaterial = NULL;
 	m_pMeshTextura  = NULL;
 	m_SizeFVF       = 0;
+	m_Alpha         = 1.0f;	
 	ID3DXBuffer *pMaterialBuffer  = NULL;
 	if (FAILED(D3DXLoadMeshFromX(Name, D3DXMESH_SYSTEMMEM, g_pD3DDevice, NULL, &pMaterialBuffer, NULL, &m_TexturCount, &m_pMesh)))
 	{
@@ -455,7 +456,7 @@ void CMesh3D::SetMatrixProjection(D3DXMATRIX * Matrix)
 void CMesh3D::DrawMyMesh()
 {
 	D3DXMATRIX  wvp;
-	m_Alpha = 1.0f;	
+	
 	wvp = m_MatrixWorld * m_MatrixView * m_MatrixProjection;
 
 	g_Shader.pConstTableVS[Diffuse] -> SetMatrix( g_pD3DDevice, "mat_mvp",   &wvp );
@@ -504,7 +505,7 @@ bool CalcPickingRay( HWND hwnd , D3DXMATRIX *MatrixView, D3DXMATRIX *MatrixProje
 {
 	float px = 0.0f;
 	float py = 0.0f;
-	D3DVIEWPORT9 vp;
+	D3DVIEWPORT9 ViewPort;
 	RECT ClientRec;
 	POINT PosMouse;
 	//GetWindowRect(hwnd,&rect);
@@ -513,17 +514,19 @@ bool CalcPickingRay( HWND hwnd , D3DXMATRIX *MatrixView, D3DXMATRIX *MatrixProje
 	GetCursorPos( &PosMouse );
 	int x = PosMouse.x - ClientRec.left;
 	int y = PosMouse.y - ClientRec.top;
-	g_pD3DDevice->GetViewport(&vp);
-	px = ((( 2.0f*x) / vp.Width)  - 1.0f) / MatrixProjection->_11;
-	py = (((-2.0f*y) / vp.Height) + 1.0f) / MatrixProjection->_22;
+	g_pD3DDevice->GetViewport( &ViewPort );
 	
-	D3DXMATRIX MatV;
+	px = ((( 2.0f * x) / ViewPort.Width ) - 1.0f) / MatrixProjection->_11;
+	py = (((-2.0f * y) / ViewPort.Height) + 1.0f) / MatrixProjection->_22;	
+	
 	D3DXVECTOR3 Direction = D3DXVECTOR3( px, py, 1.0f );
+
+	D3DXMATRIX MatV;
 	D3DXMatrixInverse( &MatV, NULL, MatrixView ); 
-	//D3DXVec3TransformCoord( &PosView, &PosView, MatrixView );
-	D3DXVec3TransformNormal( &Direction, &Direction, MatrixView );
+	D3DXVECTOR3 PosView = D3DXVECTOR3( MatV._41, MatV._42, MatV._43 ); //   извлечь координаты камеры из матрицы вида	
+	D3DXVec3TransformNormal( &Direction, &Direction, &MatV );
 	D3DXVec3Normalize( &Direction, &Direction );
-	D3DXVECTOR3 PosView = D3DXVECTOR3( MatV._41, MatV._42, MatV._43 ); //   = Camera.positionCamera;	
+	
 
 	D3DXVECTOR3 v =  PosView - g_Sphere[ArrX][ArrY].Centr;
 	float b = 2.0f * D3DXVec3Dot( &Direction, &v );
@@ -539,7 +542,7 @@ bool CalcPickingRay( HWND hwnd , D3DXMATRIX *MatrixView, D3DXMATRIX *MatrixProje
 	// Если есть решение >= 0, луч пересекает сферу
 	if ( ( s0 >= 0.0f ) || ( s1 >= 0.0f ) )
 		return true;
-
+	
 	return false;
 }
 
@@ -589,7 +592,7 @@ void RenderingDirect3D(HWND hwnd)
 	g_pD3DDevice -> SetVertexShader( g_Shader.pVertexShader[Sky] );
 	g_pD3DDevice -> SetPixelShader(  g_Shader.pPixelShader [Sky] );
 	// вывод примитивов
-	g_pD3DDevice -> DrawIndexedPrimitive( D3DPT_TRIANGLELIST, 0, 0, 6, 0, 2 );
+	//g_pD3DDevice -> DrawIndexedPrimitive( D3DPT_TRIANGLELIST, 0, 0, 6, 0, 2 );
 
 	g_pD3DDevice -> SetSamplerState( 0, D3DSAMP_ADDRESSU, D3DTADDRESS_WRAP );
 	g_pD3DDevice -> SetSamplerState( 0, D3DSAMP_ADDRESSV, D3DTADDRESS_WRAP );
@@ -639,7 +642,7 @@ void RenderingDirect3D(HWND hwnd)
 				g_MeshX.SetMatrixWorld( &MatrixWorld );
 				g_MeshX.SetMatrixView( &MatrixView );
 				g_MeshX.SetMatrixProjection( &MatrixProjection );
-				g_MeshX.m_Alpha = 0.5f;
+				g_MeshX.m_Alpha = 0.3f;
 				g_MeshX.DrawMyMesh();
 			}
 		}
