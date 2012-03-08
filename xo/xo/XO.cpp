@@ -516,8 +516,8 @@ bool CalcPickingRay( HWND hwnd , D3DXMATRIX *MatrixView, D3DXMATRIX *MatrixProje
 	int y = PosMouse.y - ClientRec.top;
 	g_pD3DDevice->GetViewport( &ViewPort );
 	
-	px = ((( 2.0f * x) / ViewPort.Width ) - 1.0f) / MatrixProjection->_11;
-	py = (((-2.0f * y) / ViewPort.Height) + 1.0f) / MatrixProjection->_22;	
+	px = (  2.0f * x / ViewPort.Width  - 1.0f) / MatrixProjection->_11;
+	py = ( -2.0f * y / ViewPort.Height + 1.0f) / MatrixProjection->_22;	
 	
 	D3DXVECTOR3 Direction = D3DXVECTOR3( px, py, 1.0f );
 
