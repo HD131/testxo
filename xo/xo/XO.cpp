@@ -16,7 +16,7 @@ IDirect3DTexture9      *pTextura001;
 
 enum         NameShader { Sky , Diffuse, Mirror };
 bool         g_Exit=false;
-int          Field[3][3];
+
 D3DXVECTOR4  Light( 0.0f, 1.0f, -1.0f, 1.0f );
 D3DXMATRIX   MatrixView;
 D3DXMATRIX   MatrixProjection;
@@ -32,7 +32,24 @@ struct CSphereObject
 	{	 }
 };
 
-CSphereObject g_Sphere[3][3];
+struct CCell
+{
+	CSphereObject m_Sphere[3][3];
+	int           m_Field[3][3];
+	CCell()
+	{
+		D3DXMATRIX MatrixWorld;
+		for (int y = 0; y < 3; ++y)
+			for (int x = 0; x < 3; ++x)
+			{
+				m_Field[x][y] = 10; //rand() % 2;	
+				D3DXMatrixTranslation( &MatrixWorld, 0, 0, 0 );
+				m_Sphere[x][y].Centr = D3DXVECTOR3(  ( x * 16 - 16 ), ( 16 - y * 16 ), 0 );
+				D3DXVec3TransformNormal( &m_Sphere[x][y].Centr, &m_Sphere[x][y].Centr, &MatrixWorld );
+			}
+	}
+};
+CCell g_Cell;
 
 struct CVertexFVF
 {
@@ -377,12 +394,12 @@ public:
 	IDirect3DIndexBuffer9  *m_IndexBuffer;
 	DWORD 					m_SizeFVF;
 	float                   m_Alpha;
-	HRESULT                 InitialMesh(LPCSTR Name);
+	HRESULT                 InitialMesh( LPCSTR Name );
 	void					Release();
 	void                    DrawMyMesh();
-	void					SetMatrixWorld(D3DXMATRIX * Matrix);
-	void					SetMatrixView(D3DXMATRIX * Matrix);
-	void					SetMatrixProjection(D3DXMATRIX * Matrix);
+	void					SetMatrixWorld( D3DXMATRIX  Matrix );
+	void					SetMatrixView( D3DXMATRIX  Matrix );
+	void					SetMatrixProjection( D3DXMATRIX  Matrix );
 private:
 	D3DXMATRIX              m_MatrixWorld;
 	D3DXMATRIX              m_MatrixView;
@@ -439,19 +456,19 @@ HRESULT CMesh3D::InitialMesh(LPCSTR Name)
 	return S_OK;
 }
 
-void CMesh3D::SetMatrixWorld(D3DXMATRIX * Matrix)
+void CMesh3D::SetMatrixWorld(D3DXMATRIX Matrix)
 {
-	m_MatrixWorld = *Matrix;
+	m_MatrixWorld = Matrix;
 }
 
-void CMesh3D::SetMatrixView(D3DXMATRIX * Matrix)
+void CMesh3D::SetMatrixView(D3DXMATRIX Matrix)
 {
-	m_MatrixView = *Matrix;
+	m_MatrixView = Matrix;
 }
 
-void CMesh3D::SetMatrixProjection(D3DXMATRIX * Matrix)
+void CMesh3D::SetMatrixProjection(D3DXMATRIX Matrix)
 {
-	m_MatrixProjection = *Matrix;
+	m_MatrixProjection = Matrix;
 }
 void CMesh3D::DrawMyMesh()
 {
@@ -501,36 +518,36 @@ void CMesh3D::Release()
 		m_pMesh -> Release();
 }
 
-bool CalcPickingRay( HWND hwnd , D3DXMATRIX *MatrixView, D3DXMATRIX *MatrixProjection, int ArrX, int ArrY)
+bool CalcPickingRay( int ArrX, int ArrY)
 {
 	float px = 0.0f;
 	float py = 0.0f;
 	D3DVIEWPORT9 ViewPort;
 	RECT ClientRec;
 	POINT PosMouse;
-	//GetWindowRect(hwnd,&rect);
-	GetClientRect(hwnd, &ClientRec);
-	ClientToScreen(hwnd, (LPPOINT)&ClientRec);
+	
+	GetClientRect ( GetForegroundWindow(), &ClientRec);
+	ClientToScreen( GetForegroundWindow(), (LPPOINT)&ClientRec);
 	GetCursorPos( &PosMouse );
 	int x = PosMouse.x - ClientRec.left;
 	int y = PosMouse.y - ClientRec.top;
 	g_pD3DDevice->GetViewport( &ViewPort );
 	
-	px = (  2.0f * x / ViewPort.Width  - 1.0f) / MatrixProjection->_11;
-	py = ( -2.0f * y / ViewPort.Height + 1.0f) / MatrixProjection->_22;	
+	px = (  2.0f * x / ViewPort.Width  - 1.0f) / Camera.m_Proj._11;
+	py = ( -2.0f * y / ViewPort.Height + 1.0f) / Camera.m_Proj._22;	
 	
 	D3DXVECTOR3 Direction = D3DXVECTOR3( px, py, 1.0f );
 
 	D3DXMATRIX MatV;
-	D3DXMatrixInverse( &MatV, NULL, MatrixView ); 
+	D3DXMatrixInverse( &MatV, NULL, &Camera.m_View ); 
 	D3DXVECTOR3 PosView = D3DXVECTOR3( MatV._41, MatV._42, MatV._43 ); //   извлечь координаты камеры из матрицы вида	
 	D3DXVec3TransformNormal( &Direction, &Direction, &MatV );
 	D3DXVec3Normalize( &Direction, &Direction );
 	
 
-	D3DXVECTOR3 v =  PosView - g_Sphere[ArrX][ArrY].Centr;
+	D3DXVECTOR3 v =  PosView - g_Cell.m_Sphere[ArrX][ArrY].Centr;
 	float b = 2.0f * D3DXVec3Dot( &Direction, &v );
-	float c = D3DXVec3Dot( &v, &v ) - g_Sphere[ArrX][ArrY].Radius * g_Sphere[ArrX][ArrY].Radius ;
+	float c = D3DXVec3Dot( &v, &v ) - g_Cell.m_Sphere[ArrX][ArrY].Radius * g_Cell.m_Sphere[ArrX][ArrY].Radius ;
 	// Ќаходим дискриминант
 	float discriminant = (b * b) - (4.0f * c);
 	// ѕровер€ем на мнимые числа
@@ -601,53 +618,53 @@ void RenderingDirect3D(HWND hwnd)
 	//------------------------------------------Render Mesh----------------------------------------
 	
 	//------------------Setka--------------
-	D3DXMatrixRotationY(   &MatrixWorld, 0 );
-	g_MeshS.SetMatrixWorld( &MatrixWorld );
-	g_MeshS.SetMatrixView(  &MatrixView );
-	g_MeshS.SetMatrixProjection( &MatrixProjection );
+	D3DXMatrixRotationY( &MatrixWorld, 0 );
+	g_MeshS.SetMatrixWorld( MatrixWorld );
+	g_MeshS.SetMatrixView( MatrixView );
+	g_MeshS.SetMatrixProjection( MatrixProjection );
 	g_MeshS.DrawMyMesh();
 	for ( int y = 0; y < 3; ++y )
 		for ( int x = 0; x < 3; ++x )
 		{
-			if ( Field[x][y] == 1 )
+			if ( g_Cell.m_Field[x][y] == 1 )
 			{
 				//--------------------X-------------------
-				D3DXMatrixRotationX(   &MatrixWorldY, Angle );
+				D3DXMatrixRotationY(   &MatrixWorldY, Angle );
 				D3DXMatrixTranslation( &MatrixWorldX, ( x * 16 - 16 ), ( 16 - y * 16 ), 0 );
 				MatrixWorld = MatrixWorldY * MatrixWorldX;
-				g_MeshX.SetMatrixWorld( &MatrixWorld );
-				g_MeshX.SetMatrixView( &MatrixView );
-				g_MeshX.SetMatrixProjection( &MatrixProjection );
+				g_MeshX.SetMatrixWorld( MatrixWorld );
+				g_MeshX.SetMatrixView( MatrixView );
+				g_MeshX.SetMatrixProjection( MatrixProjection );
 				g_MeshX.m_Alpha = 1.0f;
 				g_MeshX.DrawMyMesh();
 			}
-			if ( Field[x][y] == 0 )
+			if ( g_Cell.m_Field[x][y] == 0 )
 			{		
 				//--------------------O-------------------
-				D3DXMatrixRotationY(   &MatrixWorldY, -Angle );
+				D3DXMatrixRotationX(   &MatrixWorldY, -Angle );
 				D3DXMatrixTranslation( &MatrixWorldX, ( x * 16 - 16 ), ( 16 - y * 16  ), 0 );
 				D3DXMatrixMultiply(&MatrixWorld, &MatrixWorldY, &MatrixWorldX);
-				g_MeshO.SetMatrixWorld( &MatrixWorld );
-				g_MeshO.SetMatrixView( &MatrixView );
-				g_MeshO.SetMatrixProjection( &MatrixProjection );
+				g_MeshO.SetMatrixWorld( MatrixWorld );
+				g_MeshO.SetMatrixView( MatrixView );
+				g_MeshO.SetMatrixProjection( MatrixProjection );
 				g_MeshO.m_Alpha = 1.0f;
 				g_MeshO.DrawMyMesh();
 			}	
-			if ( ( Field[x][y] == 10 ) && ( CalcPickingRay( hwnd, &MatrixView, &MatrixProjection, x, y ) ) )
+			if ( ( g_Cell.m_Field[x][y] == 10 ) && ( CalcPickingRay( x, y ) ) )
 			{
 				//--------------------X-------------------
-				D3DXMatrixRotationX(   &MatrixWorldY, Angle );
+				D3DXMatrixRotationY(   &MatrixWorldY, 0 );
 				D3DXMatrixTranslation( &MatrixWorldX, ( x * 16 - 16 ), ( 16 - y * 16 ), 0 );
 				MatrixWorld = MatrixWorldY * MatrixWorldX;
-				g_MeshX.SetMatrixWorld( &MatrixWorld );
-				g_MeshX.SetMatrixView( &MatrixView );
-				g_MeshX.SetMatrixProjection( &MatrixProjection );
-				g_MeshX.m_Alpha = 0.3f;
+				g_MeshX.SetMatrixWorld( MatrixWorld );
+				g_MeshX.SetMatrixView( MatrixView );
+				g_MeshX.SetMatrixProjection( MatrixProjection );
+				g_MeshX.m_Alpha = 0.4f;
 				g_MeshX.DrawMyMesh();
 			}
 		}
-		sprintf(str, "%d", (int)CalcPickingRay( hwnd, &MatrixView, &MatrixProjection, 2, 0 ));
-		if ( CalcPickingRay( hwnd, &MatrixView, &MatrixProjection, 2, 0 ) )
+		sprintf(str, "%d", (int)CalcPickingRay( 2, 0 ));
+		if ( CalcPickingRay( 2, 0 ) )
 		    DrawMyText(g_pD3DDevice, str, 10, 10, 500, 700, D3DCOLOR_ARGB(250, 250, 250,50));
 	//------------------------------------------LuaScript----------------------------------------
 		/*
@@ -682,8 +699,10 @@ LONG WINAPI WndProc(HWND hwnd, UINT Message, WPARAM wparam, LPARAM lparam)
 		g_Exit = true;
 		break;
 	case WM_KEYDOWN:
-		if (wparam == VK_ESCAPE)
-			g_Exit = true;
+		if ( wparam == VK_ESCAPE )
+			g_Exit = true;		
+		if ( wparam == VK_F4 )
+			Wireframe = !Wireframe;
 		break;
 	}
 	return DefWindowProc(hwnd, Message, wparam, lparam);
@@ -741,13 +760,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	//memset(Field,0,sizeof(int)*9);
 	//ZeroMemory(Field, sizeof(Field));
 	srand(1000);
-	for (int y = 0; y < 3; ++y)
-		for (int x = 0; x < 3; ++x)
-		{
-			Field[x][y] = 10; //rand() % 2;	
-			g_Sphere[x][y].Centr = D3DXVECTOR3( ( x * 16 - 16 ), ( 16 - y * 16 ), 0 );
-		}
-		Field[2][0] = 10;
+	
+		g_Cell.m_Field[2][0] = 0;
 	if ( SUCCEEDED(g_DeviceD3D.IntialDirect3D(hwnd) ) )
 	{	
 		if ( SUCCEEDED( g_DeviceD3D.LoadTexture() ) )
@@ -837,8 +851,7 @@ bool CInputDevice::ScanInput()
 		pKeyboard -> Acquire();
 		return FALSE;
 	}
-	if ( KEYDOWN(keyboard, DIK_F4) )
-		Wireframe = !Wireframe;
+	
 	if ( KEYDOWN(keyboard, DIK_RIGHT) || KEYDOWN(keyboard, DIK_D))
 		Camera.MoveRight();
 	if ( KEYDOWN(keyboard, DIK_LEFT) || KEYDOWN(keyboard, DIK_A))
@@ -857,8 +870,8 @@ bool CInputDevice::ScanInput()
 	dy = mouse.lY;
 	dz = mouse.lZ;
 
-	if (mouse.rgbButtons[LEFT_BUTTON]&0x80)
-		Camera.MoveBack();
+	if ( ( mouse.rgbButtons[LEFT_BUTTON]&0x80 ) && (1) )
+		true;
 	/*
 	if ( (dx < 0) )  
 		Camera.MouseRotateLeft();
