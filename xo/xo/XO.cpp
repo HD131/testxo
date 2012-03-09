@@ -24,32 +24,26 @@ bool         Wireframe = false;
 FLOAT        Diffuse_intensity = 1.0f;
 CameraDevice Camera;
 
-struct CSphereObject
-{
-	float       Radius;
-	D3DXVECTOR3 Centr;
-    CSphereObject():Radius(5.0f), Centr(D3DXVECTOR3(0,0,0))
-	{	 }
-};
-
 struct CCell
 {
-	CSphereObject m_Sphere[3][3];
-	int           m_Field[3][3];
+	float       Radius;
+	D3DXVECTOR3 Centr;	
+	int         Value;
 	CCell()
+	{		
+		Value  = 10;
+		Radius = 5.0f;			
+		Centr  = D3DXVECTOR3( 0, 0, 0 );			
+	}
+	void SetCenter( float x, float y, float z)
 	{
 		D3DXMATRIX MatrixWorld;
-		for (int y = 0; y < 3; ++y)
-			for (int x = 0; x < 3; ++x)
-			{
-				m_Field[x][y] = 10; //rand() % 2;	
-				D3DXMatrixTranslation( &MatrixWorld, 0, 0, 0 );
-				m_Sphere[x][y].Centr = D3DXVECTOR3(  ( x * 16 - 16 ), ( 16 - y * 16 ), 0 );
-				D3DXVec3TransformNormal( &m_Sphere[x][y].Centr, &m_Sphere[x][y].Centr, &MatrixWorld );
-			}
+		D3DXMatrixTranslation( &MatrixWorld, 0, 0, 0 );
+		Centr = D3DXVECTOR3( x, y, z );
+		D3DXVec3TransformNormal( &Centr, &Centr, &MatrixWorld );
 	}
 };
-CCell g_Cell;
+CCell g_Cell[3][3];
 
 struct CVertexFVF
 {
@@ -518,24 +512,25 @@ void CMesh3D::Release()
 		m_pMesh -> Release();
 }
 
-bool CalcPickingRay( int ArrX, int ArrY)
+
+POINT PickObject()
 {
+	POINT Point;
 	float px = 0.0f;
 	float py = 0.0f;
 	D3DVIEWPORT9 ViewPort;
 	RECT ClientRec;
-	POINT PosMouse;
-	
+
 	GetClientRect ( GetForegroundWindow(), &ClientRec);
 	ClientToScreen( GetForegroundWindow(), (LPPOINT)&ClientRec);
-	GetCursorPos( &PosMouse );
-	int x = PosMouse.x - ClientRec.left;
-	int y = PosMouse.y - ClientRec.top;
+	GetCursorPos( &Point );
+	int x = Point.x - ClientRec.left;
+	int y = Point.y - ClientRec.top;
 	g_pD3DDevice->GetViewport( &ViewPort );
-	
+
 	px = (  2.0f * x / ViewPort.Width  - 1.0f) / Camera.m_Proj._11;
 	py = ( -2.0f * y / ViewPort.Height + 1.0f) / Camera.m_Proj._22;	
-	
+
 	D3DXVECTOR3 Direction = D3DXVECTOR3( px, py, 1.0f );
 
 	D3DXMATRIX MatV;
@@ -543,24 +538,55 @@ bool CalcPickingRay( int ArrX, int ArrY)
 	D3DXVECTOR3 PosView = D3DXVECTOR3( MatV._41, MatV._42, MatV._43 ); //   извлечь координаты камеры из матрицы вида	
 	D3DXVec3TransformNormal( &Direction, &Direction, &MatV );
 	D3DXVec3Normalize( &Direction, &Direction );
+	POINT NumObject[9];
+	int Count = -1;
+	for ( int ArrY = 0; ArrY < 3; ++ArrY )
+		for ( int ArrX = 0; ArrX < 3; ++ArrX )
+		{	
+			D3DXVECTOR3 v =  PosView - g_Cell[ArrX][ArrY].Centr;
+			float b = 2.0f * D3DXVec3Dot( &Direction, &v );
+			float c = D3DXVec3Dot( &v, &v ) - g_Cell[ArrX][ArrY].Radius * g_Cell[ArrX][ArrY].Radius ;
+			// Находим дискриминант
+			float Discr = ( b * b ) - ( 4.0f * c );
+			// Проверяем на мнимые числа
+			if ( Discr >= 0.0f )
+			{
+				Discr = sqrtf(Discr);
+				float s0 = ( -b + Discr ) / 2.0f;
+				float s1 = ( -b - Discr ) / 2.0f;
+				// Если есть решение >= 0, луч пересекает сферу
+				if ( ( s0 >= 0.0f ) && ( s1 >= 0.0f ) )
+				{
+					++Count;
+					NumObject[Count].x = ArrX;
+					NumObject[Count].y = ArrY;					
+				}
+			}
+		}
+	float Dist = 100000.f;
+	if ( Count < 0 )
+	{
+		NumObject[0].x = -1;
+		NumObject[0].y = -1;
+		return NumObject[0];
+	}
+	if ( Count == 0 )	
+		return NumObject[0];
+	if ( Count > 0 )
+	{
+		for ( int i = 0; i < Count; ++i)
+		{
+			D3DXVECTOR3 T = PosView - g_Cell[NumObject[i].x][NumObject[i].y].Centr;
+			float DistVec = D3DXVec3LengthSq( &T );
+			if ( DistVec < Dist )
+			{
+				NumObject[0].x = NumObject[i].x;
+				NumObject[0].y = NumObject[i].y;
+			}
+		}
+	}
 	
-
-	D3DXVECTOR3 v =  PosView - g_Cell.m_Sphere[ArrX][ArrY].Centr;
-	float b = 2.0f * D3DXVec3Dot( &Direction, &v );
-	float c = D3DXVec3Dot( &v, &v ) - g_Cell.m_Sphere[ArrX][ArrY].Radius * g_Cell.m_Sphere[ArrX][ArrY].Radius ;
-	// Находим дискриминант
-	float discriminant = (b * b) - (4.0f * c);
-	// Проверяем на мнимые числа
-	if ( discriminant < 0.0f )
-		return false;
-	discriminant = sqrtf(discriminant);
-	float s0 = (-b + discriminant) / 2.0f;
-	float s1 = (-b - discriminant) / 2.0f;
-	// Если есть решение >= 0, луч пересекает сферу
-	if ( ( s0 >= 0.0f ) || ( s1 >= 0.0f ) )
-		return true;
-	
-	return false;
+	return NumObject[0];
 }
 
 void RenderingDirect3D(HWND hwnd)
@@ -626,7 +652,7 @@ void RenderingDirect3D(HWND hwnd)
 	for ( int y = 0; y < 3; ++y )
 		for ( int x = 0; x < 3; ++x )
 		{
-			if ( g_Cell.m_Field[x][y] == 1 )
+			if ( g_Cell[x][y].Value == 1 )
 			{
 				//--------------------X-------------------
 				D3DXMatrixRotationY(   &MatrixWorldY, Angle );
@@ -638,7 +664,7 @@ void RenderingDirect3D(HWND hwnd)
 				g_MeshX.m_Alpha = 1.0f;
 				g_MeshX.DrawMyMesh();
 			}
-			if ( g_Cell.m_Field[x][y] == 0 )
+			if ( g_Cell[x][y].Value == 0 )
 			{		
 				//--------------------O-------------------
 				D3DXMatrixRotationX(   &MatrixWorldY, -Angle );
@@ -649,12 +675,16 @@ void RenderingDirect3D(HWND hwnd)
 				g_MeshO.SetMatrixProjection( MatrixProjection );
 				g_MeshO.m_Alpha = 1.0f;
 				g_MeshO.DrawMyMesh();
-			}	
-			if ( ( g_Cell.m_Field[x][y] == 10 ) && ( CalcPickingRay( x, y ) ) )
+			}
+		}
+		POINT P = PickObject();
+		if ( P.x >= 0)
+		{
+			if ( g_Cell[P.x][P.y].Value == 10 )
 			{
 				//--------------------X-------------------
-				D3DXMatrixRotationY(   &MatrixWorldY, 0 );
-				D3DXMatrixTranslation( &MatrixWorldX, ( x * 16 - 16 ), ( 16 - y * 16 ), 0 );
+				D3DXMatrixRotationY(   &MatrixWorldY, Angle );
+				D3DXMatrixTranslation( &MatrixWorldX, ( P.x * 16 - 16 ), ( 16 - P.y * 16 ), 0 );
 				MatrixWorld = MatrixWorldY * MatrixWorldX;
 				g_MeshX.SetMatrixWorld( MatrixWorld );
 				g_MeshX.SetMatrixView( MatrixView );
@@ -663,9 +693,8 @@ void RenderingDirect3D(HWND hwnd)
 				g_MeshX.DrawMyMesh();
 			}
 		}
-		sprintf(str, "%d", (int)CalcPickingRay( 2, 0 ));
-		if ( CalcPickingRay( 2, 0 ) )
-		    DrawMyText(g_pD3DDevice, str, 10, 10, 500, 700, D3DCOLOR_ARGB(250, 250, 250,50));
+		sprintf(str, "%d %d", P.x, P.y);		
+		DrawMyText(g_pD3DDevice, str, 10, 10, 500, 700, D3DCOLOR_ARGB(250, 250, 250,50));
 	//------------------------------------------LuaScript----------------------------------------
 		/*
 	lua_getglobal( CLuaScript.m_luaVM, "Update" );
@@ -760,8 +789,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	//memset(Field,0,sizeof(int)*9);
 	//ZeroMemory(Field, sizeof(Field));
 	srand(1000);
-	
-		g_Cell.m_Field[2][0] = 0;
+	for (int y = 0; y < 3; ++y)
+		for (int x = 0; x < 3; ++x)
+			g_Cell[x][y].SetCenter( x * 16 - 16, 16 - y * 16, 0 );
+		
+	g_Cell[2][0].Value = 0;
 	if ( SUCCEEDED(g_DeviceD3D.IntialDirect3D(hwnd) ) )
 	{	
 		if ( SUCCEEDED( g_DeviceD3D.LoadTexture() ) )
@@ -870,8 +902,14 @@ bool CInputDevice::ScanInput()
 	dy = mouse.lY;
 	dz = mouse.lZ;
 
-	if ( ( mouse.rgbButtons[LEFT_BUTTON]&0x80 ) && (1) )
-		true;
+	if ( mouse.rgbButtons[LEFT_BUTTON]&0x80 )
+	{
+		POINT Point = PickObject();
+		if ( ( Point.x >= 0 ) && ( g_Cell[Point.x][Point.y].Value > 1 ) )
+		{
+			g_Cell[Point.x][Point.y].Value = 1;
+		}
+	}
 	/*
 	if ( (dx < 0) )  
 		Camera.MouseRotateLeft();
