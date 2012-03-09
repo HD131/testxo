@@ -36,9 +36,8 @@ class CameraDevice
 {
 public:
 	CameraDevice();
-   ~CameraDevice();
-
-	D3DXVECTOR3		positionCamera;
+   
+	D3DXVECTOR3		PositionCamera;
 	D3DXVECTOR3		CameraUp;	// вверх
 	D3DXVECTOR3		TargetDir;	// вперед
 	D3DXVECTOR3     DirX;
