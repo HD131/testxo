@@ -1,4 +1,0 @@
-Initial Script 
-Initial Direct3D
-Initial CreateDevice Direct3D
-Initial DirectInput8

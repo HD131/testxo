@@ -387,26 +387,28 @@ int GameOver()
 int SaveField( lua_State *luaVM )
 {	
 	lua_newtable( luaVM );//создать таблицу, поместить ее на вершину стэка
-	for (int i = 1; i <= 9; ++i) 
-	{
-		lua_pushnumber( luaVM,  i );               //кладем в стэк число (key)
-		lua_pushnumber( luaVM,  i + 1 );//добавляем значение ключа (value)
-		lua_settable  ( luaVM, -3 );              //добавить к таблице пару ключ-значение: table[key] = value		
-	}
+	for (int y = 0; y < 3; ++y)
+		for (int x = 0; x < 3; ++x) 
+		{
+			lua_pushnumber( luaVM,  y * 3 + x + 1 );               //кладем в стэк число (key)
+			lua_pushnumber( luaVM,  g_Cell[x][y].Value );//добавляем значение ключа (value)
+			lua_settable  ( luaVM, -3 );              //добавить к таблице пару ключ-значение: table[key] = value		
+		}
 	return 1;
 }
 
 void CheckPC()
 {
+	Beep(1000, 300); 
 	lua_getglobal( g_Lua.m_luaVM, "IO" );
 	if ( lua_pcall( g_Lua.m_luaVM, 0, 0, 0 ) && lua_tostring( g_Lua.m_luaVM, -1 ) )
 	lua_pop( g_Lua.m_luaVM, 1 );
 	
-	lua_getglobal( g_Lua.m_luaVM, "x" );
+	lua_getglobal( g_Lua.m_luaVM, "a" );
 	int x	=	(int)lua_tonumber( g_Lua.m_luaVM, -1 );
 	lua_pop( g_Lua.m_luaVM, 1 );
 
-	lua_getglobal( g_Lua.m_luaVM, "y" );
+	lua_getglobal( g_Lua.m_luaVM, "b" );
 	int y	=	(int)lua_tonumber( g_Lua.m_luaVM, -1 );
 	lua_pop( g_Lua.m_luaVM, 1 );
 	/*
