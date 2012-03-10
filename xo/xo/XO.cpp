@@ -355,21 +355,66 @@ void RenderingDirect3D(HWND hwnd)
 	g_pD3DDevice -> Present(NULL, NULL, NULL, NULL); // вывод содержимого заднего буфера в окно
 }
 
+int GameOver()
+{
+	if ( ( ( g_Cell[0][0].Value == 1 ) && ( g_Cell[1][0].Value == 1 ) && ( g_Cell[2][0].Value == 1 ) ) ||
+		 ( ( g_Cell[0][1].Value == 1 ) && ( g_Cell[1][1].Value == 1 ) && ( g_Cell[2][1].Value == 1 ) ) ||
+		 ( ( g_Cell[0][2].Value == 1 ) && ( g_Cell[1][2].Value == 1 ) && ( g_Cell[2][2].Value == 1 ) ) ||
+		 ( ( g_Cell[0][0].Value == 1 ) && ( g_Cell[0][1].Value == 1 ) && ( g_Cell[0][2].Value == 1 ) ) ||
+		 ( ( g_Cell[1][0].Value == 1 ) && ( g_Cell[1][1].Value == 1 ) && ( g_Cell[1][2].Value == 1 ) ) ||
+		 ( ( g_Cell[2][0].Value == 1 ) && ( g_Cell[2][1].Value == 1 ) && ( g_Cell[2][2].Value == 1 ) ) ||
+		 ( ( g_Cell[0][0].Value == 1 ) && ( g_Cell[1][1].Value == 1 ) && ( g_Cell[2][2].Value == 1 ) ) ||
+		 ( ( g_Cell[2][0].Value == 1 ) && ( g_Cell[1][1].Value == 1 ) && ( g_Cell[0][2].Value == 1 ) ) )
+	{
+		 g_Exit = true;
+		 return 1;
+	}
+	if ( ( ( g_Cell[0][0].Value == 0 ) && ( g_Cell[1][0].Value == 0 ) && ( g_Cell[2][0].Value == 0 ) ) ||
+         ( ( g_Cell[0][1].Value == 0 ) && ( g_Cell[1][1].Value == 0 ) && ( g_Cell[2][1].Value == 0 ) ) ||
+		 ( ( g_Cell[0][2].Value == 0 ) && ( g_Cell[1][2].Value == 0 ) && ( g_Cell[2][2].Value == 0 ) ) ||
+		 ( ( g_Cell[0][0].Value == 0 ) && ( g_Cell[0][1].Value == 0 ) && ( g_Cell[0][2].Value == 0 ) ) ||
+		 ( ( g_Cell[1][0].Value == 0 ) && ( g_Cell[1][1].Value == 0 ) && ( g_Cell[1][2].Value == 0 ) ) ||
+		 ( ( g_Cell[2][0].Value == 0 ) && ( g_Cell[2][1].Value == 0 ) && ( g_Cell[2][2].Value == 0 ) ) ||
+		 ( ( g_Cell[0][0].Value == 0 ) && ( g_Cell[1][1].Value == 0 ) && ( g_Cell[2][2].Value == 0 ) ) ||
+		 ( ( g_Cell[2][0].Value == 0 ) && ( g_Cell[1][1].Value == 0 ) && ( g_Cell[0][2].Value == 0 ) ) )
+	{
+		g_Exit = true;
+		return 0;
+	}
+	return -1;
+}
+
 int SaveField( lua_State *luaVM )
 {	
 	lua_newtable( luaVM );//создать таблицу, поместить ее на вершину стэка
 	for (int i = 1; i <= 9; ++i) 
 	{
-		lua_pushnumber(luaVM, i);               //кладем в стэк число (key)
-		lua_pushnumber(luaVM, i + 1 );//добавляем значение ключа (value)
-		lua_settable  (luaVM, -3);              //добавить к таблице пару ключ-значение: table[key] = value		
+		lua_pushnumber( luaVM,  i );               //кладем в стэк число (key)
+		lua_pushnumber( luaVM,  i + 1 );//добавляем значение ключа (value)
+		lua_settable  ( luaVM, -3 );              //добавить к таблице пару ключ-значение: table[key] = value		
 	}
 	return 1;
 }
 
 void CheckPC()
 {
+	lua_getglobal( g_Lua.m_luaVM, "IO" );
+	if ( lua_pcall( g_Lua.m_luaVM, 0, 0, 0 ) && lua_tostring( g_Lua.m_luaVM, -1 ) )
+	lua_pop( g_Lua.m_luaVM, 1 );
+	
+	lua_getglobal( g_Lua.m_luaVM, "x" );
+	int x	=	(int)lua_tonumber( g_Lua.m_luaVM, -1 );
+	lua_pop( g_Lua.m_luaVM, 1 );
 
+	lua_getglobal( g_Lua.m_luaVM, "y" );
+	int y	=	(int)lua_tonumber( g_Lua.m_luaVM, -1 );
+	lua_pop( g_Lua.m_luaVM, 1 );
+	/*
+	int arg = lua_gettop(g_Lua.m_luaVM);
+	int x = (int)lua_tonumber(g_Lua.m_luaVM, 1);
+	int y = (int)lua_tonumber(g_Lua.m_luaVM, 2);
+	*/
+	g_Cell[x][y].Value = 0;
 }
 
 LONG WINAPI WndProc(HWND hwnd, UINT Message, WPARAM wparam, LPARAM lparam)
@@ -480,11 +525,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	return 0;
 }
 
-
-
-
-
-
+//-----------------------------------------------------------------------------------------------------------------------------------
 
 
 HRESULT CInputDevice::InitialInput(HWND hwnd)
@@ -560,7 +601,9 @@ bool CInputDevice::ScanInput()
 		if ( ( Point.x >= 0 ) && ( g_Cell[Point.x][Point.y].Value > 1 ) )
 		{
 			g_Cell[Point.x][Point.y].Value = 1;
+			GameOver();
 			CheckPC();
+			GameOver();
 		}
 	}
 return TRUE;
@@ -603,7 +646,7 @@ bool CLuaScript::lua_dobuffer( lua_State* Lua, void const* Buffer, int Size )
 	{
 		char const* ErrorMsg = lua_tostring( Lua, -1 );
 		lua_pop( Lua, 1 );
-		fprintf( g_FileLog, "%s",ErrorMsg );
+		fprintf( g_FileLog, "%s\n",ErrorMsg );
 		return false;
 	}
 
@@ -611,7 +654,7 @@ bool CLuaScript::lua_dobuffer( lua_State* Lua, void const* Buffer, int Size )
 	{
 		char const* ErrorMsg = lua_tostring( Lua, -1 );
 		lua_pop( Lua, 1 );
-		fprintf( g_FileLog, "%s", ErrorMsg );
+		fprintf( g_FileLog, "%s\n", ErrorMsg );
 		return false;
 	}
 	fprintf( g_FileLog, "Initial Script \n" );	
