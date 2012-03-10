@@ -349,7 +349,7 @@ void RenderingDirect3D(HWND hwnd)
 			}
 		}
 		sprintf(str, "%f                %d", Angle, P.y);		
-		DrawMyText(g_pD3DDevice, str, 10, 10, 500, 700, D3DCOLOR_ARGB(250, 250, 250,50));	
+		//DrawMyText(g_pD3DDevice, str, 10, 10, 500, 700, D3DCOLOR_ARGB(250, 250, 250,50));	
 
 	g_pD3DDevice -> EndScene();
 	g_pD3DDevice -> Present(NULL, NULL, NULL, NULL); // вывод содержимого заднего буфера в окно
@@ -407,7 +407,7 @@ void CheckPC()
 
 	int y = lua_tonumber( g_Lua.m_luaVM, -1 );
 	int x = lua_tonumber( g_Lua.m_luaVM, -2 );
-fprintf( g_FileLog, "%d %d\n", x, y );
+    fprintf( g_FileLog, "%d %d\n", x, y );
 	g_Cell[x][y].Value = 0;
 }
 
@@ -480,7 +480,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	for (int y = 0; y < 3; ++y)
 		for (int x = 0; x < 3; ++x)
 			g_Cell[x][y].SetCenter( x * 16 - 16, 16 - y * 16, 0 );		
-	g_Cell[2][0].Value = 0;
+	//g_Cell[2][0].Value = 0;
 	if ( SUCCEEDED(g_DeviceD3D.IntialDirect3D(hwnd) ) )
 	{	
 		if ( SUCCEEDED( g_DeviceD3D.LoadTexture() ) )
