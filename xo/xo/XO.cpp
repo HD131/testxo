@@ -280,7 +280,7 @@ void RenderingDirect3D(HWND hwnd)
 	g_Shader.pConstTableVS[Sky] -> SetMatrix( g_pD3DDevice, "mat_mvp",   &tmp );
 	g_Shader.pConstTableVS[Sky] -> SetVector( g_pD3DDevice, "vec_light", &Light );
 	g_Shader.pConstTableVS[Sky] -> SetVector( g_pD3DDevice, "scale",     &Scale );
-	g_Shader.pConstTablePS[Sky] -> SetMatrix( g_pD3DDevice, "mat_view",  &MatrixView );
+	g_Shader.pConstTableVS[Sky] -> SetMatrix( g_pD3DDevice, "mat_view",  &MatrixView );
 	// здесь перерисовка сцены	
 	g_pD3DDevice -> SetStreamSource(0, g_Sky.m_pVerBufSky, 0, sizeof( CVertexFVF ) ); // связь буфера вершин с потоком данных
 	g_pD3DDevice -> SetFVF( D3DFVF_CUSTOMVERTEX ); // устанавливается формат вершин
@@ -290,7 +290,7 @@ void RenderingDirect3D(HWND hwnd)
 	g_pD3DDevice -> SetVertexShader( g_Shader.pVertexShader[Sky] );
 	g_pD3DDevice -> SetPixelShader(  g_Shader.pPixelShader [Sky] );
 	// вывод примитивов
-	//g_pD3DDevice -> DrawIndexedPrimitive( D3DPT_TRIANGLELIST, 0, 0, 6, 0, 2 );
+	g_pD3DDevice -> DrawIndexedPrimitive( D3DPT_TRIANGLELIST, 0, 0, 6, 0, 2 );
 
 	g_pD3DDevice -> SetSamplerState( 0, D3DSAMP_ADDRESSU, D3DTADDRESS_WRAP );
 	g_pD3DDevice -> SetSamplerState( 0, D3DSAMP_ADDRESSV, D3DTADDRESS_WRAP );
@@ -384,38 +384,30 @@ int GameOver()
 	return -1;
 }
 
-int SaveField( lua_State *luaVM )
-{	
-	lua_newtable( luaVM );//создать таблицу, поместить ее на вершину стэка
-	for (int y = 0; y < 3; ++y)
-		for (int x = 0; x < 3; ++x) 
-		{
-			lua_pushnumber( luaVM,  y * 3 + x + 1 );               //кладем в стэк число (key)
-			lua_pushnumber( luaVM,  g_Cell[x][y].Value );//добавляем значение ключа (value)
-			lua_settable  ( luaVM, -3 );              //добавить к таблице пару ключ-значение: table[key] = value		
-		}
-	return 1;
-}
 
 void CheckPC()
 {
 	Beep(1000, 300); 
 	lua_getglobal( g_Lua.m_luaVM, "IO" );
-	if ( lua_pcall( g_Lua.m_luaVM, 0, 0, 0 ) && lua_tostring( g_Lua.m_luaVM, -1 ) )
-	lua_pop( g_Lua.m_luaVM, 1 );
-	
-	lua_getglobal( g_Lua.m_luaVM, "a" );
-	int x	=	(int)lua_tonumber( g_Lua.m_luaVM, -1 );
-	lua_pop( g_Lua.m_luaVM, 1 );
 
-	lua_getglobal( g_Lua.m_luaVM, "b" );
-	int y	=	(int)lua_tonumber( g_Lua.m_luaVM, -1 );
-	lua_pop( g_Lua.m_luaVM, 1 );
-	/*
-	int arg = lua_gettop(g_Lua.m_luaVM);
-	int x = (int)lua_tonumber(g_Lua.m_luaVM, 1);
-	int y = (int)lua_tonumber(g_Lua.m_luaVM, 2);
-	*/
+	lua_newtable( g_Lua.m_luaVM );//создать таблицу, поместить ее на вершину стэка
+	for (int y = 0; y < 3; ++y)
+		for (int x = 0; x < 3; ++x) 
+		{
+			lua_pushnumber( g_Lua.m_luaVM,  y * 3 + x + 1 );               //кладем в стэк число (key)
+			lua_pushnumber( g_Lua.m_luaVM,  g_Cell[x][y].Value );//добавляем значение ключа (value)
+			lua_settable  ( g_Lua.m_luaVM, -3 );              //добавить к таблице пару ключ-значение: table[key] = value		
+		}
+
+	if ( lua_pcall( g_Lua.m_luaVM, 1, 2, 0 ) )
+	{
+		fprintf( g_FileLog, lua_tostring( g_Lua.m_luaVM, -1 ) );
+		lua_pop( g_Lua.m_luaVM, 1 );
+	}
+
+	int y = lua_tonumber( g_Lua.m_luaVM, -1 );
+	int x = lua_tonumber( g_Lua.m_luaVM, -2 );
+fprintf( g_FileLog, "%d %d\n", x, y );
 	g_Cell[x][y].Value = 0;
 }
 
@@ -460,9 +452,6 @@ int CFps::Fps()
 	else m_count++;
 return m_fps;
 }
-
-
-
 
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
@@ -688,7 +677,6 @@ CLuaScript::CLuaScript()
 	luaopen_math  ( m_luaVM );
 	luaopen_os    ( m_luaVM );
 
-	lua_register( m_luaVM, "SaveField", SaveField);
 	lua_dobuffer( m_luaVM, m_FileBuffer, m_FileSize );
 }
 

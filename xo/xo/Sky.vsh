@@ -5,7 +5,6 @@ float4   scale;
 struct VS_INPUT_STRUCT
 {
   float4 position: POSITION;
-  float3 uv      : TEXCOORD0;
 };
 // Исходящие данные.
 struct VS_OUTPUT_STRUCT
