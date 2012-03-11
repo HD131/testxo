@@ -502,6 +502,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	WNDCLASS	 w;	
 	CFps         g_fps;
 	D3DVIEWPORT9 vp;
+	// Запись лога в файл 
+	g_FileLog = fopen( "log.txt", "w" );
 
 	memset(&w,0,sizeof(WNDCLASS));
 	w.style         = CS_HREDRAW | CS_VREDRAW;
@@ -684,10 +686,6 @@ bool CLuaScript::lua_dobuffer( lua_State* Lua, void const* Buffer, int Size )
 {
 	if ( !Size )
 		return true;
-	// Запись лога в файл 
-	g_FileLog = fopen( "log.txt", "w" );
-		
-
 	if ( luaL_loadbuffer( Lua, (char const*)Buffer, Size, 0 ) )
 	{
 		char const* ErrorMsg = lua_tostring( Lua, -1 );
@@ -802,7 +800,7 @@ HRESULT	CD3DDevice::LoadTexture()
 
 	if ( FAILED( D3DXCreateCubeTextureFromFileEx( g_pD3DDevice, "model//sky_cube_mipmap.dds", D3DX_DEFAULT, D3DX_FROM_FILE, 0, D3DFMT_UNKNOWN, D3DPOOL_DEFAULT, D3DX_FILTER_NONE, D3DX_FILTER_NONE, 0, 0, 0, &CubeTexture )))
 		if ( g_FileLog ) 
-			fprintf( g_FileLog, "error load sky texture" );
+			fprintf( g_FileLog, "error load sky texture\n" );
 	return S_OK;
 }
 
@@ -950,7 +948,7 @@ HRESULT CMesh3D::InitialMesh(LPCSTR Name)
 		if ( m_pMesh == NULL )
 		{		
 			if ( g_FileLog ) 
-				fprintf( g_FileLog, "error load x file '%s'", Name );
+				fprintf( g_FileLog, "error load x file '%s'\n", Name );
 			return E_FAIL;
 		}
 	}
@@ -978,7 +976,7 @@ HRESULT CMesh3D::InitialMesh(LPCSTR Name)
 		string FileName = string( "model//" ) + string( D3DXMeshMaterial[i].pTextureFilename );
 		if ( FAILED( D3DXCreateTextureFromFile( g_pD3DDevice, FileName.c_str(), &m_pMeshTextura[i] )))
 		{
-			fprintf( g_FileLog, "error load texture '%s'", D3DXMeshMaterial[i].pTextureFilename );
+			fprintf( g_FileLog, "error load texture '%s'\n", D3DXMeshMaterial[i].pTextureFilename );
 			m_pMeshTextura[i] = NULL;
 		}
 	}
