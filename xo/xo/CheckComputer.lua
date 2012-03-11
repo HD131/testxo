@@ -1,3 +1,6 @@
+math.randomseed(os.time())
+math.random()
+
 function IO( Field )
 	local j = 0
 	for i = 1, 3 do		
@@ -93,15 +96,20 @@ function IO( Field )
 		return 1,1
 	end
 	local i = 1
-	math.randomseed(os.time())
-	math.random()
 	repeat
-	local x = math.random(0,8) + 1 
-	if Field[x] == 10 then
-		return x, (x-1) / 3
-	end
-	i = i + 1
-	until i < 5
-	return x,-1
+		local x = math.random(0,8) + 1
+		if x > -10 then
+			return x , x
+		end		
+		if Field[x] == 10 then
+			return (x-1) % 3, (x-1) / 3
+		end
+		i = i + 1
+	until i < 1000
+	return -1,-1
 end
 
+function Out()
+	
+	return math.random(0,8) + 1  
+end
