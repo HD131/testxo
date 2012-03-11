@@ -381,6 +381,17 @@ int GameOver()
 		g_Exit = true;
 		return 0;
 	}
+	int t = 0;
+	for (int y = 0; y < 3; ++y)
+		for (int x = 0; x < 3; ++x) 
+			if ( g_Cell[x][y].Value == 10 ) 
+				++t;
+	if ( t == 0 )
+	{
+		g_Exit = true;
+		return 2;
+	}
+		
 	return -1;
 }
 
@@ -399,15 +410,15 @@ void CheckPC()
 			lua_settable  ( g_Lua.m_luaVM, -3 );              //добавить к таблице пару ключ-значение: table[key] = value		
 		}
 
-	if ( lua_pcall( g_Lua.m_luaVM, 1, 2, 0 ) )
+	if ( lua_pcall( g_Lua.m_luaVM, 1, 3, 0 ) )
 	{
 		fprintf( g_FileLog, lua_tostring( g_Lua.m_luaVM, -1 ) );
 		lua_pop( g_Lua.m_luaVM, 1 );
 	}
-	
-	int y = lua_tonumber( g_Lua.m_luaVM, -1 );
-	int x = lua_tonumber( g_Lua.m_luaVM, -2 );
-    fprintf( g_FileLog, "      x=%d  y=%d\n", x, y );
+	float t = lua_tonumber( g_Lua.m_luaVM, -1 );
+	int y = lua_tonumber( g_Lua.m_luaVM, -2 );
+	int x = lua_tonumber( g_Lua.m_luaVM, -3 );
+    fprintf( g_FileLog, "      x=%d  y=%d  t=%g\n", x, y , t);
  
 	if ( g_Cell[x][y].Value == 10 )
 		g_Cell[x][y].Value = 0;
