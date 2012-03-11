@@ -311,10 +311,13 @@ void RenderingDirect3D()
 
 	D3DXMatrixTranslation( &MatrixWorld, 1.0f, 1.0f, 1.0f );
 	tmp = MatrixWorld * MatrixView * MatrixProjection;
-	g_Shader.pConstTableVS[Sky] -> SetMatrix( g_pD3DDevice, "mat_mvp",   &tmp );
-	g_Shader.pConstTableVS[Sky] -> SetVector( g_pD3DDevice, "vec_light", &Light );
-	g_Shader.pConstTableVS[Sky] -> SetVector( g_pD3DDevice, "scale",     &Scale );
-	g_Shader.pConstTableVS[Sky] -> SetMatrix( g_pD3DDevice, "mat_view",  &MatrixView );
+	if ( g_Shader.pConstTableVS[Sky] )
+	{
+		g_Shader.pConstTableVS[Sky] -> SetMatrix( g_pD3DDevice, "mat_mvp",   &tmp );
+		g_Shader.pConstTableVS[Sky] -> SetVector( g_pD3DDevice, "vec_light", &Light );
+		g_Shader.pConstTableVS[Sky] -> SetVector( g_pD3DDevice, "scale",     &Scale );
+		g_Shader.pConstTableVS[Sky] -> SetMatrix( g_pD3DDevice, "mat_view",  &MatrixView );
+	}
 	// здесь перерисовка сцены	
 	g_pD3DDevice -> SetStreamSource(0, g_Sky.m_pVerBufSky, 0, sizeof( CVertexFVF ) ); // связь буфера вершин с потоком данных
 	g_pD3DDevice -> SetFVF( D3DFVF_CUSTOMVERTEX ); // устанавливается формат вершин
@@ -434,12 +437,14 @@ void CheckPC()
 		}
 		if ( lua_pcall( g_Lua.m_luaVM, 1, 2, 0 ) )
 		{
-			//fprintf( g_FileLog, lua_tostring( g_Lua.m_luaVM, -1 ) );
+			if ( g_FileLog ) 
+				fprintf( g_FileLog, lua_tostring( g_Lua.m_luaVM, -1 ) );
 			lua_pop( g_Lua.m_luaVM, 1 );
 		}	
 		int y = lua_tonumber( g_Lua.m_luaVM, -1 );
 		int x = lua_tonumber( g_Lua.m_luaVM, -2 );
-		//fprintf( g_FileLog, "x=%d  y=%d\n", x, y );
+		if ( g_FileLog ) 
+			fprintf( g_FileLog, "x=%d  y=%d\n", x, y );
 
 		if ( g_Cell[x][y].Value == 10 )
 			g_Cell[x][y].Value = 0;
@@ -578,7 +583,8 @@ HRESULT CInputDevice::InitialInput(HWND hwnd)
 	dipdw.dwData			= 32;
 	if (FAILED(DirectInput8Create(GetModuleHandle(0), DIRECTINPUT_VERSION, IID_IDirectInput8, (void**)&pInput, NULL)))
 		return E_FAIL;
-	//fprintf( g_FileLog, "Initial DirectInput8\n" );
+	if ( g_FileLog ) 
+		fprintf( g_FileLog, "Initial DirectInput8\n" );
 
 	if FAILED(pInput -> CreateDevice(GUID_SysKeyboard, &pKeyboard, NULL)) //создание устройства клавиатура
 		return E_FAIL;
@@ -679,14 +685,15 @@ bool CLuaScript::lua_dobuffer( lua_State* Lua, void const* Buffer, int Size )
 	if ( !Size )
 		return true;
 	// Запись лога в файл 
-	if ( ( g_FileLog = fopen( "log.txt", "w" ) ) == NULL )
-		return false;
+	g_FileLog = fopen( "log.txt", "w" );
+		
 
 	if ( luaL_loadbuffer( Lua, (char const*)Buffer, Size, 0 ) )
 	{
 		char const* ErrorMsg = lua_tostring( Lua, -1 );
 		lua_pop( Lua, 1 );
-		//fprintf( g_FileLog, "%s\n",ErrorMsg );
+		if ( g_FileLog ) 
+			fprintf( g_FileLog, "%s\n",ErrorMsg );
 		return false;
 	}
 
@@ -694,10 +701,12 @@ bool CLuaScript::lua_dobuffer( lua_State* Lua, void const* Buffer, int Size )
 	{
 		char const* ErrorMsg = lua_tostring( Lua, -1 );
 		lua_pop( Lua, 1 );
-		//fprintf( g_FileLog, "%s\n", ErrorMsg );
+		if ( g_FileLog ) 
+			fprintf( g_FileLog, "%s\n", ErrorMsg );
 		return false;
 	}
-	//fprintf( g_FileLog, "Initial Script \n" );	
+	if ( g_FileLog ) 
+		fprintf( g_FileLog, "Initial Script \n" );	
 	return true;
 }
 
@@ -717,7 +726,8 @@ CLuaScript::CLuaScript()
 	}
 	m_luaVM = lua_open();
 	if ( m_luaVM == NULL ) 
-		//fprintf( g_FileLog, "Error Initializing lua\n" );
+		if ( g_FileLog ) 
+			fprintf( g_FileLog, "Error Initializing lua\n" );
 
 	// инициализация стандартных библиотечных функции lua
 	luaopen_base  ( m_luaVM );
@@ -746,7 +756,8 @@ HRESULT CD3DDevice::IntialDirect3D( HWND hwnd )
 
 	if ( ( m_pDirect3D = Direct3DCreate9( D3D_SDK_VERSION ) ) == NULL ) // создаётся главный интерфейс
 		return E_FAIL;	
-	//fprintf( g_FileLog, "Initial Direct3D\n" );
+	if ( g_FileLog ) 
+		fprintf( g_FileLog, "Initial Direct3D\n" );
 	if ( FAILED( m_pDirect3D -> GetAdapterDisplayMode( D3DADAPTER_DEFAULT, &Display ) ) ) // получаем текущий формат дисплея
 		return E_FAIL;
 
@@ -767,7 +778,8 @@ HRESULT CD3DDevice::IntialDirect3D( HWND hwnd )
 	if ( FAILED( m_pDirect3D -> CreateDevice( D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, hwnd, D3DCREATE_HARDWARE_VERTEXPROCESSING,
 		&Direct3DParametr, &g_pD3DDevice ) ) ) // создаётся интерфейс устройства
 		return E_FAIL;
-	//fprintf( g_FileLog, "Initial CreateDevice Direct3D\n" );
+	if ( g_FileLog ) 
+		fprintf( g_FileLog, "Initial CreateDevice Direct3D\n" );
 	g_pD3DDevice -> SetRenderState( D3DRS_CULLMODE, D3DCULL_CCW );				//  режим отсечения включено и происходит по часовой стрелке
 	g_pD3DDevice -> SetRenderState( D3DRS_LIGHTING, FALSE );					// запрещается работа со светом
 	g_pD3DDevice -> SetRenderState( D3DRS_ZENABLE, D3DZB_TRUE );				// разрешает использовать Z-буфер
@@ -789,7 +801,8 @@ HRESULT	CD3DDevice::LoadTexture()
 	CubeTexture   = NULL;
 
 	if ( FAILED( D3DXCreateCubeTextureFromFileEx( g_pD3DDevice, "model//sky_cube_mipmap.dds", D3DX_DEFAULT, D3DX_FROM_FILE, 0, D3DFMT_UNKNOWN, D3DPOOL_DEFAULT, D3DX_FILTER_NONE, D3DX_FILTER_NONE, 0, 0, 0, &CubeTexture )))
-		fprintf( g_FileLog, "error load sky texture" );
+		if ( g_FileLog ) 
+			fprintf( g_FileLog, "error load sky texture" );
 	return S_OK;
 }
 
@@ -809,7 +822,8 @@ void CD3DDevice::Release()
 		g_pD3DDevice -> Release();
 	if ( m_pDirect3D != NULL )
 		m_pDirect3D -> Release();
-	fclose( g_FileLog );
+	if ( g_FileLog )
+		fclose( g_FileLog );
 };
 
 HRESULT CShader::InitialShader()
@@ -826,27 +840,38 @@ HRESULT CShader::InitialShader()
 	}
 	//-------------------------------SkyShader----------------------------
 	// вертексный шейдер
-	D3DXCompileShaderFromFile( "shader/Sky.vsh", NULL, NULL, "main", "vs_2_0", D3DXSHADER_OPTIMIZATION_LEVEL3,
-		&pShaderBuff, &pErrors, &pConstTableVS[Sky] );
-	g_pD3DDevice->CreateVertexShader(( DWORD* )pShaderBuff->GetBufferPointer(), &pVertexShader[Sky]);
-	pShaderBuff -> Release();
+	D3DXCompileShaderFromFile( "shader//Sky.vsh", NULL, NULL, "main", "vs_2_0", D3DXSHADER_OPTIMIZATION_LEVEL3,
+								&pShaderBuff, &pErrors, &pConstTableVS[Sky] );
+	if ( pShaderBuff )
+	{
+		g_pD3DDevice->CreateVertexShader(( DWORD* )pShaderBuff->GetBufferPointer(), &pVertexShader[Sky]);
+		pShaderBuff -> Release();
+	}
 	// пиксельный шейдер
-	D3DXCompileShaderFromFile( "shader/Sky.psh", NULL, NULL, "main", "ps_2_0", D3DXSHADER_OPTIMIZATION_LEVEL3,
-		&pShaderBuff, &pErrors, &pConstTablePS[Sky] );
-	g_pD3DDevice->CreatePixelShader(( DWORD* )pShaderBuff->GetBufferPointer(), &pPixelShader[Sky]);
-	pShaderBuff -> Release();
+	D3DXCompileShaderFromFile( "shader//Sky.psh", NULL, NULL, "main", "ps_2_0", D3DXSHADER_OPTIMIZATION_LEVEL3,
+								&pShaderBuff, &pErrors, &pConstTablePS[Sky] );
+	if ( pShaderBuff )
+	{
+		g_pD3DDevice->CreatePixelShader(( DWORD* )pShaderBuff->GetBufferPointer(), &pPixelShader[Sky]);
+		pShaderBuff -> Release();
+	}
 	//-------------------------------Diffuse----------------------------
 	// вертексный шейдер
-	D3DXCompileShaderFromFile( "shader/Diffuse.vsh", NULL, NULL, "main", "vs_2_0", D3DXSHADER_OPTIMIZATION_LEVEL3,
-		&pShaderBuff, &pErrors, &pConstTableVS[Diffuse] );
-	g_pD3DDevice->CreateVertexShader(( DWORD* )pShaderBuff->GetBufferPointer(), &pVertexShader[Diffuse]);
-	pShaderBuff -> Release();
+	D3DXCompileShaderFromFile( "shader//Diffuse.vsh", NULL, NULL, "main", "vs_2_0", D3DXSHADER_OPTIMIZATION_LEVEL3,
+								&pShaderBuff, &pErrors, &pConstTableVS[Diffuse] );
+	if ( pShaderBuff )
+	{
+		g_pD3DDevice->CreateVertexShader(( DWORD* )pShaderBuff->GetBufferPointer(), &pVertexShader[Diffuse]);
+		pShaderBuff -> Release();
+	}
 	// пиксельный шейдер
-	D3DXCompileShaderFromFile( "shader/Diffuse.psh", NULL, NULL, "main", "ps_2_0", D3DXSHADER_OPTIMIZATION_LEVEL3,
-		&pShaderBuff, &pErrors, &pConstTablePS[Diffuse] );
-	g_pD3DDevice->CreatePixelShader(( DWORD* )pShaderBuff->GetBufferPointer(), &pPixelShader[Diffuse]);
-	pShaderBuff -> Release();
-
+	D3DXCompileShaderFromFile( "shader//Diffuse.psh", NULL, NULL, "main", "ps_2_0", D3DXSHADER_OPTIMIZATION_LEVEL3,
+								&pShaderBuff, &pErrors, &pConstTablePS[Diffuse] );
+	if ( pShaderBuff )
+	{
+		g_pD3DDevice->CreatePixelShader(( DWORD* )pShaderBuff->GetBufferPointer(), &pPixelShader[Diffuse]);
+		pShaderBuff -> Release();
+	}
 	return S_OK;
 }
 
@@ -920,10 +945,14 @@ HRESULT CMesh3D::InitialMesh(LPCSTR Name)
 	m_SizeFVF       = 0;
 	m_Alpha         = 1.0f;	
 	ID3DXBuffer *pMaterialBuffer  = NULL;
-	if (FAILED(D3DXLoadMeshFromX(Name, D3DXMESH_SYSTEMMEM, g_pD3DDevice, NULL, &pMaterialBuffer, NULL, &m_TexturCount, &m_pMesh)))
+	if (FAILED(D3DXLoadMeshFromX( Name, D3DXMESH_SYSTEMMEM, g_pD3DDevice, NULL, &pMaterialBuffer, NULL, &m_TexturCount, &m_pMesh)))
 	{
-		fprintf( g_FileLog, "error load x file '%s'", Name );
-		return E_FAIL;
+		if ( m_pMesh == NULL )
+		{		
+			if ( g_FileLog ) 
+				fprintf( g_FileLog, "error load x file '%s'", Name );
+			return E_FAIL;
+		}
 	}
 
 	if ( m_pMesh->GetFVF() & D3DFVF_XYZ ) 
@@ -976,28 +1005,31 @@ void CMesh3D::SetMatrixProjection(D3DXMATRIX Matrix)
 void CMesh3D::DrawMyMesh()
 {
 	D3DXMATRIX  wvp;
-
-	wvp = m_MatrixWorld * m_MatrixView * m_MatrixProjection;
-
-	g_Shader.pConstTableVS[Diffuse] -> SetMatrix( g_pD3DDevice, "mat_mvp",   &wvp );
-	g_Shader.pConstTableVS[Diffuse] -> SetMatrix( g_pD3DDevice, "mat_world", &m_MatrixWorld );
-	g_Shader.pConstTableVS[Diffuse] -> SetVector( g_pD3DDevice, "vec_light", &Light );
-	g_Shader.pConstTablePS[Diffuse] -> SetFloat(  g_pD3DDevice, "diffuse_intensity", Diffuse_intensity );	
-	g_Shader.pConstTablePS[Diffuse] -> SetFloat(  g_pD3DDevice, "Alpha", m_Alpha );	
-
-	// устанавливаем шейдеры
-	g_pD3DDevice->SetVertexShader( g_Shader.pVertexShader[Diffuse] );
-	g_pD3DDevice->SetPixelShader(  g_Shader.pPixelShader [Diffuse] );
-
-	g_pD3DDevice->SetStreamSource( 0, m_VertexBuffer, 0, m_SizeFVF );
-	g_pD3DDevice->SetIndices( m_IndexBuffer );
-	for ( int i = 0; i < m_TexturCount; ++i )
+	if ( m_pMesh )
 	{
-		g_pD3DDevice -> SetMaterial( &m_pMeshMaterial[i] );
-		g_pD3DDevice -> SetTexture( 0, m_pMeshTextura[i] );
-		//m_pMesh -> DrawSubset(i);
+		wvp = m_MatrixWorld * m_MatrixView * m_MatrixProjection;
+		if ( g_Shader.pConstTableVS[Diffuse] )
+		{
+			g_Shader.pConstTableVS[Diffuse] -> SetMatrix( g_pD3DDevice, "mat_mvp",   &wvp );
+			g_Shader.pConstTableVS[Diffuse] -> SetMatrix( g_pD3DDevice, "mat_world", &m_MatrixWorld );
+			g_Shader.pConstTableVS[Diffuse] -> SetVector( g_pD3DDevice, "vec_light", &Light );
+			g_Shader.pConstTablePS[Diffuse] -> SetFloat(  g_pD3DDevice, "diffuse_intensity", Diffuse_intensity );	
+			g_Shader.pConstTablePS[Diffuse] -> SetFloat(  g_pD3DDevice, "Alpha", m_Alpha );	
+		}
+		// устанавливаем шейдеры
+		g_pD3DDevice->SetVertexShader( g_Shader.pVertexShader[Diffuse] );
+		g_pD3DDevice->SetPixelShader(  g_Shader.pPixelShader [Diffuse] );
+
+		g_pD3DDevice->SetStreamSource( 0, m_VertexBuffer, 0, m_SizeFVF );
+		g_pD3DDevice->SetIndices( m_IndexBuffer );
+		for ( int i = 0; i < m_TexturCount; ++i )
+		{
+			g_pD3DDevice -> SetMaterial( &m_pMeshMaterial[i] );
+			g_pD3DDevice -> SetTexture( 0, m_pMeshTextura[i] );
+			//m_pMesh -> DrawSubset(i);
+		}
+		g_pD3DDevice->DrawIndexedPrimitive( D3DPT_TRIANGLELIST, 0, 0, m_pMesh->GetNumVertices(), 0, m_pMesh->GetNumFaces() ); 
 	}
-	g_pD3DDevice->DrawIndexedPrimitive( D3DPT_TRIANGLELIST, 0, 0, m_pMesh->GetNumVertices(), 0, m_pMesh->GetNumFaces() ); 	
 }
 
 void CMesh3D::Release()
