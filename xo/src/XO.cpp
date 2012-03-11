@@ -522,12 +522,12 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 		{			
 			ShowWindow(hwnd,nCmdShow);
 			ZeroMemory(&msg, sizeof(msg));
-			g_MeshS.InitialMesh("model/Setka.x");
-			g_MeshO.InitialMesh("model/O.x");
-			g_MeshX.InitialMesh("model/X.x");	
-			g_MeshWin.InitialMesh("model/Win.x");	
-			g_MeshLost.InitialMesh("model/Lost.x");
-			g_MeshStalemate.InitialMesh("model/Stalemate.x");
+			g_MeshS.InitialMesh("model//Setka.x");
+			g_MeshO.InitialMesh("model//O.x");
+			g_MeshX.InitialMesh("model//X.x");	
+			g_MeshWin.InitialMesh("model//Win.x");	
+			g_MeshLost.InitialMesh("model//Lost.x");
+			g_MeshStalemate.InitialMesh("model//Stalemate.x");
 			g_Sky.InitialSky();
 			g_DeviceInput.InitialInput(hwnd);					
 			g_Shader.InitialShader();
@@ -788,10 +788,8 @@ HRESULT	CD3DDevice::LoadTexture()
 	m_Texture     = NULL;
 	CubeTexture   = NULL;
 
-	if ( FAILED( D3DXCreateCubeTextureFromFileEx( g_pD3DDevice, "model\sky_cube_mipmap.dds", D3DX_DEFAULT, D3DX_FROM_FILE, 0, 
-		D3DFMT_UNKNOWN, D3DPOOL_DEFAULT, D3DX_FILTER_NONE, 
-		D3DX_FILTER_NONE, 0, 0, 0, &CubeTexture )))
-		MessageBox( NULL, "Не удалось загрузить текстуру SkyCube", "", MB_OK );
+	if ( FAILED( D3DXCreateCubeTextureFromFileEx( g_pD3DDevice, "model//sky_cube_mipmap.dds", D3DX_DEFAULT, D3DX_FROM_FILE, 0, D3DFMT_UNKNOWN, D3DPOOL_DEFAULT, D3DX_FILTER_NONE, D3DX_FILTER_NONE, 0, 0, 0, &CubeTexture )))
+		fprintf( g_FileLog, "error load sky texture" );
 	return S_OK;
 }
 
@@ -924,8 +922,7 @@ HRESULT CMesh3D::InitialMesh(LPCSTR Name)
 	ID3DXBuffer *pMaterialBuffer  = NULL;
 	if (FAILED(D3DXLoadMeshFromX(Name, D3DXMESH_SYSTEMMEM, g_pD3DDevice, NULL, &pMaterialBuffer, NULL, &m_TexturCount, &m_pMesh)))
 	{
-		MessageBox(NULL, "Не удалось загрузить X-file", "", MB_OK);
-		//fprintf( g_FileLog, "No Initial LoadMeshFromX\n" );
+		fprintf( g_FileLog, "error load x file '%s'", Name );
 		return E_FAIL;
 	}
 
@@ -949,9 +946,10 @@ HRESULT CMesh3D::InitialMesh(LPCSTR Name)
 		// Установить окружающего свет
 		m_pMeshMaterial[i].Ambient = m_pMeshMaterial[i].Diffuse;
 		// Загружаем текстуру
-		if ( FAILED( D3DXCreateTextureFromFile( g_pD3DDevice, D3DXMeshMaterial[i].pTextureFilename, &m_pMeshTextura[i] )))
+		string FileName = string( "model//" ) + string( D3DXMeshMaterial[i].pTextureFilename );
+		if ( FAILED( D3DXCreateTextureFromFile( g_pD3DDevice, FileName.c_str(), &m_pMeshTextura[i] )))
 		{
-			//MessageBox(NULL, "Не удалось загрузить текстуры на модель", "", MB_OK);
+			fprintf( g_FileLog, "error load texture '%s'", D3DXMeshMaterial[i].pTextureFilename );
 			m_pMeshTextura[i] = NULL;
 		}
 	}
