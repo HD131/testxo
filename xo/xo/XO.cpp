@@ -378,9 +378,7 @@ int GameOver()
 		g_MeshWin.m_Alpha = 1.0f;
 		g_MeshWin.DrawMyMesh();
 		g_pD3DDevice -> EndScene();
-		g_pD3DDevice -> Present(NULL, NULL, NULL, NULL); // вывод содержимого заднего буфера в окно
-		Sleep(2000);
-		g_Exit = true;
+		g_pD3DDevice -> Present(NULL, NULL, NULL, NULL); // вывод содержимого заднего буфера в окно		
 		return 1;
 	}
 	if ( ( ( g_Cell[0][0].Value == 0 ) && ( g_Cell[1][0].Value == 0 ) && ( g_Cell[2][0].Value == 0 ) ) ||
@@ -401,9 +399,7 @@ int GameOver()
 		g_MeshLost.m_Alpha = 1.0f;
 		g_MeshLost.DrawMyMesh();
 		g_pD3DDevice -> EndScene();
-		g_pD3DDevice -> Present(NULL, NULL, NULL, NULL); // вывод содержимого заднего буфера в окно
-		Sleep(3000);
-		g_Exit = true;
+		g_pD3DDevice -> Present(NULL, NULL, NULL, NULL); // вывод содержимого заднего буфера в окно		
 		return 2;
 	}
 	int t = 0;
@@ -422,9 +418,7 @@ int GameOver()
 		g_MeshStalemate.m_Alpha = 1.0f;
 		g_MeshStalemate.DrawMyMesh();
 		g_pD3DDevice -> EndScene();
-		g_pD3DDevice -> Present(NULL, NULL, NULL, NULL); // вывод содержимого заднего буфера в окно
-		Sleep(3000);
-		g_Exit = true;
+		g_pD3DDevice -> Present(NULL, NULL, NULL, NULL); // вывод содержимого заднего буфера в окно		
 		return 3;
 	}		
 return -1;
@@ -550,7 +544,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 				//sprintf(str, "FPS=%d", g_fps.Fps());
 				//SetWindowText(hwnd,str);
 				g_DeviceInput.ScanInput();
-				RenderingDirect3D();
+				if ( GameOver() < 0)
+					RenderingDirect3D();
 				if ( PeekMessage( &msg, NULL, 0, 0, PM_REMOVE ) )
 				{
 					TranslateMessage( &msg );
@@ -645,7 +640,7 @@ bool CInputDevice::ScanInput()
 	if ( mouse.rgbButtons[LEFT_BUTTON]&0x80 )
 	{
 		POINT Point = PickObject();
-		if ( ( Point.x >= 0 ) && ( g_Cell[Point.x][Point.y].Value > 1 ) )
+		if ( ( Point.x >= 0 ) && ( g_Cell[Point.x][Point.y].Value > 1 ) && ( GameOver() < 0 ) )
 		{
 			g_Cell[Point.x][Point.y].Value = 1;
 			RenderingDirect3D();
