@@ -88,7 +88,12 @@ function IO( Field )
 	if Field[5] == 1 and Field[7] == 1 and Field[3] == 10 then
 		return 2,0,200
 	end
-	
+	if Field[5] == 10 then
+		return 1,1,300
+	end
+	if Field[9] == 10 then
+		return 2,2,300
+	end
 	--
 	math.randomseed(os.time())
 	math.random()
