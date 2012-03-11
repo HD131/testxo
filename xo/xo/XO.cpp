@@ -404,11 +404,21 @@ void CheckPC()
 		fprintf( g_FileLog, lua_tostring( g_Lua.m_luaVM, -1 ) );
 		lua_pop( g_Lua.m_luaVM, 1 );
 	}
-
+	
 	int y = lua_tonumber( g_Lua.m_luaVM, -1 );
 	int x = lua_tonumber( g_Lua.m_luaVM, -2 );
-    fprintf( g_FileLog, "%d %d\n", x, y );
-	g_Cell[x][y].Value = 0;
+    fprintf( g_FileLog, "      x=%d  y=%d\n", x, y );
+ 
+	if ( g_Cell[x][y].Value == 10 )
+		g_Cell[x][y].Value = 0;
+	/*
+	for (int x = 0; x < 10; ++x) 
+	{
+		lua_getglobal( g_Lua.m_luaVM, "Out" );
+		lua_pcall( g_Lua.m_luaVM, 0, 1, 0 );		
+		int t	=	lua_tonumber( g_Lua.m_luaVM, -1 );
+		fprintf( g_FileLog, "x=%d\n", t );
+	}*/
 }
 
 LONG WINAPI WndProc(HWND hwnd, UINT Message, WPARAM wparam, LPARAM lparam)
@@ -676,6 +686,7 @@ CLuaScript::CLuaScript()
 	luaopen_string( m_luaVM );
 	luaopen_math  ( m_luaVM );
 	luaopen_os    ( m_luaVM );
+	
 
 	lua_dobuffer( m_luaVM, m_FileBuffer, m_FileSize );
 }
