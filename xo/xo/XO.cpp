@@ -149,6 +149,8 @@ CSky         g_Sky;
 CMesh3D      g_MeshS;
 CMesh3D      g_MeshX;
 CMesh3D      g_MeshO;
+CMesh3D		 g_MeshWin;
+CMesh3D		 g_MeshLost;
 
 void DrawMyText(IDirect3DDevice9 *g_pD3DDevice, char* StrokaTexta, int x, int y, int x1, int y1, D3DCOLOR MyColor)
 {
@@ -322,7 +324,7 @@ void RenderingDirect3D(HWND hwnd)
 			if ( g_Cell[x][y].Value == 0 )
 			{		
 				//--------------------O-------------------
-				D3DXMatrixRotationX(   &MatrixWorldY, -Angle );
+				D3DXMatrixRotationY(   &MatrixWorldY, -Angle + 3.14f );
 				D3DXMatrixTranslation( &MatrixWorldX, ( x * 16 - 16 ), ( 16 - y * 16  ), 0 );
 				D3DXMatrixMultiply(&MatrixWorld, &MatrixWorldY, &MatrixWorldX);
 				g_MeshO.SetMatrixWorld( MatrixWorld );
@@ -366,8 +368,19 @@ int GameOver()
 		 ( ( g_Cell[0][0].Value == 1 ) && ( g_Cell[1][1].Value == 1 ) && ( g_Cell[2][2].Value == 1 ) ) ||
 		 ( ( g_Cell[2][0].Value == 1 ) && ( g_Cell[1][1].Value == 1 ) && ( g_Cell[0][2].Value == 1 ) ) )
 	{
-		 g_Exit = true;
-		 return 1;
+		g_pD3DDevice -> BeginScene(); // начало рендеринга
+		D3DXMATRIX MatrixWorld;
+		D3DXMatrixTranslation( &MatrixWorld, 0, 0, -7 );		
+		g_MeshWin.SetMatrixWorld( MatrixWorld );
+		g_MeshWin.SetMatrixView( Camera.m_View );
+		g_MeshWin.SetMatrixProjection( Camera.m_Proj );
+		g_MeshWin.m_Alpha = 1.0f;
+		g_MeshWin.DrawMyMesh();
+		g_pD3DDevice -> EndScene();
+		g_pD3DDevice -> Present(NULL, NULL, NULL, NULL); // вывод содержимого заднего буфера в окно
+		Sleep(2000);
+		g_Exit = true;
+		return 1;
 	}
 	if ( ( ( g_Cell[0][0].Value == 0 ) && ( g_Cell[1][0].Value == 0 ) && ( g_Cell[2][0].Value == 0 ) ) ||
          ( ( g_Cell[0][1].Value == 0 ) && ( g_Cell[1][1].Value == 0 ) && ( g_Cell[2][1].Value == 0 ) ) ||
@@ -378,6 +391,17 @@ int GameOver()
 		 ( ( g_Cell[0][0].Value == 0 ) && ( g_Cell[1][1].Value == 0 ) && ( g_Cell[2][2].Value == 0 ) ) ||
 		 ( ( g_Cell[2][0].Value == 0 ) && ( g_Cell[1][1].Value == 0 ) && ( g_Cell[0][2].Value == 0 ) ) )
 	{
+		g_pD3DDevice -> BeginScene(); // начало рендеринга
+		D3DXMATRIX MatrixWorld;
+		D3DXMatrixTranslation( &MatrixWorld, 0, 0, -7 );		
+		g_MeshLost.SetMatrixWorld( MatrixWorld );
+		g_MeshLost.SetMatrixView( Camera.m_View );
+		g_MeshLost.SetMatrixProjection( Camera.m_Proj );
+		g_MeshLost.m_Alpha = 1.0f;
+		g_MeshLost.DrawMyMesh();
+		g_pD3DDevice -> EndScene();
+		g_pD3DDevice -> Present(NULL, NULL, NULL, NULL); // вывод содержимого заднего буфера в окно
+		Sleep(3000);
 		g_Exit = true;
 		return 0;
 	}
@@ -500,6 +524,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 			g_MeshS.InitialMesh("Setka.x");
 			g_MeshO.InitialMesh("O.x");
 			g_MeshX.InitialMesh("X.x");	
+			g_MeshWin.InitialMesh("Win.x");	
+			g_MeshLost.InitialMesh("Lost.x");	
 			g_Sky.InitialSky();
 			g_DeviceInput.InitialInput(hwnd);					
 			g_Shader.InitialShader();
@@ -519,6 +545,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 			}						
 		}
 	}	
+	g_MeshLost.Release();
+	g_MeshWin.Release();
 	g_MeshS.Release();
 	g_MeshX.Release();
 	g_MeshO.Release();
