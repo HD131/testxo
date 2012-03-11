@@ -130,7 +130,7 @@ Material m_X {
  0.000000;0.000000;0.000000;;
 
  TextureFilename {
-  "bricks003.jpg";
+  "X.jpg";
  }
 }
 
