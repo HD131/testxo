@@ -14,7 +14,7 @@ IDirect3DDevice9	   *g_pD3DDevice  = NULL; //Ќаше устройство
 IDirect3DCubeTexture9  *CubeTexture   = NULL;
 IDirect3DTexture9      *pTextura001   = NULL;
 
-enum         NameShader { Sky , Diffuse, Mirror };
+enum         NameShader { Sky , Diffuse };
 bool         g_Exit = false;
 FILE        *g_FileLog;
 D3DXVECTOR4  Light( 0.0f, 1.0f, -1.0f, 1.0f );
@@ -203,8 +203,7 @@ POINT PickObject()
 			float b = 2.0f * D3DXVec3Dot( &Direction, &v );
 			float c = D3DXVec3Dot( &v, &v ) - g_Cell[ArrX][ArrY].Radius * g_Cell[ArrX][ArrY].Radius ;
 			// Ќаходим дискриминант
-			float Discr = ( b * b ) - ( 4.0f * c );
-			// ѕровер€ем на мнимые числа
+			float Discr = ( b * b ) - ( 4.0f * c );			
 			if ( Discr >= 0.0f )
 			{
 				Discr = sqrtf(Discr);
@@ -523,12 +522,12 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 		{			
 			ShowWindow(hwnd,nCmdShow);
 			ZeroMemory(&msg, sizeof(msg));
-			g_MeshS.InitialMesh("Setka.x");
-			g_MeshO.InitialMesh("O.x");
-			g_MeshX.InitialMesh("X.x");	
-			g_MeshWin.InitialMesh("Win.x");	
-			g_MeshLost.InitialMesh("Lost.x");
-			g_MeshStalemate.InitialMesh("Stalemate.x");
+			g_MeshS.InitialMesh("model/Setka.x");
+			g_MeshO.InitialMesh("model/O.x");
+			g_MeshX.InitialMesh("model/X.x");	
+			g_MeshWin.InitialMesh("model/Win.x");	
+			g_MeshLost.InitialMesh("model/Lost.x");
+			g_MeshStalemate.InitialMesh("model/Stalemate.x");
 			g_Sky.InitialSky();
 			g_DeviceInput.InitialInput(hwnd);					
 			g_Shader.InitialShader();
@@ -787,12 +786,7 @@ HRESULT	CD3DDevice::LoadTexture()
 	m_pTexturaSky = NULL;
 	m_Texture     = NULL;
 	CubeTexture   = NULL;
-	if ( FAILED( D3DXCreateTextureFromFile( g_pD3DDevice, "Textures/TexturaUV.jpg", &pTextura001 )))
-		MessageBox( NULL, "Ќе удалось загрузить текстуру ", "", MB_OK );
-	if ( FAILED( D3DXCreateTextureFromFile( g_pD3DDevice, "Textures/bricks003.jpg", &pTextura002 )))
-		MessageBox( NULL, "Ќе удалось загрузить текстуру ", "", MB_OK );		
-	if ( FAILED( D3DXCreateTextureFromFile( g_pD3DDevice, "Textures/Sky.jpg", &m_pTexturaSky )))
-		MessageBox( NULL, "Ќе удалось загрузить текстуру ", "", MB_OK );
+
 	if ( FAILED( D3DXCreateCubeTextureFromFileEx( g_pD3DDevice, "Textures/sky_cube_mipmap.dds", D3DX_DEFAULT, D3DX_FROM_FILE, 0, 
 		D3DFMT_UNKNOWN, D3DPOOL_DEFAULT, D3DX_FILTER_NONE, 
 		D3DX_FILTER_NONE, 0, 0, 0, &CubeTexture )))
@@ -833,23 +827,23 @@ HRESULT CShader::InitialShader()
 	}
 	//-------------------------------SkyShader----------------------------
 	// вертексный шейдер
-	D3DXCompileShaderFromFile( "Sky.vsh", NULL, NULL, "main", "vs_2_0", D3DXSHADER_OPTIMIZATION_LEVEL3,
+	D3DXCompileShaderFromFile( "shader/Sky.vsh", NULL, NULL, "main", "vs_2_0", D3DXSHADER_OPTIMIZATION_LEVEL3,
 							    &pShaderBuff, &pErrors, &pConstTableVS[Sky] );
 	g_pD3DDevice->CreateVertexShader(( DWORD* )pShaderBuff->GetBufferPointer(), &pVertexShader[Sky]);
 	pShaderBuff -> Release();
 	// пиксельный шейдер
-	D3DXCompileShaderFromFile( "Sky.psh", NULL, NULL, "main", "ps_2_0", D3DXSHADER_OPTIMIZATION_LEVEL3,
+	D3DXCompileShaderFromFile( "shader/Sky.psh", NULL, NULL, "main", "ps_2_0", D3DXSHADER_OPTIMIZATION_LEVEL3,
 								&pShaderBuff, &pErrors, &pConstTablePS[Sky] );
 	g_pD3DDevice->CreatePixelShader(( DWORD* )pShaderBuff->GetBufferPointer(), &pPixelShader[Sky]);
 	pShaderBuff -> Release();
 	//-------------------------------Diffuse----------------------------
 	// вертексный шейдер
-	D3DXCompileShaderFromFile( "Diffuse.vsh", NULL, NULL, "main", "vs_2_0", D3DXSHADER_OPTIMIZATION_LEVEL3,
+	D3DXCompileShaderFromFile( "shader/Diffuse.vsh", NULL, NULL, "main", "vs_2_0", D3DXSHADER_OPTIMIZATION_LEVEL3,
 								&pShaderBuff, &pErrors, &pConstTableVS[Diffuse] );
 	g_pD3DDevice->CreateVertexShader(( DWORD* )pShaderBuff->GetBufferPointer(), &pVertexShader[Diffuse]);
 	pShaderBuff -> Release();
 	// пиксельный шейдер
-	D3DXCompileShaderFromFile( "Diffuse.psh", NULL, NULL, "main", "ps_2_0", D3DXSHADER_OPTIMIZATION_LEVEL3,
+	D3DXCompileShaderFromFile( "shader/Diffuse.psh", NULL, NULL, "main", "ps_2_0", D3DXSHADER_OPTIMIZATION_LEVEL3,
 								&pShaderBuff, &pErrors, &pConstTablePS[Diffuse] );
 	g_pD3DDevice->CreatePixelShader(( DWORD* )pShaderBuff->GetBufferPointer(), &pPixelShader[Diffuse]);
 	pShaderBuff -> Release();
