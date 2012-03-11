@@ -151,6 +151,7 @@ CMesh3D      g_MeshX;
 CMesh3D      g_MeshO;
 CMesh3D		 g_MeshWin;
 CMesh3D		 g_MeshLost;
+CMesh3D      g_MeshStalemate;
 
 void DrawMyText(IDirect3DDevice9 *g_pD3DDevice, char* StrokaTexta, int x, int y, int x1, int y1, D3DCOLOR MyColor)
 {
@@ -244,7 +245,7 @@ POINT PickObject()
 	return NumObject[0];
 }
 
-void RenderingDirect3D(HWND hwnd)
+void RenderingDirect3D()
 {
 	D3DXMATRIX  MatrixWorld, MatrixWorldX, MatrixWorldY, MatrixWorldZ;
 	D3DXMATRIX  tmp;
@@ -403,7 +404,7 @@ int GameOver()
 		g_pD3DDevice -> Present(NULL, NULL, NULL, NULL); // вывод содержимого заднего буфера в окно
 		Sleep(3000);
 		g_Exit = true;
-		return 0;
+		return 2;
 	}
 	int t = 0;
 	for (int y = 0; y < 3; ++y)
@@ -412,8 +413,19 @@ int GameOver()
 				++t;
 	if ( t == 0 )
 	{
+		g_pD3DDevice -> BeginScene(); // начало рендеринга
+		D3DXMATRIX MatrixWorld;
+		D3DXMatrixTranslation( &MatrixWorld, 0, 0, -7 );		
+		g_MeshStalemate.SetMatrixWorld( MatrixWorld );
+		g_MeshStalemate.SetMatrixView( Camera.m_View );
+		g_MeshStalemate.SetMatrixProjection( Camera.m_Proj );
+		g_MeshStalemate.m_Alpha = 1.0f;
+		g_MeshStalemate.DrawMyMesh();
+		g_pD3DDevice -> EndScene();
+		g_pD3DDevice -> Present(NULL, NULL, NULL, NULL); // вывод содержимого заднего буфера в окно
+		Sleep(3000);
 		g_Exit = true;
-		return 2;
+		return 3;
 	}		
 return -1;
 }
@@ -443,6 +455,7 @@ void CheckPC()
  
 	if ( g_Cell[x][y].Value == 10 )
 		g_Cell[x][y].Value = 0;
+	RenderingDirect3D();
 }
 
 LONG WINAPI WndProc(HWND hwnd, UINT Message, WPARAM wparam, LPARAM lparam)
@@ -525,7 +538,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 			g_MeshO.InitialMesh("O.x");
 			g_MeshX.InitialMesh("X.x");	
 			g_MeshWin.InitialMesh("Win.x");	
-			g_MeshLost.InitialMesh("Lost.x");	
+			g_MeshLost.InitialMesh("Lost.x");
+			g_MeshStalemate.InitialMesh("Stalemate.x");
 			g_Sky.InitialSky();
 			g_DeviceInput.InitialInput(hwnd);					
 			g_Shader.InitialShader();
@@ -536,7 +550,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 				//sprintf(str, "FPS=%d", g_fps.Fps());
 				//SetWindowText(hwnd,str);
 				g_DeviceInput.ScanInput();
-				RenderingDirect3D( hwnd );
+				RenderingDirect3D();
 				if ( PeekMessage( &msg, NULL, 0, 0, PM_REMOVE ) )
 				{
 					TranslateMessage( &msg );
@@ -545,6 +559,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 			}						
 		}
 	}	
+	g_MeshStalemate.Release();
 	g_MeshLost.Release();
 	g_MeshWin.Release();
 	g_MeshS.Release();
@@ -633,9 +648,11 @@ bool CInputDevice::ScanInput()
 		if ( ( Point.x >= 0 ) && ( g_Cell[Point.x][Point.y].Value > 1 ) )
 		{
 			g_Cell[Point.x][Point.y].Value = 1;
-			GameOver();
+			RenderingDirect3D();
+			if ( GameOver() > 0 )
+				return TRUE;
 			CheckPC();
-			GameOver();
+			GameOver();			
 		}
 	}
 return TRUE;
