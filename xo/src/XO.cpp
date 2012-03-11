@@ -16,7 +16,7 @@ IDirect3DTexture9      *pTextura001   = NULL;
 
 enum         NameShader { Sky , Diffuse };
 bool         g_Exit = false;
-FILE        *g_FileLog;
+FILE        *g_FileLog = NULL;
 D3DXVECTOR4  Light( 0.0f, 1.0f, -1.0f, 1.0f );
 bool         g_Wireframe = false;
 FLOAT        Diffuse_intensity = 1.0f;
@@ -434,12 +434,12 @@ void CheckPC()
 		}
 		if ( lua_pcall( g_Lua.m_luaVM, 1, 2, 0 ) )
 		{
-			fprintf( g_FileLog, lua_tostring( g_Lua.m_luaVM, -1 ) );
+			//fprintf( g_FileLog, lua_tostring( g_Lua.m_luaVM, -1 ) );
 			lua_pop( g_Lua.m_luaVM, 1 );
 		}	
 		int y = lua_tonumber( g_Lua.m_luaVM, -1 );
 		int x = lua_tonumber( g_Lua.m_luaVM, -2 );
-		fprintf( g_FileLog, "x=%d  y=%d\n", x, y );
+		//fprintf( g_FileLog, "x=%d  y=%d\n", x, y );
 
 		if ( g_Cell[x][y].Value == 10 )
 			g_Cell[x][y].Value = 0;
@@ -578,7 +578,7 @@ HRESULT CInputDevice::InitialInput(HWND hwnd)
 	dipdw.dwData			= 32;
 	if (FAILED(DirectInput8Create(GetModuleHandle(0), DIRECTINPUT_VERSION, IID_IDirectInput8, (void**)&pInput, NULL)))
 		return E_FAIL;
-	fprintf( g_FileLog, "Initial DirectInput8\n" );
+	//fprintf( g_FileLog, "Initial DirectInput8\n" );
 
 	if FAILED(pInput -> CreateDevice(GUID_SysKeyboard, &pKeyboard, NULL)) //создание устройства клавиатура
 		return E_FAIL;
@@ -678,14 +678,15 @@ bool CLuaScript::lua_dobuffer( lua_State* Lua, void const* Buffer, int Size )
 {
 	if ( !Size )
 		return true;
-	// Запись результата в файл input.txt
-	g_FileLog = fopen ("log.txt", "w");
+	// Запись лога в файл 
+	if ( ( g_FileLog = fopen( "log.txt", "w" ) ) == NULL )
+		return false;
 
 	if ( luaL_loadbuffer( Lua, (char const*)Buffer, Size, 0 ) )
 	{
 		char const* ErrorMsg = lua_tostring( Lua, -1 );
 		lua_pop( Lua, 1 );
-		fprintf( g_FileLog, "%s\n",ErrorMsg );
+		//fprintf( g_FileLog, "%s\n",ErrorMsg );
 		return false;
 	}
 
@@ -693,10 +694,10 @@ bool CLuaScript::lua_dobuffer( lua_State* Lua, void const* Buffer, int Size )
 	{
 		char const* ErrorMsg = lua_tostring( Lua, -1 );
 		lua_pop( Lua, 1 );
-		fprintf( g_FileLog, "%s\n", ErrorMsg );
+		//fprintf( g_FileLog, "%s\n", ErrorMsg );
 		return false;
 	}
-	fprintf( g_FileLog, "Initial Script \n" );	
+	//fprintf( g_FileLog, "Initial Script \n" );	
 	return true;
 }
 
@@ -716,7 +717,7 @@ CLuaScript::CLuaScript()
 	}
 	m_luaVM = lua_open();
 	if ( m_luaVM == NULL ) 
-		fprintf( g_FileLog, "Error Initializing lua\n" );
+		//fprintf( g_FileLog, "Error Initializing lua\n" );
 
 	// инициализация стандартных библиотечных функции lua
 	luaopen_base  ( m_luaVM );
@@ -745,7 +746,7 @@ HRESULT CD3DDevice::IntialDirect3D( HWND hwnd )
 
 	if ( ( m_pDirect3D = Direct3DCreate9( D3D_SDK_VERSION ) ) == NULL ) // создаётся главный интерфейс
 		return E_FAIL;	
-	fprintf( g_FileLog, "Initial Direct3D\n" );
+	//fprintf( g_FileLog, "Initial Direct3D\n" );
 	if ( FAILED( m_pDirect3D -> GetAdapterDisplayMode( D3DADAPTER_DEFAULT, &Display ) ) ) // получаем текущий формат дисплея
 		return E_FAIL;
 
@@ -766,7 +767,7 @@ HRESULT CD3DDevice::IntialDirect3D( HWND hwnd )
 	if ( FAILED( m_pDirect3D -> CreateDevice( D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, hwnd, D3DCREATE_HARDWARE_VERTEXPROCESSING,
 		&Direct3DParametr, &g_pD3DDevice ) ) ) // создаётся интерфейс устройства
 		return E_FAIL;
-	fprintf( g_FileLog, "Initial CreateDevice Direct3D\n" );
+	//fprintf( g_FileLog, "Initial CreateDevice Direct3D\n" );
 	g_pD3DDevice -> SetRenderState( D3DRS_CULLMODE, D3DCULL_CCW );				//  режим отсечения включено и происходит по часовой стрелке
 	g_pD3DDevice -> SetRenderState( D3DRS_LIGHTING, FALSE );					// запрещается работа со светом
 	g_pD3DDevice -> SetRenderState( D3DRS_ZENABLE, D3DZB_TRUE );				// разрешает использовать Z-буфер
@@ -787,7 +788,7 @@ HRESULT	CD3DDevice::LoadTexture()
 	m_Texture     = NULL;
 	CubeTexture   = NULL;
 
-	if ( FAILED( D3DXCreateCubeTextureFromFileEx( g_pD3DDevice, "Textures/sky_cube_mipmap.dds", D3DX_DEFAULT, D3DX_FROM_FILE, 0, 
+	if ( FAILED( D3DXCreateCubeTextureFromFileEx( g_pD3DDevice, "model\sky_cube_mipmap.dds", D3DX_DEFAULT, D3DX_FROM_FILE, 0, 
 		D3DFMT_UNKNOWN, D3DPOOL_DEFAULT, D3DX_FILTER_NONE, 
 		D3DX_FILTER_NONE, 0, 0, 0, &CubeTexture )))
 		MessageBox( NULL, "Не удалось загрузить текстуру SkyCube", "", MB_OK );
@@ -924,7 +925,7 @@ HRESULT CMesh3D::InitialMesh(LPCSTR Name)
 	if (FAILED(D3DXLoadMeshFromX(Name, D3DXMESH_SYSTEMMEM, g_pD3DDevice, NULL, &pMaterialBuffer, NULL, &m_TexturCount, &m_pMesh)))
 	{
 		MessageBox(NULL, "Не удалось загрузить X-file", "", MB_OK);
-		fprintf( g_FileLog, "No Initial LoadMeshFromX\n" );
+		//fprintf( g_FileLog, "No Initial LoadMeshFromX\n" );
 		return E_FAIL;
 	}
 
