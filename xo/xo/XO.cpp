@@ -93,7 +93,7 @@ struct CShader
 	ID3DXConstantTable     *pConstTablePS[3];
 	int						m_CountShader;
 	HRESULT                 InitialShader();
-	~CShader();
+	void					Release();
 };
 
 class CInputDevice
@@ -102,10 +102,10 @@ public:
 	LPDIRECTINPUT8			pInput;
 	LPDIRECTINPUTDEVICE8    pKeyboard;
 	LPDIRECTINPUTDEVICE8    pMouse;
-	CMouseState             mouse;
-	~CInputDevice();
+	CMouseState             mouse;	
 	HRESULT                 InitialInput(HWND hwnd);
 	bool                    ScanInput();
+	void					Release();
 };
 
 struct CSky
@@ -113,7 +113,7 @@ struct CSky
 	IDirect3DVertexBuffer9 *m_pVerBufSky;
 	IDirect3DIndexBuffer9  *m_pBufIndexSky;
 	HRESULT                 InitialSky();
-	~CSky();
+	void                    Release();
 };
 
 class CMesh3D
@@ -390,15 +390,14 @@ int GameOver()
 	{
 		g_Exit = true;
 		return 2;
-	}
-		
-	return -1;
+	}		
+return -1;
 }
 
 
 void CheckPC()
 {
-	Beep(1000, 300); 
+	Beep(150, 50); 
 	lua_getglobal( g_Lua.m_luaVM, "IO" );
 
 	lua_newtable( g_Lua.m_luaVM );//создать таблицу, поместить ее на вершину стэка
@@ -409,27 +408,17 @@ void CheckPC()
 			lua_pushnumber( g_Lua.m_luaVM,  g_Cell[x][y].Value );//добавляем значение ключа (value)
 			lua_settable  ( g_Lua.m_luaVM, -3 );              //добавить к таблице пару ключ-значение: table[key] = value		
 		}
-
-	if ( lua_pcall( g_Lua.m_luaVM, 1, 3, 0 ) )
+	if ( lua_pcall( g_Lua.m_luaVM, 1, 2, 0 ) )
 	{
 		fprintf( g_FileLog, lua_tostring( g_Lua.m_luaVM, -1 ) );
 		lua_pop( g_Lua.m_luaVM, 1 );
-	}
-	float t = lua_tonumber( g_Lua.m_luaVM, -1 );
-	int y = lua_tonumber( g_Lua.m_luaVM, -2 );
-	int x = lua_tonumber( g_Lua.m_luaVM, -3 );
-    fprintf( g_FileLog, "      x=%d  y=%d  t=%g\n", x, y , t);
+	}	
+	int y = lua_tonumber( g_Lua.m_luaVM, -1 );
+	int x = lua_tonumber( g_Lua.m_luaVM, -2 );
+    fprintf( g_FileLog, "x=%d  y=%d\n", x, y );
  
 	if ( g_Cell[x][y].Value == 10 )
 		g_Cell[x][y].Value = 0;
-	/*
-	for (int x = 0; x < 10; ++x) 
-	{
-		lua_getglobal( g_Lua.m_luaVM, "Out" );
-		lua_pcall( g_Lua.m_luaVM, 0, 1, 0 );		
-		int t	=	lua_tonumber( g_Lua.m_luaVM, -1 );
-		fprintf( g_FileLog, "x=%d\n", t );
-	}*/
 }
 
 LONG WINAPI WndProc(HWND hwnd, UINT Message, WPARAM wparam, LPARAM lparam)
@@ -446,7 +435,7 @@ LONG WINAPI WndProc(HWND hwnd, UINT Message, WPARAM wparam, LPARAM lparam)
 			g_Wireframe = !g_Wireframe;
 		break;
 	}
-	return DefWindowProc( hwnd, Message, wparam, lparam );
+return DefWindowProc( hwnd, Message, wparam, lparam );
 }  
 
 struct CFps
@@ -478,10 +467,10 @@ return m_fps;
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 				   LPSTR     lpCmdLine, int       nCmdShow)
 {
-	HWND		hwnd;
-	MSG			msg;
-	WNDCLASS	w;	
-	CFps        g_fps;
+	HWND		 hwnd;
+	MSG			 msg;
+	WNDCLASS	 w;	
+	CFps         g_fps;
 	D3DVIEWPORT9 vp;
 
 	memset(&w,0,sizeof(WNDCLASS));
@@ -533,8 +522,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	g_MeshS.Release();
 	g_MeshX.Release();
 	g_MeshO.Release();
+	g_Shader.Release();
+	g_Sky.Release(); 
+	g_DeviceInput.Release();
 	g_DeviceD3D.Release();
-	return 0;
+return 0;
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------
@@ -621,7 +613,7 @@ bool CInputDevice::ScanInput()
 return TRUE;
 }
 
-CInputDevice::~CInputDevice()
+void CInputDevice::Release()
 {
 	if (pInput)
 	{
@@ -829,7 +821,7 @@ HRESULT CShader::InitialShader()
 	return S_OK;
 }
 
-CShader::~CShader()
+void CShader::Release()
 {
 	for (int i = 0; i < m_CountShader; ++i)
 	{	
@@ -883,7 +875,7 @@ HRESULT CSky::InitialSky()
 	return S_OK;
 }
 
-CSky::~CSky()
+void CSky::Release()
 {
 	if ( m_pBufIndexSky != NULL )
 		m_pBufIndexSky -> Release();
