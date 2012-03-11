@@ -240,9 +240,41 @@ POINT PickObject()
 				NumObject[0].y = NumObject[i].y;
 			}
 		}
-	}
+	}	
+return NumObject[0];
+}
+
+int GameOver()
+{
+	if ( ( ( g_Cell[0][0].Value == 1 ) && ( g_Cell[1][0].Value == 1 ) && ( g_Cell[2][0].Value == 1 ) ) ||
+		( ( g_Cell[0][1].Value == 1 ) && ( g_Cell[1][1].Value == 1 ) && ( g_Cell[2][1].Value == 1 ) ) ||
+		( ( g_Cell[0][2].Value == 1 ) && ( g_Cell[1][2].Value == 1 ) && ( g_Cell[2][2].Value == 1 ) ) ||
+		( ( g_Cell[0][0].Value == 1 ) && ( g_Cell[0][1].Value == 1 ) && ( g_Cell[0][2].Value == 1 ) ) ||
+		( ( g_Cell[1][0].Value == 1 ) && ( g_Cell[1][1].Value == 1 ) && ( g_Cell[1][2].Value == 1 ) ) ||
+		( ( g_Cell[2][0].Value == 1 ) && ( g_Cell[2][1].Value == 1 ) && ( g_Cell[2][2].Value == 1 ) ) ||
+		( ( g_Cell[0][0].Value == 1 ) && ( g_Cell[1][1].Value == 1 ) && ( g_Cell[2][2].Value == 1 ) ) ||
+		( ( g_Cell[2][0].Value == 1 ) && ( g_Cell[1][1].Value == 1 ) && ( g_Cell[0][2].Value == 1 ) ) )
+		return 1;
 	
-	return NumObject[0];
+	if ( ( ( g_Cell[0][0].Value == 0 ) && ( g_Cell[1][0].Value == 0 ) && ( g_Cell[2][0].Value == 0 ) ) ||
+		( ( g_Cell[0][1].Value == 0 ) && ( g_Cell[1][1].Value == 0 ) && ( g_Cell[2][1].Value == 0 ) ) ||
+		( ( g_Cell[0][2].Value == 0 ) && ( g_Cell[1][2].Value == 0 ) && ( g_Cell[2][2].Value == 0 ) ) ||
+		( ( g_Cell[0][0].Value == 0 ) && ( g_Cell[0][1].Value == 0 ) && ( g_Cell[0][2].Value == 0 ) ) ||
+		( ( g_Cell[1][0].Value == 0 ) && ( g_Cell[1][1].Value == 0 ) && ( g_Cell[1][2].Value == 0 ) ) ||
+		( ( g_Cell[2][0].Value == 0 ) && ( g_Cell[2][1].Value == 0 ) && ( g_Cell[2][2].Value == 0 ) ) ||
+		( ( g_Cell[0][0].Value == 0 ) && ( g_Cell[1][1].Value == 0 ) && ( g_Cell[2][2].Value == 0 ) ) ||
+		( ( g_Cell[2][0].Value == 0 ) && ( g_Cell[1][1].Value == 0 ) && ( g_Cell[0][2].Value == 0 ) ) )
+		return 2;
+	
+	int t = 0;
+	for (int y = 0; y < 3; ++y)
+		for (int x = 0; x < 3; ++x) 
+			if ( g_Cell[x][y].Value == 10 ) 
+				++t;
+	if ( t == 0 )
+		return 3;
+			
+	return -1;
 }
 
 void RenderingDirect3D()
@@ -353,76 +385,39 @@ void RenderingDirect3D()
 		}
 		sprintf(str, "%f                %d", Angle, P.y);		
 		//DrawMyText(g_pD3DDevice, str, 10, 10, 500, 700, D3DCOLOR_ARGB(250, 250, 250,50));	
+		switch ( GameOver() )
+		{
+		case 1:
+			D3DXMatrixTranslation( &MatrixWorld, 0, 0, -7 );		
+			g_MeshWin.SetMatrixWorld( MatrixWorld );
+			g_MeshWin.SetMatrixView( Camera.m_View );
+			g_MeshWin.SetMatrixProjection( Camera.m_Proj );
+			g_MeshWin.m_Alpha = 1.0f;
+			g_MeshWin.DrawMyMesh();
+			break;
+		case 2:
+			D3DXMatrixTranslation( &MatrixWorld, 0, 0, -7 );		
+			g_MeshLost.SetMatrixWorld( MatrixWorld );
+			g_MeshLost.SetMatrixView( Camera.m_View );
+			g_MeshLost.SetMatrixProjection( Camera.m_Proj );
+			g_MeshLost.m_Alpha = 1.0f;
+			g_MeshLost.DrawMyMesh();
+			break;
+		case 3:
+			D3DXMatrixTranslation( &MatrixWorld, 0, 0, -7 );		
+			g_MeshStalemate.SetMatrixWorld( MatrixWorld );
+			g_MeshStalemate.SetMatrixView( Camera.m_View );
+			g_MeshStalemate.SetMatrixProjection( Camera.m_Proj );
+			g_MeshStalemate.m_Alpha = 1.0f;
+			g_MeshStalemate.DrawMyMesh();
+			break;
+		}
 
 	g_pD3DDevice -> EndScene();
 	g_pD3DDevice -> Present(NULL, NULL, NULL, NULL); // вывод содержимого заднего буфера в окно
 }
 
-int GameOver()
-{
-	if ( ( ( g_Cell[0][0].Value == 1 ) && ( g_Cell[1][0].Value == 1 ) && ( g_Cell[2][0].Value == 1 ) ) ||
-		 ( ( g_Cell[0][1].Value == 1 ) && ( g_Cell[1][1].Value == 1 ) && ( g_Cell[2][1].Value == 1 ) ) ||
-		 ( ( g_Cell[0][2].Value == 1 ) && ( g_Cell[1][2].Value == 1 ) && ( g_Cell[2][2].Value == 1 ) ) ||
-		 ( ( g_Cell[0][0].Value == 1 ) && ( g_Cell[0][1].Value == 1 ) && ( g_Cell[0][2].Value == 1 ) ) ||
-		 ( ( g_Cell[1][0].Value == 1 ) && ( g_Cell[1][1].Value == 1 ) && ( g_Cell[1][2].Value == 1 ) ) ||
-		 ( ( g_Cell[2][0].Value == 1 ) && ( g_Cell[2][1].Value == 1 ) && ( g_Cell[2][2].Value == 1 ) ) ||
-		 ( ( g_Cell[0][0].Value == 1 ) && ( g_Cell[1][1].Value == 1 ) && ( g_Cell[2][2].Value == 1 ) ) ||
-		 ( ( g_Cell[2][0].Value == 1 ) && ( g_Cell[1][1].Value == 1 ) && ( g_Cell[0][2].Value == 1 ) ) )
-	{
-		g_pD3DDevice -> BeginScene(); // начало рендеринга
-		D3DXMATRIX MatrixWorld;
-		D3DXMatrixTranslation( &MatrixWorld, 0, 0, -7 );		
-		g_MeshWin.SetMatrixWorld( MatrixWorld );
-		g_MeshWin.SetMatrixView( Camera.m_View );
-		g_MeshWin.SetMatrixProjection( Camera.m_Proj );
-		g_MeshWin.m_Alpha = 1.0f;
-		g_MeshWin.DrawMyMesh();
-		g_pD3DDevice -> EndScene();
-		g_pD3DDevice -> Present(NULL, NULL, NULL, NULL); // вывод содержимого заднего буфера в окно		
-		return 1;
-	}
-	if ( ( ( g_Cell[0][0].Value == 0 ) && ( g_Cell[1][0].Value == 0 ) && ( g_Cell[2][0].Value == 0 ) ) ||
-         ( ( g_Cell[0][1].Value == 0 ) && ( g_Cell[1][1].Value == 0 ) && ( g_Cell[2][1].Value == 0 ) ) ||
-		 ( ( g_Cell[0][2].Value == 0 ) && ( g_Cell[1][2].Value == 0 ) && ( g_Cell[2][2].Value == 0 ) ) ||
-		 ( ( g_Cell[0][0].Value == 0 ) && ( g_Cell[0][1].Value == 0 ) && ( g_Cell[0][2].Value == 0 ) ) ||
-		 ( ( g_Cell[1][0].Value == 0 ) && ( g_Cell[1][1].Value == 0 ) && ( g_Cell[1][2].Value == 0 ) ) ||
-		 ( ( g_Cell[2][0].Value == 0 ) && ( g_Cell[2][1].Value == 0 ) && ( g_Cell[2][2].Value == 0 ) ) ||
-		 ( ( g_Cell[0][0].Value == 0 ) && ( g_Cell[1][1].Value == 0 ) && ( g_Cell[2][2].Value == 0 ) ) ||
-		 ( ( g_Cell[2][0].Value == 0 ) && ( g_Cell[1][1].Value == 0 ) && ( g_Cell[0][2].Value == 0 ) ) )
-	{
-		g_pD3DDevice -> BeginScene(); // начало рендеринга
-		D3DXMATRIX MatrixWorld;
-		D3DXMatrixTranslation( &MatrixWorld, 0, 0, -7 );		
-		g_MeshLost.SetMatrixWorld( MatrixWorld );
-		g_MeshLost.SetMatrixView( Camera.m_View );
-		g_MeshLost.SetMatrixProjection( Camera.m_Proj );
-		g_MeshLost.m_Alpha = 1.0f;
-		g_MeshLost.DrawMyMesh();
-		g_pD3DDevice -> EndScene();
-		g_pD3DDevice -> Present(NULL, NULL, NULL, NULL); // вывод содержимого заднего буфера в окно		
-		return 2;
-	}
-	int t = 0;
-	for (int y = 0; y < 3; ++y)
-		for (int x = 0; x < 3; ++x) 
-			if ( g_Cell[x][y].Value == 10 ) 
-				++t;
-	if ( t == 0 )
-	{
-		g_pD3DDevice -> BeginScene(); // начало рендеринга
-		D3DXMATRIX MatrixWorld;
-		D3DXMatrixTranslation( &MatrixWorld, 0, 0, -7 );		
-		g_MeshStalemate.SetMatrixWorld( MatrixWorld );
-		g_MeshStalemate.SetMatrixView( Camera.m_View );
-		g_MeshStalemate.SetMatrixProjection( Camera.m_Proj );
-		g_MeshStalemate.m_Alpha = 1.0f;
-		g_MeshStalemate.DrawMyMesh();
-		g_pD3DDevice -> EndScene();
-		g_pD3DDevice -> Present(NULL, NULL, NULL, NULL); // вывод содержимого заднего буфера в окно		
-		return 3;
-	}		
-return -1;
-}
+
 
 
 void CheckPC()
@@ -544,8 +539,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 				//sprintf(str, "FPS=%d", g_fps.Fps());
 				//SetWindowText(hwnd,str);
 				g_DeviceInput.ScanInput();
-				if ( GameOver() < 0)
-					RenderingDirect3D();
+				
+				RenderingDirect3D();
+				GameOver();
 				if ( PeekMessage( &msg, NULL, 0, 0, PM_REMOVE ) )
 				{
 					TranslateMessage( &msg );
