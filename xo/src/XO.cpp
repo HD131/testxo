@@ -1,89 +1,21 @@
+#pragma once
+#include "D3DDevice.h"
 #include "CameraDevice.h"
+#include "InputDevice.h"
 
-extern "C"
-{
-#include "lua/lua.h"
-#include "lua/lualib.h"
-#include "lua/lauxlib.h"
-}
 
 
 using namespace std;
-
-IDirect3DDevice9	   *g_pD3DDevice  = NULL; //Наше устройство
-IDirect3DCubeTexture9  *CubeTexture   = NULL;
-IDirect3DTexture9      *pTextura001   = NULL;
+extern IDirect3DDevice9	   *g_pD3DDevice;
+extern CCell                g_Cell[3][3];
 
 enum         NameShader { Sky , Diffuse };
+
 bool         g_Exit = false;
-FILE        *g_FileLog = NULL;
 D3DXVECTOR4  Light( 0.0f, 1.0f, -1.0f, 1.0f );
 bool         g_Wireframe = false;
 FLOAT        Diffuse_intensity = 1.0f;
-CameraDevice Camera;
 
-struct CCell
-{
-	float       Radius;
-	D3DXVECTOR3 Centr;	
-	int         Value;
-	CCell()
-	{		
-		Value  = 10;
-		Radius = 5.0f;			
-		Centr  = D3DXVECTOR3( 0, 0, 0 );			
-	}
-	void SetCenter( float x, float y, float z)
-	{
-		D3DXMATRIX MatrixWorld;
-		D3DXMatrixTranslation( &MatrixWorld, 0, 0, 0 );
-		Centr = D3DXVECTOR3( x, y, z );
-		D3DXVec3TransformNormal( &Centr, &Centr, &MatrixWorld );
-	}
-};
-
-struct CVertexFVF
-{
-	FLOAT X,   Y,  Z;
-	FLOAT nx, ny, nz;
-	FLOAT tu, tv;
-};
-
-struct CMouseState
-{
-	LONG     lX;
-	LONG     lY;
-	LONG     lZ;
-	BYTE     rgbButtons[8];
-	CMouseState()
-	{
-		lX = 0;
-		lY = 0;
-		lZ = 0;
-	}
-};
-
-struct CLuaScript
-{
-	lua_State    *m_luaVM;
-	void         *m_FileBuffer;
-	unsigned int  m_FileSize;
-	bool          lua_dobuffer( lua_State* Lua, void const* Buffer, int Size );
-	CLuaScript();
-	~CLuaScript();
-};
-
-class CD3DDevice
-{
-public:
-	IDirect3D9			   *m_pDirect3D; // указатель на Главный интерфейс отвечающий за Direct3D
-	IDirect3DTexture9      *pTextura002;
-	IDirect3DTexture9      *m_pTexturaSky;
-	IDirect3DTexture9	   *m_Texture;
-	HRESULT                 IntialDirect3D(HWND hwnd);	
-	HRESULT				    LoadTexture();
-	void				    Release();
-};
 
 struct CShader
 {
@@ -93,18 +25,6 @@ struct CShader
 	ID3DXConstantTable     *pConstTablePS[3];
 	int						m_CountShader;
 	HRESULT                 InitialShader();
-	void					Release();
-};
-
-class CInputDevice
-{
-public:
-	LPDIRECTINPUT8			pInput;
-	LPDIRECTINPUTDEVICE8    pKeyboard;
-	LPDIRECTINPUTDEVICE8    pMouse;
-	CMouseState             mouse;	
-	HRESULT                 InitialInput(HWND hwnd);
-	bool                    ScanInput();
 	void					Release();
 };
 
@@ -127,7 +47,7 @@ public:
 	IDirect3DIndexBuffer9  *m_IndexBuffer;
 	DWORD 					m_SizeFVF;
 	float                   m_Alpha;
-	HRESULT                 InitialMesh( LPCSTR Name );
+	HRESULT                 InitialMesh( LPCSTR Name, FILE *m_FileLog );
 	void					Release();
 	void                    DrawMyMesh();
 	void					SetMatrixWorld( D3DXMATRIX  Matrix );
@@ -141,8 +61,6 @@ private:
 
 
 CD3DDevice   g_DeviceD3D;
-CLuaScript   g_Lua;
-CCell        g_Cell[3][3];
 CShader      g_Shader;
 CInputDevice g_DeviceInput;
 CSky         g_Sky;
@@ -152,6 +70,7 @@ CMesh3D      g_MeshO;
 CMesh3D		 g_MeshWin;
 CMesh3D		 g_MeshLost;
 CMesh3D      g_MeshStalemate;
+CameraDevice g_Camera;
 
 void DrawMyText(IDirect3DDevice9 *g_pD3DDevice, char* StrokaTexta, int x, int y, int x1, int y1, D3DCOLOR MyColor)
 {
@@ -184,13 +103,13 @@ POINT PickObject()
 	int y = Point.y - ClientRec.top;
 	g_pD3DDevice->GetViewport( &ViewPort );
 
-	px = (  2.0f * x / ViewPort.Width  - 1.0f) / Camera.m_Proj._11;
-	py = ( -2.0f * y / ViewPort.Height + 1.0f) / Camera.m_Proj._22;	
+	px = (  2.0f * x / ViewPort.Width  - 1.0f) / g_Camera.m_Proj._11;
+	py = ( -2.0f * y / ViewPort.Height + 1.0f) / g_Camera.m_Proj._22;	
 
 	D3DXVECTOR3 Direction = D3DXVECTOR3( px, py, 1.0f );
 
 	D3DXMATRIX MatV;
-	D3DXMatrixInverse( &MatV, NULL, &Camera.m_View ); 
+	D3DXMatrixInverse( &MatV, NULL, &g_Camera.m_View ); 
 	D3DXVECTOR3 PosView = D3DXVECTOR3( MatV._41, MatV._42, MatV._43 ); //   извлечь координаты камеры из матрицы вида	
 	D3DXVec3TransformNormal( &Direction, &Direction, &MatV );
 	D3DXVec3Normalize( &Direction, &Direction );
@@ -294,8 +213,8 @@ void RenderingDirect3D()
 	//UINT  Time  = timeGetTime()  9000;
 	FLOAT Angle = timeGetTime() / 2000.0f;
 
-	MatrixView       = Camera.m_View;
-	MatrixProjection = Camera.m_Proj;
+	MatrixView       = g_Camera.m_View;
+	MatrixProjection = g_Camera.m_Proj;
 
 	if ( g_pD3DDevice == NULL )
 		return;
@@ -322,7 +241,7 @@ void RenderingDirect3D()
 	g_pD3DDevice -> SetStreamSource(0, g_Sky.m_pVerBufSky, 0, sizeof( CVertexFVF ) ); // связь буфера вершин с потоком данных
 	g_pD3DDevice -> SetFVF( D3DFVF_CUSTOMVERTEX ); // устанавливается формат вершин
 	g_pD3DDevice -> SetIndices( g_Sky.m_pBufIndexSky );
-	g_pD3DDevice -> SetTexture( 0, CubeTexture );
+	g_pD3DDevice -> SetTexture( 0, g_DeviceD3D.m_CubeTexture );
 	// устанавливаем шейдеры
 	g_pD3DDevice -> SetVertexShader( g_Shader.pVertexShader[Sky] );
 	g_pD3DDevice -> SetPixelShader(  g_Shader.pPixelShader [Sky] );
@@ -392,24 +311,24 @@ void RenderingDirect3D()
 		case 1:
 			D3DXMatrixTranslation( &MatrixWorld, 0, 0, -7 );		
 			g_MeshWin.SetMatrixWorld( MatrixWorld );
-			g_MeshWin.SetMatrixView( Camera.m_View );
-			g_MeshWin.SetMatrixProjection( Camera.m_Proj );
+			g_MeshWin.SetMatrixView( g_Camera.m_View );
+			g_MeshWin.SetMatrixProjection( g_Camera.m_Proj );
 			g_MeshWin.m_Alpha = 1.0f;
 			g_MeshWin.DrawMyMesh();
 			break;
 		case 2:
 			D3DXMatrixTranslation( &MatrixWorld, 0, 0, -7 );		
 			g_MeshLost.SetMatrixWorld( MatrixWorld );
-			g_MeshLost.SetMatrixView( Camera.m_View );
-			g_MeshLost.SetMatrixProjection( Camera.m_Proj );
+			g_MeshLost.SetMatrixView( g_Camera.m_View );
+			g_MeshLost.SetMatrixProjection( g_Camera.m_Proj );
 			g_MeshLost.m_Alpha = 1.0f;
 			g_MeshLost.DrawMyMesh();
 			break;
 		case 3:
 			D3DXMatrixTranslation( &MatrixWorld, 0, 0, -7 );		
 			g_MeshStalemate.SetMatrixWorld( MatrixWorld );
-			g_MeshStalemate.SetMatrixView( Camera.m_View );
-			g_MeshStalemate.SetMatrixProjection( Camera.m_Proj );
+			g_MeshStalemate.SetMatrixView( g_Camera.m_View );
+			g_MeshStalemate.SetMatrixProjection( g_Camera.m_Proj );
 			g_MeshStalemate.m_Alpha = 1.0f;
 			g_MeshStalemate.DrawMyMesh();
 			break;
@@ -419,35 +338,31 @@ void RenderingDirect3D()
 		g_pD3DDevice -> Present(NULL, NULL, NULL, NULL); // вывод содержимого заднего буфера в окно
 }
 
-
-
-
-void CheckPC()
+void CheckPC( lua_State *m_luaVM, bool *Check )
 {
 	Beep(150, 50); 
-	lua_getglobal( g_Lua.m_luaVM, "IO" );
+	lua_getglobal( m_luaVM, "IO" );
 
-	lua_newtable( g_Lua.m_luaVM );//создать таблицу, поместить ее на вершину стэка
+	lua_newtable( m_luaVM );//создать таблицу, поместить ее на вершину стэка
 	for (int y = 0; y < 3; ++y)
 		for (int x = 0; x < 3; ++x) 
 		{
-			lua_pushnumber( g_Lua.m_luaVM,  y * 3 + x + 1 );               //кладем в стэк число (key)
-			lua_pushnumber( g_Lua.m_luaVM,  g_Cell[x][y].Value );//добавляем значение ключа (value)
-			lua_settable  ( g_Lua.m_luaVM, -3 );              //добавить к таблице пару ключ-значение: table[key] = value		
+			lua_pushnumber( m_luaVM,  y * 3 + x + 1 );               //кладем в стэк число (key)
+			lua_pushnumber( m_luaVM,  g_Cell[x][y].Value );//добавляем значение ключа (value)
+			lua_settable  ( m_luaVM, -3 );              //добавить к таблице пару ключ-значение: table[key] = value		
 		}
-		if ( lua_pcall( g_Lua.m_luaVM, 1, 2, 0 ) )
+		if ( lua_pcall( m_luaVM, 1, 2, 0 ) )
 		{
-			if ( g_FileLog ) 
-				fprintf( g_FileLog, lua_tostring( g_Lua.m_luaVM, -1 ) );
-			lua_pop( g_Lua.m_luaVM, 1 );
+			//if ( m_FileLog ) 				fprintf( m_FileLog, lua_tostring( m_luaVM, -1 ) );
+			lua_pop( m_luaVM, 1 );
 		}	
-		int y = lua_tonumber( g_Lua.m_luaVM, -1 );
-		int x = lua_tonumber( g_Lua.m_luaVM, -2 );
-		if ( g_FileLog ) 
-			fprintf( g_FileLog, "x=%d  y=%d\n", x, y );
+		int y = lua_tonumber( m_luaVM, -1 );
+		int x = lua_tonumber( m_luaVM, -2 );
+		
 
 		if ( g_Cell[x][y].Value == 10 )
 			g_Cell[x][y].Value = 0;
+		*Check = false;
 		RenderingDirect3D();
 }
 
@@ -502,9 +417,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	WNDCLASS	 w;	
 	CFps         g_fps;
 	D3DVIEWPORT9 vp;
+	bool         Check = false;
 	// Запись лога в файл 
-	g_FileLog = fopen( "log.txt", "w" );
-
+	FILE *g_FileLog = fopen( "log.txt", "w" );
+	CLuaScript   g_Lua( g_FileLog );
 	memset(&w,0,sizeof(WNDCLASS));
 	w.style         = CS_HREDRAW | CS_VREDRAW;
 	w.lpfnWndProc   = WndProc;
@@ -513,7 +429,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	w.lpszClassName = "My Class";
 	w.hIcon         = LoadIcon(NULL,IDI_QUESTION);//стандартная иконка приложения Win API 	
 	RegisterClass(&w);
-	hwnd = CreateWindow( "My Class", "Тест", WS_SYSMENU | WS_MINIMIZEBOX,
+	hwnd = CreateWindow( "My Class", "Крестики-нолики", WS_SYSMENU | WS_MINIMIZEBOX,
 		250, 150, Width+6, Height+28, NULL, NULL, hInstance, NULL );	
 	char str[8];
 	//memset(Field,0,sizeof(int)*9);
@@ -523,20 +439,20 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 		for (int x = 0; x < 3; ++x)
 			g_Cell[x][y].SetCenter( x * 16 - 16, 16 - y * 16, 0 );		
 	//g_Cell[2][0].Value = 0;
-	if ( SUCCEEDED(g_DeviceD3D.IntialDirect3D(hwnd) ) )
+	if ( SUCCEEDED(g_DeviceD3D.IntialDirect3D( hwnd, g_FileLog) ) )
 	{	
-		if ( SUCCEEDED( g_DeviceD3D.LoadTexture() ) )
+		if ( SUCCEEDED( g_DeviceD3D.LoadTexture( g_FileLog ) ) )
 		{			
 			ShowWindow(hwnd,nCmdShow);
 			ZeroMemory(&msg, sizeof(msg));
-			g_MeshS.InitialMesh("model//Setka.x");
-			g_MeshO.InitialMesh("model//O.x");
-			g_MeshX.InitialMesh("model//X.x");	
-			g_MeshWin.InitialMesh("model//Win.x");	
-			g_MeshLost.InitialMesh("model//Lost.x");
-			g_MeshStalemate.InitialMesh("model//Stalemate.x");
+			g_MeshS.InitialMesh("model//Setka.x", g_FileLog);
+			g_MeshO.InitialMesh("model//O.x", g_FileLog);
+			g_MeshX.InitialMesh("model//X.x", g_FileLog);	
+			g_MeshWin.InitialMesh("model//Win.x", g_FileLog);	
+			g_MeshLost.InitialMesh("model//Lost.x", g_FileLog);
+			g_MeshStalemate.InitialMesh("model//Stalemate.x", g_FileLog);
 			g_Sky.InitialSky();
-			g_DeviceInput.InitialInput(hwnd);					
+			g_DeviceInput.InitialInput( hwnd, g_FileLog );					
 			g_Shader.InitialShader();
 			g_fps.m_last_tick = GetTickCount();
 			while( !g_Exit )
@@ -544,8 +460,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 				g_pD3DDevice -> GetViewport(&vp);
 				//sprintf(str, "FPS=%d", g_fps.Fps());
 				//SetWindowText(hwnd,str);
-				g_DeviceInput.ScanInput();
-
+				g_DeviceInput.ScanInput( &g_Camera, &Check );
+				if ( Check )
+					CheckPC( g_Lua.m_luaVM , &Check);
 				RenderingDirect3D();
 				GameOver();
 				if ( PeekMessage( &msg, NULL, 0, 0, PM_REMOVE ) )
@@ -566,263 +483,13 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	g_Sky.Release(); 
 	g_DeviceInput.Release();
 	g_DeviceD3D.Release();
+	if ( g_FileLog )
+		fclose( g_FileLog );
 	return 0;
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------
 
-
-HRESULT CInputDevice::InitialInput(HWND hwnd)
-{	
-	pInput    = NULL;
-	pKeyboard = NULL;
-	pMouse    = NULL;
-	DIPROPDWORD dipdw;
-	dipdw.diph.dwSize		= sizeof( DIPROPDWORD );
-	dipdw.diph.dwHeaderSize	= sizeof( DIPROPHEADER );
-	dipdw.diph.dwObj		= 0;
-	dipdw.diph.dwHow		= DIPH_DEVICE;
-	dipdw.dwData			= 32;
-	if (FAILED(DirectInput8Create(GetModuleHandle(0), DIRECTINPUT_VERSION, IID_IDirectInput8, (void**)&pInput, NULL)))
-		return E_FAIL;
-	if ( g_FileLog ) 
-		fprintf( g_FileLog, "Initial DirectInput8\n" );
-
-	if FAILED(pInput -> CreateDevice(GUID_SysKeyboard, &pKeyboard, NULL)) //создание устройства клавиатура
-		return E_FAIL;
-	if FAILED(pKeyboard -> SetDataFormat(&c_dfDIKeyboard))
-		return E_FAIL;
-	if FAILED(pKeyboard -> SetCooperativeLevel(hwnd, DISCL_FOREGROUND | DISCL_NONEXCLUSIVE))
-		return E_FAIL;
-	if( FAILED(pKeyboard->SetProperty( DIPROP_BUFFERSIZE, &dipdw.diph ) ) )
-		return E_FAIL;
-	if FAILED(pKeyboard -> Acquire())
-		return E_FAIL;
-
-	if FAILED(pInput -> CreateDevice(GUID_SysMouse, &pMouse, NULL)) // создание устройства мышь
-		return E_FAIL;	
-	if FAILED(pMouse -> SetDataFormat(&c_dfDIMouse2))
-		return E_FAIL;	
-	if FAILED(pMouse -> SetCooperativeLevel(hwnd, DISCL_FOREGROUND | DISCL_NONEXCLUSIVE))
-		return E_FAIL;	
-	if FAILED(pMouse -> Acquire())
-		return E_FAIL;
-
-	return S_OK;
-}
-
-bool CInputDevice::ScanInput()
-{	
-	char     keyboard[256];     
-	LONG     dx, dy, dz;
-
-	if FAILED( pKeyboard -> GetDeviceState(sizeof(keyboard), (LPVOID)&keyboard) )
-	{
-		pKeyboard -> Acquire();
-		return FALSE;
-	}
-
-	if ( KEYDOWN(keyboard, DIK_RIGHT) || KEYDOWN(keyboard, DIK_D))
-		Camera.MoveRight();
-	if ( KEYDOWN(keyboard, DIK_LEFT) || KEYDOWN(keyboard, DIK_A))
-		Camera.MoveLeft();
-	if ( KEYDOWN(keyboard, DIK_UP) || KEYDOWN(keyboard, DIK_W))     
-		Camera.MoveForv();
-	if ( KEYDOWN(keyboard, DIK_DOWN) || KEYDOWN(keyboard, DIK_S))
-		Camera.MoveBack();
-
-	if FAILED( pMouse -> GetDeviceState( sizeof( CMouseState ), (LPVOID)&mouse ) )
-	{
-		pMouse -> Acquire();
-		return FALSE;
-	}
-	dx = mouse.lX;
-	dy = mouse.lY;
-	dz = mouse.lZ;
-
-	if ( mouse.rgbButtons[LEFT_BUTTON]&0x80 )
-	{
-		POINT Point = PickObject();
-		if ( ( Point.x >= 0 ) && ( g_Cell[Point.x][Point.y].Value > 1 ) && ( GameOver() < 0 ) )
-		{
-			g_Cell[Point.x][Point.y].Value = 1;
-			RenderingDirect3D();
-			if ( GameOver() > 0 )
-				return TRUE;
-			CheckPC();
-			GameOver();			
-		}
-	}
-	return TRUE;
-}
-
-void CInputDevice::Release()
-{
-	if (pInput)
-	{
-		if (pKeyboard)
-		{
-			if (pKeyboard != NULL)
-				pKeyboard -> Unacquire();
-			if (pKeyboard != NULL)
-				pKeyboard -> Release();
-			pKeyboard = NULL;
-		}
-		if (pMouse)
-		{
-			if (pMouse != NULL)
-				pMouse -> Unacquire();
-			if (pMouse != NULL)
-				pMouse -> Release();
-			pMouse = NULL;
-		}
-		if (pInput != NULL)
-			pInput -> Release();
-		pInput = NULL;
-	}
-}
-
-bool CLuaScript::lua_dobuffer( lua_State* Lua, void const* Buffer, int Size )
-{
-	if ( !Size )
-		return true;
-	if ( luaL_loadbuffer( Lua, (char const*)Buffer, Size, 0 ) )
-	{
-		char const* ErrorMsg = lua_tostring( Lua, -1 );
-		lua_pop( Lua, 1 );
-		if ( g_FileLog ) 
-			fprintf( g_FileLog, "%s\n",ErrorMsg );
-		return false;
-	}
-
-	if ( lua_pcall( Lua, 0, LUA_MULTRET, 0 ) )
-	{
-		char const* ErrorMsg = lua_tostring( Lua, -1 );
-		lua_pop( Lua, 1 );
-		if ( g_FileLog ) 
-			fprintf( g_FileLog, "%s\n", ErrorMsg );
-		return false;
-	}
-	if ( g_FileLog ) 
-		fprintf( g_FileLog, "Initial Script \n" );	
-	return true;
-}
-
-CLuaScript::CLuaScript()
-{
-	m_FileBuffer = 0;
-	m_FileSize   = 0;
-	FILE* const FO = fopen( "CheckComputer.lua", "rb" );
-	if ( FO )
-	{
-		fseek(FO,0,SEEK_END);			// устанавливает указатель на конец файла
-		m_FileSize   = ftell(FO);			// возвращает количество байт от начала до указателя         
-		m_FileBuffer = malloc( m_FileSize );// возвращает указатель на захваченную память размером m_FileSize
-		fseek(FO,0,SEEK_SET);			// устанавливает указатель на начало файла
-		fread( m_FileBuffer, 1, m_FileSize, FO );// читает и записывает в память по 1 байту
-		fclose(FO);
-	}
-	m_luaVM = lua_open();
-	if ( m_luaVM == NULL ) 
-		if ( g_FileLog ) 
-			fprintf( g_FileLog, "Error Initializing lua\n" );
-
-	// инициализация стандартных библиотечных функции lua
-	luaopen_base  ( m_luaVM );
-	luaopen_table ( m_luaVM );
-	luaopen_string( m_luaVM );
-	luaopen_math  ( m_luaVM );
-	luaopen_os    ( m_luaVM );
-
-
-	lua_dobuffer( m_luaVM, m_FileBuffer, m_FileSize );
-}
-
-CLuaScript::~CLuaScript()
-{
-
-	free( m_FileBuffer );
-	lua_close( m_luaVM );
-}
-
-HRESULT CD3DDevice::IntialDirect3D( HWND hwnd )
-{
-	m_pDirect3D  = NULL;
-	g_pD3DDevice = NULL;
-	D3DPRESENT_PARAMETERS Direct3DParametr; // структура задающая парметры рендеринга 
-	D3DDISPLAYMODE        Display; // возвращает параметры дисплея
-
-	if ( ( m_pDirect3D = Direct3DCreate9( D3D_SDK_VERSION ) ) == NULL ) // создаётся главный интерфейс
-		return E_FAIL;	
-	if ( g_FileLog ) 
-		fprintf( g_FileLog, "Initial Direct3D\n" );
-	if ( FAILED( m_pDirect3D -> GetAdapterDisplayMode( D3DADAPTER_DEFAULT, &Display ) ) ) // получаем текущий формат дисплея
-		return E_FAIL;
-
-	ZeroMemory( &Direct3DParametr, sizeof( Direct3DParametr ) );
-	Direct3DParametr.Windowed               = TRUE;					 // видео режим окно (или полноэкранный режим)
-	Direct3DParametr.SwapEffect             = D3DSWAPEFFECT_DISCARD; // определяет обмен буферов
-	Direct3DParametr.BackBufferFormat       = Display.Format;		 // формат поверхности заднего буфера
-	Direct3DParametr.EnableAutoDepthStencil = TRUE;					 // включаем Z-буфер
-	Direct3DParametr.AutoDepthStencilFormat = D3DFMT_D16;
-	Direct3DParametr.PresentationInterval	= D3DPRESENT_INTERVAL_DEFAULT; // 60fps
-	//Direct3DParametr.PresentationInterval	= D3DPRESENT_INTERVAL_IMMEDIATE; //максимальное fps
-	/*/---------------------------полноэкранный режим--------------------
-	Direct3DParametr.BackBufferWidth  = GetSystemMetrics(SM_CXSCREEN);
-	Direct3DParametr.BackBufferHeight = GetSystemMetrics(SM_CYSCREEN);
-	Direct3DParametr.BackBufferCount  = 3;
-	Direct3DParametr.FullScreen_RefreshRateInHz = Display.RefreshRate;
-	//------------------------------------------------------------------*/
-	if ( FAILED( m_pDirect3D -> CreateDevice( D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, hwnd, D3DCREATE_HARDWARE_VERTEXPROCESSING,
-		&Direct3DParametr, &g_pD3DDevice ) ) ) // создаётся интерфейс устройства
-		return E_FAIL;
-	if ( g_FileLog ) 
-		fprintf( g_FileLog, "Initial CreateDevice Direct3D\n" );
-	g_pD3DDevice -> SetRenderState( D3DRS_CULLMODE, D3DCULL_CCW );				//  режим отсечения включено и происходит по часовой стрелке
-	g_pD3DDevice -> SetRenderState( D3DRS_LIGHTING, FALSE );					// запрещается работа со светом
-	g_pD3DDevice -> SetRenderState( D3DRS_ZENABLE, D3DZB_TRUE );				// разрешает использовать Z-буфер
-	g_pD3DDevice -> SetRenderState( D3DRS_ALPHABLENDENABLE, TRUE );            // включает альфа-канал
-	g_pD3DDevice -> SetRenderState( D3DRS_SRCBLEND,  D3DBLEND_SRCALPHA );
-	g_pD3DDevice -> SetRenderState( D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA );
-	g_pD3DDevice -> SetRenderState( D3DRS_AMBIENT, 0xffffffff );
-	g_pD3DDevice -> SetSamplerState( 0, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR ); // фильтрация текстуры для плавности перехода
-
-	return S_OK;
-}
-
-HRESULT	CD3DDevice::LoadTexture()
-{
-	pTextura001   = NULL;
-	pTextura002   = NULL;
-	m_pTexturaSky = NULL;
-	m_Texture     = NULL;
-	CubeTexture   = NULL;
-
-	if ( FAILED( D3DXCreateCubeTextureFromFileEx( g_pD3DDevice, "model//sky_cube_mipmap.dds", D3DX_DEFAULT, D3DX_FROM_FILE, 0, D3DFMT_UNKNOWN, D3DPOOL_DEFAULT, D3DX_FILTER_NONE, D3DX_FILTER_NONE, 0, 0, 0, &CubeTexture )))
-		if ( g_FileLog ) 
-			fprintf( g_FileLog, "error load sky texture\n" );
-	return S_OK;
-}
-
-void CD3DDevice::Release()
-{
-	if ( CubeTexture != NULL )
-		CubeTexture -> Release();
-	if ( m_pTexturaSky != NULL )
-		m_pTexturaSky -> Release();	
-	if ( m_Texture   != NULL )
-		m_Texture   -> Release();	
-	if ( pTextura002 != NULL )
-		pTextura002 -> Release();
-	if ( pTextura001 != NULL )
-		pTextura001 -> Release();
-	if ( g_pD3DDevice != NULL )
-		g_pD3DDevice -> Release();
-	if ( m_pDirect3D != NULL )
-		m_pDirect3D -> Release();
-	if ( g_FileLog )
-		fclose( g_FileLog );
-};
 
 HRESULT CShader::InitialShader()
 {
@@ -935,7 +602,7 @@ void CSky::Release()
 		m_pVerBufSky -> Release();
 }
 
-HRESULT CMesh3D::InitialMesh(LPCSTR Name)
+HRESULT CMesh3D::InitialMesh(LPCSTR Name, FILE *m_FileLog )
 {
 	m_pMesh         = NULL;
 	m_pMeshMaterial = NULL;
@@ -947,8 +614,8 @@ HRESULT CMesh3D::InitialMesh(LPCSTR Name)
 	{
 		if ( m_pMesh == NULL )
 		{		
-			if ( g_FileLog ) 
-				fprintf( g_FileLog, "error load x file '%s'\n", Name );
+			if ( m_FileLog ) 
+				fprintf( m_FileLog, "error load x file '%s'\n", Name );
 			return E_FAIL;
 		}
 	}
@@ -976,7 +643,7 @@ HRESULT CMesh3D::InitialMesh(LPCSTR Name)
 		string FileName = string( "model//" ) + string( D3DXMeshMaterial[i].pTextureFilename );
 		if ( FAILED( D3DXCreateTextureFromFile( g_pD3DDevice, FileName.c_str(), &m_pMeshTextura[i] )))
 		{
-			fprintf( g_FileLog, "error load texture '%s'\n", D3DXMeshMaterial[i].pTextureFilename );
+			fprintf( m_FileLog, "error load texture '%s'\n", D3DXMeshMaterial[i].pTextureFilename );
 			m_pMeshTextura[i] = NULL;
 		}
 	}
