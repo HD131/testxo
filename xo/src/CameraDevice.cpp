@@ -1,3 +1,4 @@
+#pragma once
 #include "CameraDevice.h"
 
 CameraDevice::CameraDevice()

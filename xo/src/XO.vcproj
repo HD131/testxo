@@ -417,6 +417,22 @@
 			>
 		</File>
 		<File
+			RelativePath=".\D3DDevice.h"
+			>
+		</File>
+		<File
+			RelativePath=".\D3DDivece.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\InputDevice.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\InputDevice.h"
+			>
+		</File>
+		<File
 			RelativePath=".\XO.cpp"
 			>
 		</File>
