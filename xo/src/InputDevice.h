@@ -7,7 +7,7 @@ struct CMouseState
 	LONG     m_lY;
 	LONG     m_lZ;
 	BYTE     m_rgbButtons[8];
-	CMouseState():m_lX(0),m_lY(0), m_lZ(0)
+	CMouseState():m_lX(0), m_lY(0), m_lZ(0)
 	{	}	
 };
 

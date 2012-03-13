@@ -118,8 +118,6 @@ void CD3DDevice::Release()
 	}
 	if ( m_CubeTexture )
 		m_CubeTexture -> Release();
-	if ( m_pTexturaSky )
-		m_pTexturaSky -> Release();	
 	if ( g_pD3DDevice )
 		g_pD3DDevice -> Release();
 	if ( m_pDirect3D )
