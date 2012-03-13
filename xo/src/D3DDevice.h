@@ -26,9 +26,7 @@ extern "C"
 
 const UINT Width  = 1024;
 const UINT Height = 768;
-enum  NameShader { Sky       = 0,  
-                   Diffuse   = 1,
-				   MaxShader = 2};
+enum  NameShader { Sky , Diffuse, MaxShader };
 
 #define LEFT_BUTTON   0
 #define RIGHT_BUTTON  1
