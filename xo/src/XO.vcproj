@@ -417,11 +417,11 @@
 			>
 		</File>
 		<File
-			RelativePath=".\D3DDevice.h"
+			RelativePath=".\D3DDevice.cpp"
 			>
 		</File>
 		<File
-			RelativePath=".\D3DDivece.cpp"
+			RelativePath=".\D3DDevice.h"
 			>
 		</File>
 		<File

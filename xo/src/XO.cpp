@@ -10,7 +10,7 @@ extern IDirect3DDevice9* g_pD3DDevice;
 
 D3DXVECTOR4  Light( 0.0f, 1.0f, -1.0f, 1.0f );
 bool         g_Wireframe = false;
-FLOAT        Diffuse_intensity = 1.0f;
+float        Diffuse_intensity = 1.0f;
 
 
 struct CSky
@@ -77,8 +77,6 @@ void DrawMyText( IDirect3DDevice9* g_pD3DDevice, char* StrokaTexta, int x, int y
 POINT PickObject( CCell* Cell )
 {
 	POINT Point;
-	float px = 0.0f;
-	float py = 0.0f;
 	D3DVIEWPORT9 ViewPort;
 	RECT ClientRec;
 
@@ -89,8 +87,8 @@ POINT PickObject( CCell* Cell )
 	int y = Point.y - ClientRec.top;
 	g_pD3DDevice->GetViewport( &ViewPort );
 
-	px = (  2.0f * x / ViewPort.Width  - 1.0f) / g_Camera.m_Proj._11;
-	py = ( -2.0f * y / ViewPort.Height + 1.0f) / g_Camera.m_Proj._22;	
+	float px = (  2.0f * x / ViewPort.Width  - 1.0f) / g_Camera.m_Proj._11;
+	float py = ( -2.0f * y / ViewPort.Height + 1.0f) / g_Camera.m_Proj._22;	
 
 	D3DXVECTOR3 Direction = D3DXVECTOR3( px, py, 1.0f );
 
@@ -181,12 +179,7 @@ int GameOver()
 }
 
 void RenderingDirect3D( CCell* Cell )
-{
-	D3DXMATRIX  MatrixWorld, MatrixWorldX, MatrixWorldY, MatrixWorldZ;
-	D3DXMATRIX  tmp;
-	D3DXMATRIX  MatrixView;
-	D3DXMATRIX  MatrixProjection;
-	char        str[50];
+{	
 	D3DXVECTOR4 Scale( tan( D3DX_PI / 8 * (FLOAT)Height / Width), tan( D3DX_PI / 8 * (FLOAT)Height / Width  ), 1.0f, 1.0f );
 	//----------------------------------------------режим каркаса-------------------------------
 	if ( g_Wireframe )
@@ -196,10 +189,10 @@ void RenderingDirect3D( CCell* Cell )
 	//------------------------------------------------------------------------------------------
 
 	//UINT  Time  = timeGetTime()  9000;
-	FLOAT Angle = timeGetTime() / 2000.0f;
+	float Angle = timeGetTime() / 2000.0f;
 
-	MatrixView       = g_Camera.m_View;
-	MatrixProjection = g_Camera.m_Proj;
+	D3DXMATRIX MatrixView       = g_Camera.m_View;
+	D3DXMATRIX MatrixProjection = g_Camera.m_Proj;
 
 	if ( g_pD3DDevice == 0 )
 		return;
@@ -212,9 +205,9 @@ void RenderingDirect3D( CCell* Cell )
 	g_pD3DDevice -> SetSamplerState( 0, D3DSAMP_ADDRESSU, D3DTADDRESS_CLAMP ); 
 	g_pD3DDevice -> SetSamplerState( 0, D3DSAMP_ADDRESSV, D3DTADDRESS_CLAMP ); 
 	g_pD3DDevice -> SetSamplerState( 0, D3DSAMP_ADDRESSW, D3DTADDRESS_CLAMP ); 
-
+	D3DXMATRIX MatrixWorld;
 	D3DXMatrixTranslation( &MatrixWorld, 1.0f, 1.0f, 1.0f );
-	tmp = MatrixWorld * MatrixView * MatrixProjection;
+	D3DXMATRIX tmp = MatrixWorld * MatrixView * MatrixProjection;
 	if ( g_DeviceD3D.m_pConstTableVS[Sky] )
 	{
 		g_DeviceD3D.m_pConstTableVS[Sky] -> SetMatrix( g_pD3DDevice, "mat_mvp",   &tmp );
@@ -238,7 +231,7 @@ void RenderingDirect3D( CCell* Cell )
 	g_pD3DDevice -> SetSamplerState( 0, D3DSAMP_ADDRESSW, D3DTADDRESS_WRAP );
 	g_pD3DDevice -> SetRenderState(  D3DRS_ZENABLE, true );
 	//------------------------------------------Render Mesh----------------------------------------
-
+	D3DXMATRIX MatrixWorldX,MatrixWorldY;
 	//------------------Setka--------------
 	D3DXMatrixRotationY( &MatrixWorld, 0 );
 	g_MeshS.SetMatrixWorld( MatrixWorld );
@@ -289,8 +282,7 @@ void RenderingDirect3D( CCell* Cell )
 				g_MeshX.DrawMyMesh();
 			}
 		}
-		sprintf(str, "%f                %d", Angle, P.y);		
-		//DrawMyText(g_pD3DDevice, str, 10, 10, 500, 700, D3DCOLOR_ARGB(250, 250, 250,50));	
+		
 		switch ( GameOver() )
 		{
 		case 1:
