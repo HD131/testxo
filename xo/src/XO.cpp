@@ -210,9 +210,9 @@ void RenderingDirect3D( CCell *m_Cell )
 
 	//------------------------------------------Render Sky----------------------------------------
 	g_pD3DDevice -> SetRenderState(  D3DRS_ZENABLE, false );
-	g_pD3DDevice -> SetSamplerState( 0, D3DSAMP_ADDRESSU, D3DTADDRESS_CLAMP ); // фильтрация текстуры для плавности перехода
-	g_pD3DDevice -> SetSamplerState( 0, D3DSAMP_ADDRESSV, D3DTADDRESS_CLAMP ); // фильтрация текстуры для плавности перехода
-	g_pD3DDevice -> SetSamplerState( 0, D3DSAMP_ADDRESSW, D3DTADDRESS_CLAMP ); // фильтрация текстуры для плавности перехода
+	g_pD3DDevice -> SetSamplerState( 0, D3DSAMP_ADDRESSU, D3DTADDRESS_CLAMP ); 
+	g_pD3DDevice -> SetSamplerState( 0, D3DSAMP_ADDRESSV, D3DTADDRESS_CLAMP ); 
+	g_pD3DDevice -> SetSamplerState( 0, D3DSAMP_ADDRESSW, D3DTADDRESS_CLAMP ); 
 
 	D3DXMatrixTranslation( &MatrixWorld, 1.0f, 1.0f, 1.0f );
 	tmp = MatrixWorld * MatrixView * MatrixProjection;
@@ -328,7 +328,6 @@ void CheckPC( lua_State *m_luaVM, bool *Check,CCell *m_Cell )
 {
 	Beep(150, 50); 
 	lua_getglobal( m_luaVM, "IO" );
-
 	lua_newtable( m_luaVM );//создать таблицу, поместить ее на вершину стэка
 	for (int y = 0; y < 3; ++y)
 		for (int x = 0; x < 3; ++x) 
@@ -401,11 +400,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	HWND		 hwnd;
 	MSG			 msg;
 	WNDCLASS	 w;	
-	CFps         g_fps;
-	D3DVIEWPORT9 vp;
+	CFps         g_fps;	
 	bool         Check = false;
-	char         str[8];
-
+	
 	// Запись лога в файл 
 	FILE *g_FileLog = fopen( "log.txt", "w" );
 	CLuaScript   g_Lua( g_FileLog );
@@ -419,39 +416,34 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	w.hIcon         = LoadIcon(NULL,IDI_QUESTION);//стандартная иконка приложения Win API 	
 	RegisterClass(&w);
 	hwnd = CreateWindow( "My Class", "Крестики-нолики", WS_SYSMENU | WS_MINIMIZEBOX,
-		250, 150, Width+6, Height+28, NULL, NULL, hInstance, NULL );	
-	
+						 250, 150, Width+6, Height+28, NULL, NULL, hInstance, NULL );	
 	
 	for (int y = 0; y < 3; ++y)
 		for (int x = 0; x < 3; ++x)
 			g_Cell[x][y].SetCenter( x * 16 - 16, 16 - y * 16, 0 );		
 	
-	if ( SUCCEEDED(g_DeviceD3D.IntialDirect3D( hwnd, g_FileLog) ) )
+	if ( SUCCEEDED( g_DeviceD3D.IntialDirect3D( hwnd, g_FileLog) ) )
 	{	
 		if ( SUCCEEDED( g_DeviceD3D.LoadTexture( g_FileLog ) ) )
 		{			
-			ShowWindow(hwnd,nCmdShow);
-			ZeroMemory(&msg, sizeof(msg));
-			g_MeshS.InitialMesh("model//Setka.x", g_FileLog);
-			g_MeshO.InitialMesh("model//O.x", g_FileLog);
-			g_MeshX.InitialMesh("model//X.x", g_FileLog);	
-			g_MeshWin.InitialMesh("model//Win.x", g_FileLog);	
-			g_MeshLost.InitialMesh("model//Lost.x", g_FileLog);
-			g_MeshStalemate.InitialMesh("model//Stalemate.x", g_FileLog);
+			ShowWindow( hwnd, nCmdShow );
+			ZeroMemory( &msg, sizeof( msg ) );
+			g_MeshS.InitialMesh( "model//Setka.x", g_FileLog );
+			g_MeshO.InitialMesh( "model//O.x", g_FileLog );
+			g_MeshX.InitialMesh( "model//X.x", g_FileLog );	
+			g_MeshWin.InitialMesh( "model//Win.x", g_FileLog );	
+			g_MeshLost.InitialMesh( "model//Lost.x", g_FileLog );
+			g_MeshStalemate.InitialMesh( "model//Stalemate.x", g_FileLog );
 			g_Sky.InitialSky();
 			g_DeviceInput.InitialInput( hwnd, g_FileLog );					
 			g_DeviceD3D.InitialShader();
 			g_fps.m_last_tick = GetTickCount();
 			while( !g_Exit )
-			{						
-				g_pD3DDevice -> GetViewport(&vp);
-				//sprintf(str, "FPS=%d", g_fps.Fps());
-				//SetWindowText(hwnd,str);
+			{					
 				g_DeviceInput.ScanInput( &g_Camera, &Check, &g_Cell[0][0] );
 				if ( Check )
 					CheckPC( g_Lua.m_luaVM , &Check, &g_Cell[0][0]);
-				RenderingDirect3D( &g_Cell[0][0] );
-				GameOver();
+				RenderingDirect3D( &g_Cell[0][0] );				
 				if ( PeekMessage( &msg, NULL, 0, 0, PM_REMOVE ) )
 				{
 					TranslateMessage( &msg );
@@ -534,7 +526,7 @@ HRESULT CMesh3D::InitialMesh(LPCSTR Name, FILE *m_FileLog )
 	m_SizeFVF       = 0;
 	m_Alpha         = 1.0f;	
 	ID3DXBuffer *pMaterialBuffer  = NULL;
-	if (FAILED(D3DXLoadMeshFromX( Name, D3DXMESH_SYSTEMMEM, g_pD3DDevice, NULL, &pMaterialBuffer, NULL, &m_TexturCount, &m_pMesh)))
+	if ( FAILED( D3DXLoadMeshFromX( Name, D3DXMESH_SYSTEMMEM, g_pD3DDevice, NULL, &pMaterialBuffer, NULL, &m_TexturCount, &m_pMesh ) ) )
 	{
 		if ( m_pMesh == NULL )
 		{		
@@ -627,7 +619,8 @@ void CMesh3D::Release()
 		m_IndexBuffer->Release();
 	if ( m_VertexBuffer != NULL )
 		m_VertexBuffer->Release();
-	if ( m_pMeshMaterial != NULL )
+
+	if ( m_pMeshMaterial )
 		delete[] m_pMeshMaterial;
 	if ( m_pMeshTextura )
 	{
