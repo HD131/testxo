@@ -1,8 +1,8 @@
 #include "InputDevice.h"
 
-int   GameOver();
-POINT PickObject();
-extern CCell g_Cell[3][3];
+int    GameOver();
+POINT PickObject( CCell *m_Cell );
+
 
 HRESULT CInputDevice::InitialInput( HWND hwnd, FILE *m_FileLog )
 {	
@@ -43,7 +43,7 @@ HRESULT CInputDevice::InitialInput( HWND hwnd, FILE *m_FileLog )
 	return S_OK;
 }
 
-bool CInputDevice::ScanInput( CameraDevice *m_Camera, bool *Check )
+bool CInputDevice::ScanInput( CameraDevice *m_Camera, bool *Check, CCell *m_Cell )
 {	
 	char     keyboard[256];     
 	LONG     dx, dy, dz;
@@ -74,10 +74,10 @@ bool CInputDevice::ScanInput( CameraDevice *m_Camera, bool *Check )
 
 	if ( mouse.rgbButtons[LEFT_BUTTON]&0x80 )
 	{
-		POINT Point = PickObject();
-		if ( ( Point.x >= 0 ) && ( g_Cell[Point.x][Point.y].Value > 1 ) && ( GameOver() < 0 ) )
+		POINT Point = PickObject( &m_Cell[0]);
+		if ( ( Point.x >= 0 ) && ( m_Cell[Point.x*3+Point.y].Value > 1 ) && ( GameOver() < 0 ) )
 		{
-			g_Cell[Point.x][Point.y].Value = 1;
+			m_Cell[Point.x*3+Point.y].Value = 1;
 			
 			if ( GameOver() > 0 )
 				return TRUE;
