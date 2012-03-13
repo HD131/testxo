@@ -38,7 +38,6 @@ class CD3DDevice
 {
 public:
 	IDirect3D9*			    m_pDirect3D; // указатель на Главный интерфейс отвечающий за Direct3D	
-	IDirect3DTexture9*      m_pTexturaSky;
 	IDirect3DCubeTexture9*  m_CubeTexture;	
 	IDirect3DPixelShader9*  m_pPixelShader [MaxShader];
 	IDirect3DVertexShader9* m_pVertexShader[MaxShader];

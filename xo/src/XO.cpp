@@ -8,9 +8,9 @@ extern IDirect3DDevice9* g_pD3DDevice;
 
 
 
-D3DXVECTOR4  Light( 0.0f, 1.0f, -1.0f, 1.0f );
-bool         g_Wireframe = false;
-float        Diffuse_intensity = 1.0f;
+const D3DXVECTOR4  Light( 0.0f, 1.0f, -1.0f, 1.0f );
+bool               g_Wireframe = false;
+const float        Diffuse_intensity = 1.0f;
 
 
 struct CSky
@@ -180,19 +180,17 @@ int GameOver()
 
 void RenderingDirect3D( CCell* Cell )
 {	
-	D3DXVECTOR4 Scale( tan( D3DX_PI / 8 * (FLOAT)Height / Width), tan( D3DX_PI / 8 * (FLOAT)Height / Width  ), 1.0f, 1.0f );
+	const D3DXVECTOR4 Scale( tan( D3DX_PI / 8 * (FLOAT)Height / Width), tan( D3DX_PI / 8 * (FLOAT)Height / Width  ), 1.0f, 1.0f );
 	//----------------------------------------------режим каркаса-------------------------------
 	if ( g_Wireframe )
 		g_pD3DDevice -> SetRenderState( D3DRS_FILLMODE, D3DFILL_WIREFRAME);
 	else
 		g_pD3DDevice -> SetRenderState( D3DRS_FILLMODE, D3DFILL_SOLID);
-	//------------------------------------------------------------------------------------------
+	//------------------------------------------------------------------------------------------	
+	float const Angle = timeGetTime() / 2000.0f;
 
-	//UINT  Time  = timeGetTime()  9000;
-	float Angle = timeGetTime() / 2000.0f;
-
-	D3DXMATRIX MatrixView       = g_Camera.m_View;
-	D3DXMATRIX MatrixProjection = g_Camera.m_Proj;
+	const D3DXMATRIX MatrixView       = g_Camera.m_View;
+	const D3DXMATRIX MatrixProjection = g_Camera.m_Proj;
 
 	if ( g_pD3DDevice == 0 )
 		return;
@@ -386,8 +384,7 @@ int CFps::Fps()
 
 int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance,
 				    LPSTR     lpCmdLine, int       nCmdShow)
-{
-	HWND		 hwnd;
+{	
 	MSG			 msg;
 	WNDCLASS	 w;	
 	CFps         g_fps;	
@@ -403,10 +400,10 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	w.hInstance     = hInstance;
 	w.hbrBackground = (HBRUSH)GetStockObject( WHITE_BRUSH );
 	w.lpszClassName = "My Class";
-	w.hIcon         = LoadIcon(NULL,IDI_QUESTION);//стандартная иконка приложения Win API 	
+	w.hIcon         = LoadIcon( NULL,IDI_QUESTION );//стандартная иконка приложения Win API 	
 	RegisterClass(&w);
-	hwnd = CreateWindow( "My Class", "Крестики-нолики", WS_SYSMENU | WS_MINIMIZEBOX,
-						 250, 150, Width+6, Height+28, 0, 0, hInstance, 0 );	
+	HWND hwnd = CreateWindow( "My Class", "Крестики-нолики", WS_SYSMENU | WS_MINIMIZEBOX,
+						      250, 150, Width+6, Height+28, 0, 0, hInstance, 0 );	
 	
 	for (int y = 0; y < 3; ++y)
 		for (int x = 0; x < 3; ++x)

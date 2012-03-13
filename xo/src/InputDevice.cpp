@@ -1,6 +1,6 @@
 #include "InputDevice.h"
 
-int    GameOver();
+int   GameOver();
 POINT PickObject( CCell *Cell );
 
 
