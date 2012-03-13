@@ -3,30 +3,16 @@
 #include "CameraDevice.h"
 #include "InputDevice.h"
 
-
-
 using namespace std;
+
 extern IDirect3DDevice9	   *g_pD3DDevice;
-extern CCell                g_Cell[3][3];
+extern enum  NameShader { Sky , Diffuse };
 
-enum         NameShader { Sky , Diffuse };
 
-bool         g_Exit = false;
 D3DXVECTOR4  Light( 0.0f, 1.0f, -1.0f, 1.0f );
 bool         g_Wireframe = false;
 FLOAT        Diffuse_intensity = 1.0f;
 
-
-struct CShader
-{
-	IDirect3DPixelShader9  *pPixelShader [3];
-	IDirect3DVertexShader9 *pVertexShader[3];
-	ID3DXConstantTable     *pConstTableVS[3];
-	ID3DXConstantTable     *pConstTablePS[3];
-	int						m_CountShader;
-	HRESULT                 InitialShader();
-	void					Release();
-};
 
 struct CSky
 {
@@ -61,7 +47,6 @@ private:
 
 
 CD3DDevice   g_DeviceD3D;
-CShader      g_Shader;
 CInputDevice g_DeviceInput;
 CSky         g_Sky;
 CMesh3D      g_MeshS;
@@ -71,6 +56,8 @@ CMesh3D		 g_MeshWin;
 CMesh3D		 g_MeshLost;
 CMesh3D      g_MeshStalemate;
 CameraDevice g_Camera;
+CCell        g_Cell[3][3];
+bool         g_Exit = false;
 
 void DrawMyText(IDirect3DDevice9 *g_pD3DDevice, char* StrokaTexta, int x, int y, int x1, int y1, D3DCOLOR MyColor)
 {
@@ -88,7 +75,7 @@ void DrawMyText(IDirect3DDevice9 *g_pD3DDevice, char* StrokaTexta, int x, int y,
 		pFont -> Release();
 }
 
-POINT PickObject()
+POINT PickObject( CCell *m_Cell )
 {
 	POINT Point;
 	float px = 0.0f;
@@ -118,9 +105,9 @@ POINT PickObject()
 	for ( int ArrY = 0; ArrY < 3; ++ArrY )
 		for ( int ArrX = 0; ArrX < 3; ++ArrX )
 		{	
-			D3DXVECTOR3 v =  PosView - g_Cell[ArrX][ArrY].Centr;
+			D3DXVECTOR3 v =  PosView - m_Cell[ArrX*3+ArrY].Centr;
 			float b = 2.0f * D3DXVec3Dot( &Direction, &v );
-			float c = D3DXVec3Dot( &v, &v ) - g_Cell[ArrX][ArrY].Radius * g_Cell[ArrX][ArrY].Radius ;
+			float c = D3DXVec3Dot( &v, &v ) - m_Cell[ArrX*3+ArrY].Radius * m_Cell[ArrX*3+ArrY].Radius ;
 			// Находим дискриминант
 			float Discr = ( b * b ) - ( 4.0f * c );			
 			if ( Discr >= 0.0f )
@@ -150,7 +137,7 @@ POINT PickObject()
 		{
 			for ( int i = 0; i < Count; ++i)
 			{
-				D3DXVECTOR3 T = PosView - g_Cell[NumObject[i].x][NumObject[i].y].Centr;
+				D3DXVECTOR3 T = PosView - m_Cell[NumObject[i].x*3+NumObject[i].y].Centr;
 				float DistVec = D3DXVec3LengthSq( &T );
 				if ( DistVec < Dist )
 				{
@@ -165,25 +152,24 @@ POINT PickObject()
 int GameOver()
 {
 	if ( ( ( g_Cell[0][0].Value == 1 ) && ( g_Cell[1][0].Value == 1 ) && ( g_Cell[2][0].Value == 1 ) ) ||
-		( ( g_Cell[0][1].Value == 1 ) && ( g_Cell[1][1].Value == 1 ) && ( g_Cell[2][1].Value == 1 ) ) ||
-		( ( g_Cell[0][2].Value == 1 ) && ( g_Cell[1][2].Value == 1 ) && ( g_Cell[2][2].Value == 1 ) ) ||
-		( ( g_Cell[0][0].Value == 1 ) && ( g_Cell[0][1].Value == 1 ) && ( g_Cell[0][2].Value == 1 ) ) ||
-		( ( g_Cell[1][0].Value == 1 ) && ( g_Cell[1][1].Value == 1 ) && ( g_Cell[1][2].Value == 1 ) ) ||
-		( ( g_Cell[2][0].Value == 1 ) && ( g_Cell[2][1].Value == 1 ) && ( g_Cell[2][2].Value == 1 ) ) ||
-		( ( g_Cell[0][0].Value == 1 ) && ( g_Cell[1][1].Value == 1 ) && ( g_Cell[2][2].Value == 1 ) ) ||
-		( ( g_Cell[2][0].Value == 1 ) && ( g_Cell[1][1].Value == 1 ) && ( g_Cell[0][2].Value == 1 ) ) )
+ 		 ( ( g_Cell[0][1].Value == 1 ) && ( g_Cell[1][1].Value == 1 ) && ( g_Cell[2][1].Value == 1 ) ) || 
+ 		 ( ( g_Cell[0][2].Value == 1 ) && ( g_Cell[1][2].Value == 1 ) && ( g_Cell[2][2].Value == 1 ) ) || 
+  		 ( ( g_Cell[0][0].Value == 1 ) && ( g_Cell[0][1].Value == 1 ) && ( g_Cell[0][2].Value == 1 ) ) ||   
+		 ( ( g_Cell[1][0].Value == 1 ) && ( g_Cell[1][1].Value == 1 ) && ( g_Cell[1][2].Value == 1 ) ) || 
+		 ( ( g_Cell[2][0].Value == 1 ) && ( g_Cell[2][1].Value == 1 ) && ( g_Cell[2][2].Value == 1 ) ) || 
+		 ( ( g_Cell[0][0].Value == 1 ) && ( g_Cell[1][1].Value == 1 ) && ( g_Cell[2][2].Value == 1 ) ) || 
+		 ( ( g_Cell[2][0].Value == 1 ) && ( g_Cell[1][1].Value == 1 ) && ( g_Cell[0][2].Value == 1 ) ) )
 		return 1;
 
 	if ( ( ( g_Cell[0][0].Value == 0 ) && ( g_Cell[1][0].Value == 0 ) && ( g_Cell[2][0].Value == 0 ) ) ||
-		( ( g_Cell[0][1].Value == 0 ) && ( g_Cell[1][1].Value == 0 ) && ( g_Cell[2][1].Value == 0 ) ) ||
-		( ( g_Cell[0][2].Value == 0 ) && ( g_Cell[1][2].Value == 0 ) && ( g_Cell[2][2].Value == 0 ) ) ||
-		( ( g_Cell[0][0].Value == 0 ) && ( g_Cell[0][1].Value == 0 ) && ( g_Cell[0][2].Value == 0 ) ) ||
-		( ( g_Cell[1][0].Value == 0 ) && ( g_Cell[1][1].Value == 0 ) && ( g_Cell[1][2].Value == 0 ) ) ||
-		( ( g_Cell[2][0].Value == 0 ) && ( g_Cell[2][1].Value == 0 ) && ( g_Cell[2][2].Value == 0 ) ) ||
-		( ( g_Cell[0][0].Value == 0 ) && ( g_Cell[1][1].Value == 0 ) && ( g_Cell[2][2].Value == 0 ) ) ||
-		( ( g_Cell[2][0].Value == 0 ) && ( g_Cell[1][1].Value == 0 ) && ( g_Cell[0][2].Value == 0 ) ) )
+		 ( ( g_Cell[0][1].Value == 0 ) && ( g_Cell[1][1].Value == 0 ) && ( g_Cell[2][1].Value == 0 ) ) ||
+		 ( ( g_Cell[0][2].Value == 0 ) && ( g_Cell[1][2].Value == 0 ) && ( g_Cell[2][2].Value == 0 ) ) ||
+		 ( ( g_Cell[0][0].Value == 0 ) && ( g_Cell[0][1].Value == 0 ) && ( g_Cell[0][2].Value == 0 ) ) ||
+		 ( ( g_Cell[1][0].Value == 0 ) && ( g_Cell[1][1].Value == 0 ) && ( g_Cell[1][2].Value == 0 ) ) ||
+		 ( ( g_Cell[2][0].Value == 0 ) && ( g_Cell[2][1].Value == 0 ) && ( g_Cell[2][2].Value == 0 ) ) ||
+		 ( ( g_Cell[0][0].Value == 0 ) && ( g_Cell[1][1].Value == 0 ) && ( g_Cell[2][2].Value == 0 ) ) ||
+		 ( ( g_Cell[2][0].Value == 0 ) && ( g_Cell[1][1].Value == 0 ) && ( g_Cell[0][2].Value == 0 ) ) )
 		return 2;
-
 	int t = 0;
 	for (int y = 0; y < 3; ++y)
 		for (int x = 0; x < 3; ++x) 
@@ -195,7 +181,7 @@ int GameOver()
 	return -1;
 }
 
-void RenderingDirect3D()
+void RenderingDirect3D( CCell *m_Cell )
 {
 	D3DXMATRIX  MatrixWorld, MatrixWorldX, MatrixWorldY, MatrixWorldZ;
 	D3DXMATRIX  tmp;
@@ -230,12 +216,12 @@ void RenderingDirect3D()
 
 	D3DXMatrixTranslation( &MatrixWorld, 1.0f, 1.0f, 1.0f );
 	tmp = MatrixWorld * MatrixView * MatrixProjection;
-	if ( g_Shader.pConstTableVS[Sky] )
+	if ( g_DeviceD3D.pConstTableVS[Sky] )
 	{
-		g_Shader.pConstTableVS[Sky] -> SetMatrix( g_pD3DDevice, "mat_mvp",   &tmp );
-		g_Shader.pConstTableVS[Sky] -> SetVector( g_pD3DDevice, "vec_light", &Light );
-		g_Shader.pConstTableVS[Sky] -> SetVector( g_pD3DDevice, "scale",     &Scale );
-		g_Shader.pConstTableVS[Sky] -> SetMatrix( g_pD3DDevice, "mat_view",  &MatrixView );
+		g_DeviceD3D.pConstTableVS[Sky] -> SetMatrix( g_pD3DDevice, "mat_mvp",   &tmp );
+		g_DeviceD3D.pConstTableVS[Sky] -> SetVector( g_pD3DDevice, "vec_light", &Light );
+		g_DeviceD3D.pConstTableVS[Sky] -> SetVector( g_pD3DDevice, "scale",     &Scale );
+		g_DeviceD3D.pConstTableVS[Sky] -> SetMatrix( g_pD3DDevice, "mat_view",  &MatrixView );
 	}
 	// здесь перерисовка сцены	
 	g_pD3DDevice -> SetStreamSource(0, g_Sky.m_pVerBufSky, 0, sizeof( CVertexFVF ) ); // связь буфера вершин с потоком данных
@@ -243,8 +229,8 @@ void RenderingDirect3D()
 	g_pD3DDevice -> SetIndices( g_Sky.m_pBufIndexSky );
 	g_pD3DDevice -> SetTexture( 0, g_DeviceD3D.m_CubeTexture );
 	// устанавливаем шейдеры
-	g_pD3DDevice -> SetVertexShader( g_Shader.pVertexShader[Sky] );
-	g_pD3DDevice -> SetPixelShader(  g_Shader.pPixelShader [Sky] );
+	g_pD3DDevice -> SetVertexShader( g_DeviceD3D.pVertexShader[Sky] );
+	g_pD3DDevice -> SetPixelShader(  g_DeviceD3D.pPixelShader [Sky] );
 	// вывод примитивов
 	g_pD3DDevice -> DrawIndexedPrimitive( D3DPT_TRIANGLELIST, 0, 0, 6, 0, 2 );
 
@@ -263,7 +249,7 @@ void RenderingDirect3D()
 	for ( int y = 0; y < 3; ++y )
 		for ( int x = 0; x < 3; ++x )
 		{
-			if ( g_Cell[x][y].Value == 1 )
+			if ( m_Cell[x*3+y].Value == 1 )
 			{
 				//--------------------X-------------------
 				D3DXMatrixRotationY(   &MatrixWorldY, Angle );
@@ -275,7 +261,7 @@ void RenderingDirect3D()
 				g_MeshX.m_Alpha = 1.0f;
 				g_MeshX.DrawMyMesh();
 			}
-			if ( g_Cell[x][y].Value == 0 )
+			if ( m_Cell[x*3+y].Value == 0 )
 			{		
 				//--------------------O-------------------
 				D3DXMatrixRotationY(   &MatrixWorldY, -Angle + 3.14f );
@@ -288,10 +274,10 @@ void RenderingDirect3D()
 				g_MeshO.DrawMyMesh();
 			}
 		}
-		POINT P = PickObject();
+		POINT P = PickObject( &m_Cell[0] );
 		if ( P.x >= 0)
 		{
-			if ( g_Cell[P.x][P.y].Value == 10 )
+			if ( m_Cell[P.x*3+P.y].Value == 10 )
 			{
 				//--------------------X-------------------
 				D3DXMatrixRotationY(   &MatrixWorldY, Angle );
@@ -338,7 +324,7 @@ void RenderingDirect3D()
 		g_pD3DDevice -> Present(NULL, NULL, NULL, NULL); // вывод содержимого заднего буфера в окно
 }
 
-void CheckPC( lua_State *m_luaVM, bool *Check )
+void CheckPC( lua_State *m_luaVM, bool *Check,CCell *m_Cell )
 {
 	Beep(150, 50); 
 	lua_getglobal( m_luaVM, "IO" );
@@ -348,7 +334,7 @@ void CheckPC( lua_State *m_luaVM, bool *Check )
 		for (int x = 0; x < 3; ++x) 
 		{
 			lua_pushnumber( m_luaVM,  y * 3 + x + 1 );               //кладем в стэк число (key)
-			lua_pushnumber( m_luaVM,  g_Cell[x][y].Value );//добавляем значение ключа (value)
+			lua_pushnumber( m_luaVM,  m_Cell[x*3+y].Value );//добавляем значение ключа (value)
 			lua_settable  ( m_luaVM, -3 );              //добавить к таблице пару ключ-значение: table[key] = value		
 		}
 		if ( lua_pcall( m_luaVM, 1, 2, 0 ) )
@@ -360,10 +346,10 @@ void CheckPC( lua_State *m_luaVM, bool *Check )
 		int x = lua_tonumber( m_luaVM, -2 );
 		
 
-		if ( g_Cell[x][y].Value == 10 )
-			g_Cell[x][y].Value = 0;
+		if ( m_Cell[x*3+y].Value == 10 )
+			m_Cell[x*3+y].Value = 0;
 		*Check = false;
-		RenderingDirect3D();
+		
 }
 
 LONG WINAPI WndProc(HWND hwnd, UINT Message, WPARAM wparam, LPARAM lparam)
@@ -418,9 +404,12 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	CFps         g_fps;
 	D3DVIEWPORT9 vp;
 	bool         Check = false;
+	char         str[8];
+
 	// Запись лога в файл 
 	FILE *g_FileLog = fopen( "log.txt", "w" );
 	CLuaScript   g_Lua( g_FileLog );
+
 	memset(&w,0,sizeof(WNDCLASS));
 	w.style         = CS_HREDRAW | CS_VREDRAW;
 	w.lpfnWndProc   = WndProc;
@@ -431,14 +420,12 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	RegisterClass(&w);
 	hwnd = CreateWindow( "My Class", "Крестики-нолики", WS_SYSMENU | WS_MINIMIZEBOX,
 		250, 150, Width+6, Height+28, NULL, NULL, hInstance, NULL );	
-	char str[8];
-	//memset(Field,0,sizeof(int)*9);
-	//ZeroMemory(Field, sizeof(Field));
-	srand(1000);
+	
+	
 	for (int y = 0; y < 3; ++y)
 		for (int x = 0; x < 3; ++x)
 			g_Cell[x][y].SetCenter( x * 16 - 16, 16 - y * 16, 0 );		
-	//g_Cell[2][0].Value = 0;
+	
 	if ( SUCCEEDED(g_DeviceD3D.IntialDirect3D( hwnd, g_FileLog) ) )
 	{	
 		if ( SUCCEEDED( g_DeviceD3D.LoadTexture( g_FileLog ) ) )
@@ -453,17 +440,17 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 			g_MeshStalemate.InitialMesh("model//Stalemate.x", g_FileLog);
 			g_Sky.InitialSky();
 			g_DeviceInput.InitialInput( hwnd, g_FileLog );					
-			g_Shader.InitialShader();
+			g_DeviceD3D.InitialShader();
 			g_fps.m_last_tick = GetTickCount();
 			while( !g_Exit )
 			{						
 				g_pD3DDevice -> GetViewport(&vp);
 				//sprintf(str, "FPS=%d", g_fps.Fps());
 				//SetWindowText(hwnd,str);
-				g_DeviceInput.ScanInput( &g_Camera, &Check );
+				g_DeviceInput.ScanInput( &g_Camera, &Check, &g_Cell[0][0] );
 				if ( Check )
-					CheckPC( g_Lua.m_luaVM , &Check);
-				RenderingDirect3D();
+					CheckPC( g_Lua.m_luaVM , &Check, &g_Cell[0][0]);
+				RenderingDirect3D( &g_Cell[0][0] );
 				GameOver();
 				if ( PeekMessage( &msg, NULL, 0, 0, PM_REMOVE ) )
 				{
@@ -478,8 +465,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	g_MeshWin.Release();
 	g_MeshS.Release();
 	g_MeshX.Release();
-	g_MeshO.Release();
-	g_Shader.Release();
+	g_MeshO.Release();	
 	g_Sky.Release(); 
 	g_DeviceInput.Release();
 	g_DeviceD3D.Release();
@@ -491,69 +477,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 //-----------------------------------------------------------------------------------------------------------------------------------
 
 
-HRESULT CShader::InitialShader()
-{
-	LPD3DXBUFFER pErrors        = NULL;
-	LPD3DXBUFFER pShaderBuff    = NULL;
-	m_CountShader = 2;
-	for (int i = 0; i < m_CountShader; ++i)
-	{	
-		pVertexShader[i] = NULL;
-		pPixelShader[i]  = NULL;
-		pConstTableVS[i] = NULL;
-		pConstTablePS[i] = NULL;
-	}
-	//-------------------------------SkyShader----------------------------
-	// вертексный шейдер
-	D3DXCompileShaderFromFile( "shader//Sky.vsh", NULL, NULL, "main", "vs_2_0", D3DXSHADER_OPTIMIZATION_LEVEL3,
-								&pShaderBuff, &pErrors, &pConstTableVS[Sky] );
-	if ( pShaderBuff )
-	{
-		g_pD3DDevice->CreateVertexShader(( DWORD* )pShaderBuff->GetBufferPointer(), &pVertexShader[Sky]);
-		pShaderBuff -> Release();
-	}
-	// пиксельный шейдер
-	D3DXCompileShaderFromFile( "shader//Sky.psh", NULL, NULL, "main", "ps_2_0", D3DXSHADER_OPTIMIZATION_LEVEL3,
-								&pShaderBuff, &pErrors, &pConstTablePS[Sky] );
-	if ( pShaderBuff )
-	{
-		g_pD3DDevice->CreatePixelShader(( DWORD* )pShaderBuff->GetBufferPointer(), &pPixelShader[Sky]);
-		pShaderBuff -> Release();
-	}
-	//-------------------------------Diffuse----------------------------
-	// вертексный шейдер
-	D3DXCompileShaderFromFile( "shader//Diffuse.vsh", NULL, NULL, "main", "vs_2_0", D3DXSHADER_OPTIMIZATION_LEVEL3,
-								&pShaderBuff, &pErrors, &pConstTableVS[Diffuse] );
-	if ( pShaderBuff )
-	{
-		g_pD3DDevice->CreateVertexShader(( DWORD* )pShaderBuff->GetBufferPointer(), &pVertexShader[Diffuse]);
-		pShaderBuff -> Release();
-	}
-	// пиксельный шейдер
-	D3DXCompileShaderFromFile( "shader//Diffuse.psh", NULL, NULL, "main", "ps_2_0", D3DXSHADER_OPTIMIZATION_LEVEL3,
-								&pShaderBuff, &pErrors, &pConstTablePS[Diffuse] );
-	if ( pShaderBuff )
-	{
-		g_pD3DDevice->CreatePixelShader(( DWORD* )pShaderBuff->GetBufferPointer(), &pPixelShader[Diffuse]);
-		pShaderBuff -> Release();
-	}
-	return S_OK;
-}
 
-void CShader::Release()
-{
-	for (int i = 0; i < m_CountShader; ++i)
-	{	
-		if (pVertexShader[i] != NULL)
-			pVertexShader[i] -> Release();
-		if (pPixelShader[i] != NULL)
-			pPixelShader[i] -> Release();
-		if (pConstTableVS[i] != NULL)
-			pConstTableVS[i] -> Release();
-		if (pConstTablePS[i] != NULL)
-			pConstTablePS[i] -> Release();
-	}
-}
 
 HRESULT CSky::InitialSky()
 {
@@ -673,17 +597,17 @@ void CMesh3D::DrawMyMesh()
 	if ( m_pMesh )
 	{
 		wvp = m_MatrixWorld * m_MatrixView * m_MatrixProjection;
-		if ( g_Shader.pConstTableVS[Diffuse] )
+		if ( g_DeviceD3D.pConstTableVS[Diffuse] )
 		{
-			g_Shader.pConstTableVS[Diffuse] -> SetMatrix( g_pD3DDevice, "mat_mvp",   &wvp );
-			g_Shader.pConstTableVS[Diffuse] -> SetMatrix( g_pD3DDevice, "mat_world", &m_MatrixWorld );
-			g_Shader.pConstTableVS[Diffuse] -> SetVector( g_pD3DDevice, "vec_light", &Light );
-			g_Shader.pConstTablePS[Diffuse] -> SetFloat(  g_pD3DDevice, "diffuse_intensity", Diffuse_intensity );	
-			g_Shader.pConstTablePS[Diffuse] -> SetFloat(  g_pD3DDevice, "Alpha", m_Alpha );	
+			g_DeviceD3D.pConstTableVS[Diffuse] -> SetMatrix( g_pD3DDevice, "mat_mvp",   &wvp );
+			g_DeviceD3D.pConstTableVS[Diffuse] -> SetMatrix( g_pD3DDevice, "mat_world", &m_MatrixWorld );
+			g_DeviceD3D.pConstTableVS[Diffuse] -> SetVector( g_pD3DDevice, "vec_light", &Light );
+			g_DeviceD3D.pConstTablePS[Diffuse] -> SetFloat(  g_pD3DDevice, "diffuse_intensity", Diffuse_intensity );	
+			g_DeviceD3D.pConstTablePS[Diffuse] -> SetFloat(  g_pD3DDevice, "Alpha", m_Alpha );	
 		}
 		// устанавливаем шейдеры
-		g_pD3DDevice->SetVertexShader( g_Shader.pVertexShader[Diffuse] );
-		g_pD3DDevice->SetPixelShader(  g_Shader.pPixelShader [Diffuse] );
+		g_pD3DDevice->SetVertexShader( g_DeviceD3D.pVertexShader[Diffuse] );
+		g_pD3DDevice->SetPixelShader(  g_DeviceD3D.pPixelShader [Diffuse] );
 
 		g_pD3DDevice->SetStreamSource( 0, m_VertexBuffer, 0, m_SizeFVF );
 		g_pD3DDevice->SetIndices( m_IndexBuffer );

@@ -47,7 +47,13 @@ public:
 	IDirect3DTexture9      *m_pTexturaSky;
 	IDirect3DTexture9	   *m_Texture;
 	IDirect3DCubeTexture9  *m_CubeTexture;
-	HRESULT                 IntialDirect3D( HWND hwnd, FILE *m_FileLog );	
+	enum { MaxShader = 2 };
+	IDirect3DPixelShader9  *pPixelShader [MaxShader];
+	IDirect3DVertexShader9 *pVertexShader[MaxShader];
+	ID3DXConstantTable     *pConstTableVS[MaxShader];
+	ID3DXConstantTable     *pConstTablePS[MaxShader];	
+	HRESULT                 IntialDirect3D( HWND hwnd, FILE *m_FileLog );
+	HRESULT                 InitialShader();
 	HRESULT				    LoadTexture( FILE *m_FileLog );
 	void				    Release();
 };

@@ -1,7 +1,57 @@
 #include "D3DDevice.h"
 
-CCell                   g_Cell[3][3];
+
 IDirect3DDevice9	   *g_pD3DDevice  = NULL; //Наше устройство
+enum         NameShader { Sky , Diffuse };
+
+HRESULT CD3DDevice::InitialShader()
+{
+	LPD3DXBUFFER pErrors        = NULL;
+	LPD3DXBUFFER pShaderBuff    = NULL;
+
+	for (int i = 0; i < MaxShader; ++i)
+	{	
+		pVertexShader[i] = NULL;
+		pPixelShader[i]  = NULL;
+		pConstTableVS[i] = NULL;
+		pConstTablePS[i] = NULL;
+	}
+	//-------------------------------SkyShader----------------------------
+	// вертексный шейдер
+	D3DXCompileShaderFromFile( "shader//Sky.vsh", NULL, NULL, "main", "vs_2_0", D3DXSHADER_OPTIMIZATION_LEVEL3,
+		&pShaderBuff, &pErrors, &pConstTableVS[Sky] );
+	if ( pShaderBuff )
+	{
+		g_pD3DDevice->CreateVertexShader(( DWORD* )pShaderBuff->GetBufferPointer(), &pVertexShader[Sky]);
+		pShaderBuff -> Release();
+	}
+	// пиксельный шейдер
+	D3DXCompileShaderFromFile( "shader//Sky.psh", NULL, NULL, "main", "ps_2_0", D3DXSHADER_OPTIMIZATION_LEVEL3,
+		&pShaderBuff, &pErrors, &pConstTablePS[Sky] );
+	if ( pShaderBuff )
+	{
+		g_pD3DDevice->CreatePixelShader(( DWORD* )pShaderBuff->GetBufferPointer(), &pPixelShader[Sky]);
+		pShaderBuff -> Release();
+	}
+	//-------------------------------Diffuse----------------------------
+	// вертексный шейдер
+	D3DXCompileShaderFromFile( "shader//Diffuse.vsh", NULL, NULL, "main", "vs_2_0", D3DXSHADER_OPTIMIZATION_LEVEL3,
+		&pShaderBuff, &pErrors, &pConstTableVS[Diffuse] );
+	if ( pShaderBuff )
+	{
+		g_pD3DDevice->CreateVertexShader(( DWORD* )pShaderBuff->GetBufferPointer(), &pVertexShader[Diffuse]);
+		pShaderBuff -> Release();
+	}
+	// пиксельный шейдер
+	D3DXCompileShaderFromFile( "shader//Diffuse.psh", NULL, NULL, "main", "ps_2_0", D3DXSHADER_OPTIMIZATION_LEVEL3,
+		&pShaderBuff, &pErrors, &pConstTablePS[Diffuse] );
+	if ( pShaderBuff )
+	{
+		g_pD3DDevice->CreatePixelShader(( DWORD* )pShaderBuff->GetBufferPointer(), &pPixelShader[Diffuse]);
+		pShaderBuff -> Release();
+	}
+	return S_OK;
+}
 
 HRESULT CD3DDevice::IntialDirect3D( HWND hwnd , FILE *m_FileLog)
 {
@@ -61,6 +111,17 @@ HRESULT	CD3DDevice::LoadTexture( FILE *m_FileLog )
 
 void CD3DDevice::Release()
 {
+	for (int i = 0; i < MaxShader; ++i)
+	{	
+		if (pVertexShader[i] != NULL)
+			pVertexShader[i] -> Release();
+		if (pPixelShader[i] != NULL)
+			pPixelShader[i] -> Release();
+		if (pConstTableVS[i] != NULL)
+			pConstTableVS[i] -> Release();
+		if (pConstTablePS[i] != NULL)
+			pConstTablePS[i] -> Release();
+	}
 	if ( m_CubeTexture != NULL )
 		m_CubeTexture -> Release();
 	if ( m_pTexturaSky != NULL )
