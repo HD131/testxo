@@ -1,69 +1,69 @@
 #include "D3DDevice.h"
 
 
-IDirect3DDevice9	   *g_pD3DDevice  = NULL; //Наше устройство
-enum         NameShader { Sky , Diffuse };
+IDirect3DDevice9* g_pD3DDevice  = 0; //Наше устройство
+
 
 HRESULT CD3DDevice::InitialShader()
 {
-	LPD3DXBUFFER pErrors        = NULL;
-	LPD3DXBUFFER pShaderBuff    = NULL;
+	LPD3DXBUFFER pErrors        = 0;
+	LPD3DXBUFFER pShaderBuff    = 0;
 
 	for (int i = 0; i < MaxShader; ++i)
 	{	
-		pVertexShader[i] = NULL;
-		pPixelShader[i]  = NULL;
-		pConstTableVS[i] = NULL;
-		pConstTablePS[i] = NULL;
+		m_pVertexShader[i] = 0;
+		m_pPixelShader[i]  = 0;
+		m_pConstTableVS[i] = 0;
+		m_pConstTablePS[i] = 0;
 	}
 	//-------------------------------SkyShader----------------------------
 	// вертексный шейдер
-	D3DXCompileShaderFromFile( "shader//Sky.vsh", NULL, NULL, "main", "vs_2_0", D3DXSHADER_OPTIMIZATION_LEVEL3,
-		&pShaderBuff, &pErrors, &pConstTableVS[Sky] );
+	D3DXCompileShaderFromFile( "shader//Sky.vsh", 0, 0, "main", "vs_2_0", D3DXSHADER_OPTIMIZATION_LEVEL3,
+								&pShaderBuff, &pErrors, &m_pConstTableVS[Sky] );
 	if ( pShaderBuff )
 	{
-		g_pD3DDevice->CreateVertexShader(( DWORD* )pShaderBuff->GetBufferPointer(), &pVertexShader[Sky]);
+		g_pD3DDevice->CreateVertexShader(( DWORD* )pShaderBuff->GetBufferPointer(), &m_pVertexShader[Sky]);
 		pShaderBuff -> Release();
 	}
 	// пиксельный шейдер
-	D3DXCompileShaderFromFile( "shader//Sky.psh", NULL, NULL, "main", "ps_2_0", D3DXSHADER_OPTIMIZATION_LEVEL3,
-		&pShaderBuff, &pErrors, &pConstTablePS[Sky] );
+	D3DXCompileShaderFromFile( "shader//Sky.psh", 0, 0, "main", "ps_2_0", D3DXSHADER_OPTIMIZATION_LEVEL3,
+								&pShaderBuff, &pErrors, &m_pConstTablePS[Sky] );
 	if ( pShaderBuff )
 	{
-		g_pD3DDevice->CreatePixelShader(( DWORD* )pShaderBuff->GetBufferPointer(), &pPixelShader[Sky]);
+		g_pD3DDevice->CreatePixelShader(( DWORD* )pShaderBuff->GetBufferPointer(), &m_pPixelShader[Sky]);
 		pShaderBuff -> Release();
 	}
 	//-------------------------------Diffuse----------------------------
 	// вертексный шейдер
-	D3DXCompileShaderFromFile( "shader//Diffuse.vsh", NULL, NULL, "main", "vs_2_0", D3DXSHADER_OPTIMIZATION_LEVEL3,
-		&pShaderBuff, &pErrors, &pConstTableVS[Diffuse] );
+	D3DXCompileShaderFromFile( "shader//Diffuse.vsh", 0, 0, "main", "vs_2_0", D3DXSHADER_OPTIMIZATION_LEVEL3,
+								&pShaderBuff, &pErrors, &m_pConstTableVS[Diffuse] );
 	if ( pShaderBuff )
 	{
-		g_pD3DDevice->CreateVertexShader(( DWORD* )pShaderBuff->GetBufferPointer(), &pVertexShader[Diffuse]);
+		g_pD3DDevice->CreateVertexShader(( DWORD* )pShaderBuff->GetBufferPointer(), &m_pVertexShader[Diffuse]);
 		pShaderBuff -> Release();
 	}
 	// пиксельный шейдер
-	D3DXCompileShaderFromFile( "shader//Diffuse.psh", NULL, NULL, "main", "ps_2_0", D3DXSHADER_OPTIMIZATION_LEVEL3,
-		&pShaderBuff, &pErrors, &pConstTablePS[Diffuse] );
+	D3DXCompileShaderFromFile( "shader//Diffuse.psh", 0, 0, "main", "ps_2_0", D3DXSHADER_OPTIMIZATION_LEVEL3,
+								&pShaderBuff, &pErrors, &m_pConstTablePS[Diffuse] );
 	if ( pShaderBuff )
 	{
-		g_pD3DDevice->CreatePixelShader(( DWORD* )pShaderBuff->GetBufferPointer(), &pPixelShader[Diffuse]);
+		g_pD3DDevice->CreatePixelShader(( DWORD* )pShaderBuff->GetBufferPointer(), &m_pPixelShader[Diffuse]);
 		pShaderBuff -> Release();
 	}
 	return S_OK;
 }
 
-HRESULT CD3DDevice::IntialDirect3D( HWND hwnd , FILE *m_FileLog)
+HRESULT CD3DDevice::IntialDirect3D( HWND hwnd , FILE* FileLog)
 {
-	m_pDirect3D  = NULL;
-	g_pD3DDevice = NULL;
+	m_pDirect3D  = 0;
+	g_pD3DDevice = 0;
 	D3DPRESENT_PARAMETERS Direct3DParametr; // структура задающая парметры рендеринга 
 	D3DDISPLAYMODE        Display; // возвращает параметры дисплея
 
-	if ( ( m_pDirect3D = Direct3DCreate9( D3D_SDK_VERSION ) ) == NULL ) // создаётся главный интерфейс
+	if ( ( m_pDirect3D = Direct3DCreate9( D3D_SDK_VERSION ) ) == 0 ) // создаётся главный интерфейс
 		return E_FAIL;	
-	if ( m_FileLog ) 
-		fprintf( m_FileLog, "Initial Direct3D\n" );
+	if ( FileLog ) 
+		fprintf( FileLog, "Initial Direct3D\n" );
 	if ( FAILED( m_pDirect3D -> GetAdapterDisplayMode( D3DADAPTER_DEFAULT, &Display ) ) ) // получаем текущий формат дисплея
 		return E_FAIL;
 
@@ -73,19 +73,13 @@ HRESULT CD3DDevice::IntialDirect3D( HWND hwnd , FILE *m_FileLog)
 	Direct3DParametr.BackBufferFormat       = Display.Format;		 // формат поверхности заднего буфера
 	Direct3DParametr.EnableAutoDepthStencil = TRUE;					 // включаем Z-буфер
 	Direct3DParametr.AutoDepthStencilFormat = D3DFMT_D16;
-	Direct3DParametr.PresentationInterval	= D3DPRESENT_INTERVAL_DEFAULT; // 60fps
-	//Direct3DParametr.PresentationInterval	= D3DPRESENT_INTERVAL_IMMEDIATE; //максимальное fps
-	/*/---------------------------полноэкранный режим--------------------
-	Direct3DParametr.BackBufferWidth  = GetSystemMetrics(SM_CXSCREEN);
-	Direct3DParametr.BackBufferHeight = GetSystemMetrics(SM_CYSCREEN);
-	Direct3DParametr.BackBufferCount  = 3;
-	Direct3DParametr.FullScreen_RefreshRateInHz = Display.RefreshRate;
-	//------------------------------------------------------------------*/
+	Direct3DParametr.PresentationInterval	= D3DPRESENT_INTERVAL_DEFAULT; 
+
 	if ( FAILED( m_pDirect3D -> CreateDevice( D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, hwnd, D3DCREATE_HARDWARE_VERTEXPROCESSING,
-		&Direct3DParametr, &g_pD3DDevice ) ) ) // создаётся интерфейс устройства
+											  &Direct3DParametr, &g_pD3DDevice ) ) ) // создаётся интерфейс устройства
 		return E_FAIL;
-	if ( m_FileLog ) 
-		fprintf( m_FileLog, "Initial CreateDevice Direct3D\n" );
+	if ( FileLog ) 
+		fprintf( FileLog, "Initial CreateDevice Direct3D\n" );
 	g_pD3DDevice -> SetRenderState( D3DRS_CULLMODE, D3DCULL_CCW );				//  режим отсечения включено и происходит по часовой стрелке
 	g_pD3DDevice -> SetRenderState( D3DRS_LIGHTING, FALSE );					// запрещается работа со светом
 	g_pD3DDevice -> SetRenderState( D3DRS_ZENABLE, D3DZB_TRUE );				// разрешает использовать Z-буфер
@@ -98,14 +92,14 @@ HRESULT CD3DDevice::IntialDirect3D( HWND hwnd , FILE *m_FileLog)
 	return S_OK;
 }
 
-HRESULT	CD3DDevice::LoadTexture( FILE *m_FileLog )
+HRESULT	CD3DDevice::LoadTexture( FILE* FileLog )
 {	
-	m_CubeTexture = NULL;
+	m_CubeTexture = 0;
 
 	if ( FAILED( D3DXCreateCubeTextureFromFileEx( g_pD3DDevice, "model//sky_cube_mipmap.dds", D3DX_DEFAULT, D3DX_FROM_FILE, 0, 
 		                                          D3DFMT_UNKNOWN, D3DPOOL_DEFAULT, D3DX_FILTER_NONE, D3DX_FILTER_NONE, 0, 0, 0, &m_CubeTexture )))
-		if ( m_FileLog ) 
-			fprintf( m_FileLog, "error load sky texture\n" );
+		if ( FileLog ) 
+			fprintf( FileLog, "error load sky texture\n" );
 	return S_OK;
 }
 
@@ -113,26 +107,22 @@ void CD3DDevice::Release()
 {
 	for (int i = 0; i < MaxShader; ++i)
 	{	
-		if (pVertexShader[i] != NULL)
-			pVertexShader[i] -> Release();
-		if (pPixelShader[i] != NULL)
-			pPixelShader[i] -> Release();
-		if (pConstTableVS[i] != NULL)
-			pConstTableVS[i] -> Release();
-		if (pConstTablePS[i] != NULL)
-			pConstTablePS[i] -> Release();
+		if ( m_pVertexShader[i] )
+			m_pVertexShader[i] -> Release();
+		if ( m_pPixelShader[i] )
+			m_pPixelShader[i] -> Release();
+		if ( m_pConstTableVS[i] )
+			m_pConstTableVS[i] -> Release();
+		if ( m_pConstTablePS[i] )
+			m_pConstTablePS[i] -> Release();
 	}
-	if ( m_CubeTexture != NULL )
+	if ( m_CubeTexture )
 		m_CubeTexture -> Release();
-	if ( m_pTexturaSky != NULL )
+	if ( m_pTexturaSky )
 		m_pTexturaSky -> Release();	
-	if ( m_Texture   != NULL )
-		m_Texture   -> Release();	
-	if ( pTextura002 != NULL )
-		pTextura002 -> Release();
-	if ( g_pD3DDevice != NULL )
+	if ( g_pD3DDevice )
 		g_pD3DDevice -> Release();
-	if ( m_pDirect3D != NULL )
+	if ( m_pDirect3D )
 		m_pDirect3D -> Release();	
 };
 
@@ -162,11 +152,11 @@ bool CLuaScript::lua_dobuffer( lua_State* Lua, void const* Buffer, int Size )
 	return true;
 }
 
-CLuaScript::CLuaScript( FILE *FileLog )
+CLuaScript::CLuaScript( FILE* FileLog )
 {
 	m_FileBuffer = 0;
 	m_FileSize   = 0;
-	m_FileLog = FileLog;
+	m_FileLog    = FileLog;
 	FILE* const FO = fopen( "CheckComputer.lua", "rb" );
 	if ( FO )
 	{
@@ -178,7 +168,7 @@ CLuaScript::CLuaScript( FILE *FileLog )
 		fclose(FO);
 	}
 	m_luaVM = lua_open();
-	if ( m_luaVM == NULL ) 
+	if ( m_luaVM == 0 ) 
 		if ( m_FileLog ) 
 			fprintf( m_FileLog, "Error Initializing lua\n" );
 

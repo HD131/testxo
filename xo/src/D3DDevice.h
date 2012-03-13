@@ -23,15 +23,12 @@ extern "C"
 #include "lua/lualib.h"
 #include "lua/lauxlib.h"
 }
-/*
-#pragma comment (lib,"d3d9.lib")
-#pragma comment (lib,"d3dx9.lib")
-#pragma comment (lib,"dinput8.lib")
-#pragma comment (lib,"dxguid.lib")
-#pragma comment (lib,"winmm.lib")
-*/
+
 const UINT Width  = 1024;
 const UINT Height = 768;
+enum  NameShader { Sky       = 0,  
+                   Diffuse   = 1,
+				   MaxShader = 2};
 
 #define LEFT_BUTTON   0
 #define RIGHT_BUTTON  1
@@ -42,39 +39,36 @@ const UINT Height = 768;
 class CD3DDevice
 {
 public:
-	IDirect3D9			   *m_pDirect3D; // указатель на Главный интерфейс отвечающий за Direct3D
-	IDirect3DTexture9      *pTextura002;
-	IDirect3DTexture9      *m_pTexturaSky;
-	IDirect3DTexture9	   *m_Texture;
-	IDirect3DCubeTexture9  *m_CubeTexture;
-	enum { MaxShader = 2 };
-	IDirect3DPixelShader9  *pPixelShader [MaxShader];
-	IDirect3DVertexShader9 *pVertexShader[MaxShader];
-	ID3DXConstantTable     *pConstTableVS[MaxShader];
-	ID3DXConstantTable     *pConstTablePS[MaxShader];	
-	HRESULT                 IntialDirect3D( HWND hwnd, FILE *m_FileLog );
+	IDirect3D9*			    m_pDirect3D; // указатель на Главный интерфейс отвечающий за Direct3D	
+	IDirect3DTexture9*      m_pTexturaSky;
+	IDirect3DCubeTexture9*  m_CubeTexture;	
+	IDirect3DPixelShader9*  m_pPixelShader [MaxShader];
+	IDirect3DVertexShader9* m_pVertexShader[MaxShader];
+	ID3DXConstantTable*     m_pConstTableVS[MaxShader];
+	ID3DXConstantTable*     m_pConstTablePS[MaxShader];	
+	HRESULT                 IntialDirect3D( HWND hwnd, FILE *FileLog );
 	HRESULT                 InitialShader();
-	HRESULT				    LoadTexture( FILE *m_FileLog );
+	HRESULT				    LoadTexture( FILE *FileLog );
 	void				    Release();
 };
 
 struct CCell
 {
-	float       Radius;
-	D3DXVECTOR3 Centr;	
-	int         Value;
+	float       m_Radius;
+	D3DXVECTOR3 m_Centr;	
+	int         m_Value;
 	CCell()
 	{		
-		Value  = 10;
-		Radius = 5.0f;			
-		Centr  = D3DXVECTOR3( 0, 0, 0 );			
+		m_Value  = 10;
+		m_Radius = 5.0f;			
+		m_Centr  = D3DXVECTOR3( 0, 0, 0 );			
 	}
 	void SetCenter( float x, float y, float z)
 	{
 		D3DXMATRIX MatrixWorld;
 		D3DXMatrixTranslation( &MatrixWorld, 0, 0, 0 );
-		Centr = D3DXVECTOR3( x, y, z );
-		D3DXVec3TransformNormal( &Centr, &Centr, &MatrixWorld );
+		m_Centr = D3DXVECTOR3( x, y, z );
+		D3DXVec3TransformNormal( &m_Centr, &m_Centr, &MatrixWorld );
 	}
 };
 
@@ -87,10 +81,10 @@ struct CVertexFVF
 
 struct CLuaScript
 {
-	lua_State    *m_luaVM;
-	void         *m_FileBuffer;
+	lua_State*    m_luaVM;
+	void*		  m_FileBuffer;
 	unsigned int  m_FileSize;
-	FILE         *m_FileLog; 
+	FILE*         m_FileLog; 
 	bool          lua_dobuffer( lua_State* Lua, void const* Buffer, int Size );
 	CLuaScript( FILE *FileLog );
 	~CLuaScript();
