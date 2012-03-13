@@ -1,56 +1,58 @@
 #include "InputDevice.h"
 
 int    GameOver();
-POINT PickObject( CCell *m_Cell );
+POINT PickObject( CCell *Cell );
 
 
-HRESULT CInputDevice::InitialInput( HWND hwnd, FILE *m_FileLog )
+HRESULT CInputDevice::InitialInput( HWND hwnd, FILE *FileLog )
 {	
-	pInput    = NULL;
-	pKeyboard = NULL;
-	pMouse    = NULL;
+	m_pInput    = 0;
+	m_pKeyboard = 0;
+	m_pMouse    = 0;
+
 	DIPROPDWORD dipdw;
 	dipdw.diph.dwSize		= sizeof( DIPROPDWORD );
 	dipdw.diph.dwHeaderSize	= sizeof( DIPROPHEADER );
 	dipdw.diph.dwObj		= 0;
 	dipdw.diph.dwHow		= DIPH_DEVICE;
 	dipdw.dwData			= 32;
-	if (FAILED(DirectInput8Create(GetModuleHandle(0), DIRECTINPUT_VERSION, IID_IDirectInput8, (void**)&pInput, NULL)))
-		return E_FAIL;
-	if ( m_FileLog ) 
-		fprintf( m_FileLog, "Initial DirectInput8\n" );
 
-	if FAILED(pInput -> CreateDevice(GUID_SysKeyboard, &pKeyboard, NULL)) //создание устройства клавиатура
+	if (FAILED(DirectInput8Create(GetModuleHandle(0), DIRECTINPUT_VERSION, IID_IDirectInput8, (void**)&m_pInput, NULL)))
 		return E_FAIL;
-	if FAILED(pKeyboard -> SetDataFormat(&c_dfDIKeyboard))
+	if ( FileLog ) 
+		fprintf( FileLog, "Initial DirectInput8\n" );
+
+	if FAILED(m_pInput -> CreateDevice(GUID_SysKeyboard, &m_pKeyboard, NULL)) //создание устройства клавиатура
 		return E_FAIL;
-	if FAILED(pKeyboard -> SetCooperativeLevel(hwnd, DISCL_FOREGROUND | DISCL_NONEXCLUSIVE))
+	if FAILED(m_pKeyboard -> SetDataFormat(&c_dfDIKeyboard))
 		return E_FAIL;
-	if( FAILED(pKeyboard->SetProperty( DIPROP_BUFFERSIZE, &dipdw.diph ) ) )
+	if FAILED(m_pKeyboard -> SetCooperativeLevel(hwnd, DISCL_FOREGROUND | DISCL_NONEXCLUSIVE))
 		return E_FAIL;
-	if FAILED(pKeyboard -> Acquire())
+	if( FAILED(m_pKeyboard->SetProperty( DIPROP_BUFFERSIZE, &dipdw.diph ) ) )
+		return E_FAIL;
+	if FAILED(m_pKeyboard -> Acquire())
 		return E_FAIL;
 
-	if FAILED(pInput -> CreateDevice(GUID_SysMouse, &pMouse, NULL)) // создание устройства мышь
+	if FAILED(m_pInput -> CreateDevice(GUID_SysMouse, &m_pMouse, 0)) // создание устройства мышь
 		return E_FAIL;	
-	if FAILED(pMouse -> SetDataFormat(&c_dfDIMouse2))
+	if FAILED(m_pMouse -> SetDataFormat(&c_dfDIMouse2))
 		return E_FAIL;	
-	if FAILED(pMouse -> SetCooperativeLevel(hwnd, DISCL_FOREGROUND | DISCL_NONEXCLUSIVE))
+	if FAILED(m_pMouse -> SetCooperativeLevel(hwnd, DISCL_FOREGROUND | DISCL_NONEXCLUSIVE))
 		return E_FAIL;	
-	if FAILED(pMouse -> Acquire())
+	if FAILED(m_pMouse -> Acquire())
 		return E_FAIL;
 
 	return S_OK;
 }
 
-bool CInputDevice::ScanInput( CameraDevice *m_Camera, bool *Check, CCell *m_Cell )
+bool CInputDevice::ScanInput( CameraDevice *m_Camera, bool *Check, CCell *Cell )
 {	
 	char     keyboard[256];     
 	LONG     dx, dy, dz;
 
-	if FAILED( pKeyboard -> GetDeviceState(sizeof(keyboard), (LPVOID)&keyboard) )
+	if FAILED( m_pKeyboard -> GetDeviceState(sizeof(keyboard), (LPVOID)&keyboard) )
 	{
-		pKeyboard -> Acquire();
+		m_pKeyboard -> Acquire();
 		return FALSE;
 	}
 
@@ -63,21 +65,21 @@ bool CInputDevice::ScanInput( CameraDevice *m_Camera, bool *Check, CCell *m_Cell
 	if ( KEYDOWN(keyboard, DIK_DOWN) || KEYDOWN(keyboard, DIK_S))
 		m_Camera->MoveBack();
 
-	if FAILED( pMouse -> GetDeviceState( sizeof( CMouseState ), (LPVOID)&mouse ) )
+	if FAILED( m_pMouse -> GetDeviceState( sizeof( CMouseState ), (LPVOID)&m_Mouse ) )
 	{
-		pMouse -> Acquire();
+		m_pMouse -> Acquire();
 		return FALSE;
 	}
-	dx = mouse.lX;
-	dy = mouse.lY;
-	dz = mouse.lZ;
+	dx = m_Mouse.m_lX;
+	dy = m_Mouse.m_lY;
+	dz = m_Mouse.m_lZ;
 
-	if ( mouse.rgbButtons[LEFT_BUTTON]&0x80 )
+	if ( m_Mouse.m_rgbButtons[LEFT_BUTTON]&0x80 )
 	{
-		POINT Point = PickObject( &m_Cell[0]);
-		if ( ( Point.x >= 0 ) && ( m_Cell[Point.x*3+Point.y].Value > 1 ) && ( GameOver() < 0 ) )
+		POINT Point = PickObject( &Cell[0]);
+		if ( ( Point.x >= 0 ) && ( Cell[Point.x*3+Point.y].m_Value > 1 ) && ( GameOver() < 0 ) )
 		{
-			m_Cell[Point.x*3+Point.y].Value = 1;
+			Cell[Point.x*3+Point.y].m_Value = 1;
 			
 			if ( GameOver() > 0 )
 				return TRUE;
@@ -89,26 +91,26 @@ bool CInputDevice::ScanInput( CameraDevice *m_Camera, bool *Check, CCell *m_Cell
 
 void CInputDevice::Release()
 {
-	if (pInput)
+	if (m_pInput)
 	{
-		if (pKeyboard)
+		if (m_pKeyboard)
 		{
-			if (pKeyboard != NULL)
-				pKeyboard -> Unacquire();
-			if (pKeyboard != NULL)
-				pKeyboard -> Release();
-			pKeyboard = NULL;
+			if (m_pKeyboard)
+				m_pKeyboard -> Unacquire();
+			if (m_pKeyboard)
+				m_pKeyboard -> Release();
+			m_pKeyboard = 0;
 		}
-		if (pMouse)
+		if (m_pMouse)
 		{
-			if (pMouse != NULL)
-				pMouse -> Unacquire();
-			if (pMouse != NULL)
-				pMouse -> Release();
-			pMouse = NULL;
+			if (m_pMouse)
+				m_pMouse -> Unacquire();
+			if (m_pMouse)
+				m_pMouse -> Release();
+			m_pMouse = 0;
 		}
-		if (pInput != NULL)
-			pInput -> Release();
-		pInput = NULL;
+		if (m_pInput)
+			m_pInput -> Release();
+		m_pInput = 0;
 	}
 }
