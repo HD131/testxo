@@ -46,6 +46,7 @@ const int    MaxField = 10;
 CD3DDevice   g_DeviceD3D;
 CInputDevice g_DeviceInput;
 CSky         g_Sky;
+CMesh3D      g_MeshA;
 CMesh3D      g_MeshS;
 CMesh3D      g_MeshX;
 CMesh3D      g_MeshO;
@@ -203,12 +204,73 @@ void RenderingDirect3D( CCell* Cell )
 	//------------------------------------------Render Mesh----------------------------------------
 	D3DXMATRIX MatrixWorldX,MatrixWorldY;
 	int t = int((MaxField-1)/2);
-	//------------------Setka--------------
-	D3DXMatrixRotationX( &MatrixWorld, 1.57f );
-	g_MeshS.SetMatrixWorld( MatrixWorld );
-	g_MeshS.SetMatrixView( MatrixView );
-	g_MeshS.SetMatrixProjection( MatrixProjection );
-	g_MeshS.DrawMyMesh();
+	//------------------Ограда--------------
+	D3DXMatrixRotationY( &MatrixWorldY, -1.57f );
+	D3DXMatrixTranslation( &MatrixWorldX, ( -1 - t ), 0, ( -1 - t ) );
+	MatrixWorld = MatrixWorldY * MatrixWorldX;
+	g_MeshA.SetMatrixWorld( MatrixWorld );
+	g_MeshA.SetMatrixView( MatrixView );
+	g_MeshA.SetMatrixProjection( MatrixProjection );
+	g_MeshA.DrawMyMesh();
+
+	D3DXMatrixRotationY( &MatrixWorldY, 0.0f );
+	D3DXMatrixTranslation( &MatrixWorldX, ( -1 - t ), 0, ( 2 + t ) );
+	MatrixWorld = MatrixWorldY * MatrixWorldX;
+	g_MeshA.SetMatrixWorld( MatrixWorld );
+	g_MeshA.SetMatrixView( MatrixView );
+	g_MeshA.SetMatrixProjection( MatrixProjection );
+	g_MeshA.DrawMyMesh();
+
+	D3DXMatrixRotationY( &MatrixWorldY, 3.14f );
+	D3DXMatrixTranslation( &MatrixWorldX, ( 2 + t ), 0, ( -1 - t ) );
+	MatrixWorld = MatrixWorldY * MatrixWorldX;
+	g_MeshA.SetMatrixWorld( MatrixWorld );
+	g_MeshA.SetMatrixView( MatrixView );
+	g_MeshA.SetMatrixProjection( MatrixProjection );
+	g_MeshA.DrawMyMesh();
+
+	D3DXMatrixRotationY( &MatrixWorldY, 1.57f );
+	D3DXMatrixTranslation( &MatrixWorldX, ( 2 + t ), 0, ( 2 + t ) );
+	MatrixWorld = MatrixWorldY * MatrixWorldX;
+	g_MeshA.SetMatrixWorld( MatrixWorld );
+	g_MeshA.SetMatrixView( MatrixView );
+	g_MeshA.SetMatrixProjection( MatrixProjection );
+	g_MeshA.DrawMyMesh();
+	for ( int x = 1; x < MaxField - 1; ++x )
+	{
+		D3DXMatrixRotationY( &MatrixWorldY, 1.57f );
+		D3DXMatrixTranslation( &MatrixWorldX, ( -1 - t ), 0, ( x - t ) );
+		MatrixWorld = MatrixWorldY * MatrixWorldX;
+		g_MeshS.SetMatrixWorld( MatrixWorld );
+		g_MeshS.SetMatrixView( MatrixView );
+		g_MeshS.SetMatrixProjection( MatrixProjection );
+		g_MeshS.DrawMyMesh();
+
+		D3DXMatrixRotationY( &MatrixWorldY, 1.57f );
+		D3DXMatrixTranslation( &MatrixWorldX, ( 2 + t ), 0, ( x - t ) );
+		MatrixWorld = MatrixWorldY * MatrixWorldX;
+		g_MeshS.SetMatrixWorld( MatrixWorld );
+		g_MeshS.SetMatrixView( MatrixView );
+		g_MeshS.SetMatrixProjection( MatrixProjection );
+		g_MeshS.DrawMyMesh();
+
+		D3DXMatrixRotationY( &MatrixWorldY, 0.0f );
+		D3DXMatrixTranslation( &MatrixWorldX, ( x - t ), 0, ( -1 - t ) );
+		MatrixWorld = MatrixWorldY * MatrixWorldX;
+		g_MeshS.SetMatrixWorld( MatrixWorld );
+		g_MeshS.SetMatrixView( MatrixView );
+		g_MeshS.SetMatrixProjection( MatrixProjection );
+		g_MeshS.DrawMyMesh();
+
+		D3DXMatrixRotationY( &MatrixWorldY, 0.0f );
+		D3DXMatrixTranslation( &MatrixWorldX, ( x - t ), 0, ( 2 + t ) );
+		MatrixWorld = MatrixWorldY * MatrixWorldX;
+		g_MeshS.SetMatrixWorld( MatrixWorld );
+		g_MeshS.SetMatrixView( MatrixView );
+		g_MeshS.SetMatrixProjection( MatrixProjection );
+		g_MeshS.DrawMyMesh();
+	}
+	//-------------------------------------------------------------------------
 	for ( int y = 0; y < MaxField; ++y )
 		for ( int x = 0; x < MaxField; ++x )
 		{
@@ -394,7 +456,8 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance,
 					g_Cell[x][y].SetCenter(  y - int((MaxField-1)/2) , 0 ,x - int((MaxField-1)/2));	
 					g_Cell[x][y].m_Value = 1;
 				}
-			g_MeshS.InitialMesh( "model//Setka.x", g_FileLog );
+			g_MeshS.InitialMesh( "model//Stena.x", g_FileLog );
+			g_MeshA.InitialMesh( "model//Angle.x", g_FileLog );
 			g_MeshO.InitialMesh( "model//O.x", g_FileLog );
 			g_MeshX.InitialMesh( "model//Box.x", g_FileLog );	
 			g_MeshWin.InitialMesh( "model//Win.x", g_FileLog );	
