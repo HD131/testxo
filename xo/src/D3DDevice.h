@@ -57,7 +57,7 @@ struct CCell
 	CCell()
 	{		
 		m_Value  = 10;
-		m_Radius = 5.0f;			
+		m_Radius = 10;			
 		m_Centr  = D3DXVECTOR3( 0, 0, 0 );			
 	}
 	void SetCenter( float x, float y, float z)
