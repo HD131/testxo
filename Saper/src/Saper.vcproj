@@ -177,7 +177,7 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath="..\..\GoogleCode\xo\src\CameraDevice.cpp"
+				RelativePath=".\CameraDevice.cpp"
 				>
 			</File>
 			<File
@@ -185,7 +185,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\GoogleCode\xo\src\InputDevice.cpp"
+				RelativePath=".\InputDevice.cpp"
 				>
 			</File>
 			<File
@@ -207,7 +207,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\GoogleCode\xo\src\InputDevice.h"
+				RelativePath=".\InputDevice.h"
 				>
 			</File>
 		</Filter>

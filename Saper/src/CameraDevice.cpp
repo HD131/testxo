@@ -2,9 +2,9 @@
 
 CameraDevice::CameraDevice()
 {
-	PositionCamera	= D3DXVECTOR3( 0, 0, -80 );
-	CameraUp		= D3DXVECTOR3( 0, 1, 0 );
-	TargetDir		= D3DXVECTOR3( 0, 0, 1 );
+	PositionCamera	= D3DXVECTOR3( 0, 20, 0 );
+	CameraUp		= D3DXVECTOR3( -1, 0, 0 );
+	TargetDir		= D3DXVECTOR3( 0, -1, 0 );
 	DirX		    = D3DXVECTOR3( 1, 0, 0 );
 	DirY		    = D3DXVECTOR3( 0, 1, 0 );
 	Point		    = D3DXVECTOR3( 0, 0, 0 );
