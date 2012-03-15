@@ -203,8 +203,9 @@ void RenderingDirect3D( CCell* Cell )
 	g_pD3DDevice -> SetRenderState(  D3DRS_ZENABLE, true );
 	//------------------------------------------Render Mesh----------------------------------------
 	D3DXMATRIX MatrixWorldX,MatrixWorldY;
-	int t = int((MaxField-1)/2);
+	int t = ( MaxField - 1) / 2;
 	//------------------Ограда--------------
+	//----------
 	D3DXMatrixRotationY( &MatrixWorldY, -1.57f );
 	D3DXMatrixTranslation( &MatrixWorldX, ( -1 - t ), 0, ( -1 - t ) );
 	MatrixWorld = MatrixWorldY * MatrixWorldX;
@@ -214,7 +215,7 @@ void RenderingDirect3D( CCell* Cell )
 	g_MeshA.DrawMyMesh();
 
 	D3DXMatrixRotationY( &MatrixWorldY, 0.0f );
-	D3DXMatrixTranslation( &MatrixWorldX, ( -1 - t ), 0, ( 2 + t ) );
+	D3DXMatrixTranslation( &MatrixWorldX, ( -1 - t ), 0, ( - t +  MaxField) );
 	MatrixWorld = MatrixWorldY * MatrixWorldX;
 	g_MeshA.SetMatrixWorld( MatrixWorld );
 	g_MeshA.SetMatrixView( MatrixView );
@@ -222,7 +223,7 @@ void RenderingDirect3D( CCell* Cell )
 	g_MeshA.DrawMyMesh();
 
 	D3DXMatrixRotationY( &MatrixWorldY, 3.14f );
-	D3DXMatrixTranslation( &MatrixWorldX, ( 2 + t ), 0, ( -1 - t ) );
+	D3DXMatrixTranslation( &MatrixWorldX, (- t +  MaxField ), 0, ( -1 - t ) );
 	MatrixWorld = MatrixWorldY * MatrixWorldX;
 	g_MeshA.SetMatrixWorld( MatrixWorld );
 	g_MeshA.SetMatrixView( MatrixView );
@@ -230,7 +231,7 @@ void RenderingDirect3D( CCell* Cell )
 	g_MeshA.DrawMyMesh();
 
 	D3DXMatrixRotationY( &MatrixWorldY, 1.57f );
-	D3DXMatrixTranslation( &MatrixWorldX, ( 2 + t ), 0, ( 2 + t ) );
+	D3DXMatrixTranslation( &MatrixWorldX, (- t +  MaxField ), 0, ( - t +  MaxField ) );
 	MatrixWorld = MatrixWorldY * MatrixWorldX;
 	g_MeshA.SetMatrixWorld( MatrixWorld );
 	g_MeshA.SetMatrixView( MatrixView );
@@ -247,7 +248,7 @@ void RenderingDirect3D( CCell* Cell )
 		g_MeshS.DrawMyMesh();
 
 		D3DXMatrixRotationY( &MatrixWorldY, 1.57f );
-		D3DXMatrixTranslation( &MatrixWorldX, ( 2 + t ), 0, ( x - t ) );
+		D3DXMatrixTranslation( &MatrixWorldX, ( - t +  MaxField ), 0, ( x - t ) );
 		MatrixWorld = MatrixWorldY * MatrixWorldX;
 		g_MeshS.SetMatrixWorld( MatrixWorld );
 		g_MeshS.SetMatrixView( MatrixView );
@@ -263,7 +264,7 @@ void RenderingDirect3D( CCell* Cell )
 		g_MeshS.DrawMyMesh();
 
 		D3DXMatrixRotationY( &MatrixWorldY, 0.0f );
-		D3DXMatrixTranslation( &MatrixWorldX, ( x - t ), 0, ( 2 + t ) );
+		D3DXMatrixTranslation( &MatrixWorldX, ( x - t ), 0, ( - t +  MaxField ) );
 		MatrixWorld = MatrixWorldY * MatrixWorldX;
 		g_MeshS.SetMatrixWorld( MatrixWorld );
 		g_MeshS.SetMatrixView( MatrixView );
@@ -302,7 +303,7 @@ void RenderingDirect3D( CCell* Cell )
 		POINT P = PickObject( &Cell[0] );
 		char  str[50];
 		sprintf(str, "%d          %d", P.x, P.y);		
-		DrawMyText(g_pD3DDevice, str, 10, 10, 500, 700, D3DCOLOR_ARGB(250, 250, 250,50));	
+		//DrawMyText(g_pD3DDevice, str, 10, 10, 500, 700, D3DCOLOR_ARGB(250, 250, 250,50));	
 		if ( P.x >= 0)
 		{
 			if ( Cell[P.x*MaxField+P.y].m_Value == 1 )
@@ -439,13 +440,22 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	w.hbrBackground = (HBRUSH)GetStockObject( WHITE_BRUSH );
 	w.lpszClassName = "My Class";
 	w.hIcon         = LoadIcon( 0, IDI_QUESTION );//стандартная иконка приложения Win API 	
+	w.hCursor       = LoadCursor( 0, "aero_link_l.cur" );
 	RegisterClass(&w);
 	HWND hwnd = CreateWindow( "My Class", "Сапёр", WS_SYSMENU | WS_MINIMIZEBOX,
 							  250, 150, Width, Height, 0, 0, hInstance, 0 );	
 	ShowWindow( hwnd, nCmdShow );
 	ZeroMemory( &msg, sizeof( msg ) );
-	
-	
+	/*
+	HWND i;
+	i=LoadImage(0,"cursor1.cur",IMAGE_CURSOR,0,0,LR_LOADFROMFILE);
+	if (i==0) ShowMessage("Ошибка загрузки курсора!");
+	else
+	{
+		Screen->Cursors[1]=i;
+		Form1->Cursor=1;
+	}*/
+
 	if ( SUCCEEDED( g_DeviceD3D.IntialDirect3D( hwnd, g_FileLog) ) )
 	{	
 		if ( SUCCEEDED( g_DeviceD3D.LoadTexture( g_FileLog ) ) )
@@ -468,7 +478,7 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance,
 			g_DeviceD3D.InitialShader();
 			g_fps.m_last_tick = GetTickCount();
 			while( !g_Exit )
-			{					
+			{
 				g_DeviceInput.ScanInput( &g_Camera, &Check, &g_Cell[0][0] );
 				if ( Check )
 					CheckPC( g_Lua.m_luaVM , &Check, &g_Cell[0][0]);
