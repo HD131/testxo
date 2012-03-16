@@ -42,10 +42,10 @@ HRESULT CInputDevice::InitialInput( HWND hwnd, FILE *FileLog )
 	if FAILED(m_pMouse -> Acquire())
 		return E_FAIL;
 
-	return S_OK;
+return S_OK;
 }
 
-bool CInputDevice::ScanInput( CameraDevice *m_Camera, CCell *Cell )
+bool CInputDevice::ScanInput( CameraDevice *m_Camera, CCell *Cell, int* Field )
 {	
 	char     keyboard[256];     
 	LONG     dx, dy, dz;
@@ -77,15 +77,32 @@ bool CInputDevice::ScanInput( CameraDevice *m_Camera, CCell *Cell )
 	if ( m_Mouse.m_rgbButtons[LEFT_BUTTON]&0x80 )
 	{
 		POINT Point = PickObject( &Cell[0]);
-		if ( ( Point.x >= 0 ) && ( Cell[Point.x*MaxField+Point.y].m_Value == Empty ) && ( GameOver() < 0 ) )
+		if ( ( Point.x >= 0 ) && ( Field[Point.x*MaxField+Point.y] == Empty ) )
 		{
-			Cell[Point.x*MaxField+Point.y].m_Value = Mine;
-			
-			if ( GameOver() > 0 )
-				return TRUE;						
+			Beep(150, 50);
+			Field[Point.x*MaxField+Point.y] = -1;								
 		}
 	}
-	return TRUE;
+	if ( m_Mouse.m_rgbButtons[RIGHT_BUTTON]&0x80 )
+	{
+		POINT Point = PickObject( &Cell[0]);
+		if ( ( Point.x >= 0 ) && ( Field[Point.x*MaxField+Point.y] == Flag ) )
+		{
+			Beep(150, 50);
+			Field[Point.x*MaxField+Point.y] = Empty;
+			return TRUE;
+		}
+	}
+	if ( m_Mouse.m_rgbButtons[RIGHT_BUTTON]&0x80 )
+	{
+		POINT Point = PickObject( &Cell[0]);
+		if ( ( Point.x >= 0 ) && ( Field[Point.x*MaxField+Point.y] == Empty ) )
+		{
+			Beep(150, 50);
+			Field[Point.x*MaxField+Point.y] = Flag;			
+		}
+	}
+return TRUE;
 }
 
 void CInputDevice::Release()

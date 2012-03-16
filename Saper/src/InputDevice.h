@@ -19,6 +19,6 @@ public:
 	LPDIRECTINPUTDEVICE8    m_pMouse;
 	CMouseState             m_Mouse;	
 	HRESULT                 InitialInput( HWND hwnd, FILE* FileLog );
-	bool                    ScanInput( CameraDevice* m_Camera , CCell* Cell );
+	bool                    ScanInput( CameraDevice* m_Camera , CCell* Cell, int* Field );
 	void					Release();
 };
