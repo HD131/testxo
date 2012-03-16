@@ -27,6 +27,7 @@ extern "C"
 const UINT Width  = 1024;
 const UINT Height = 768;
 const int  MaxField = 10;
+const int  MaxMine  = 20;
 enum  NameShader { Sky , Diffuse, MaxShader };
 enum  Values { Empty , One, Two, Three, Four, Five, Six, Seven, Eight, Flag, Mine };
 

@@ -58,7 +58,7 @@ struct CField
 			}
 		int mine = 0;
 		srand( time(0) );
-		while ( mine < 40 )
+		while ( mine < MaxMine )
 		{
 			x = rand() % MaxField;
 			y = rand() % MaxField;
@@ -319,7 +319,7 @@ void RenderingDirect3D( CCell* Cell, int* Field )
 	for ( int y = 0; y < MaxField; ++y )
 		for ( int x = 0; x < MaxField; ++x )
 		{
-			if ( Cell[x*MaxField+y].m_Value == Mine )
+			if ( ( Cell[x*MaxField+y].m_Value == Mine ) && ( Field[x*MaxField+y] == -1 ) )
 			{
 				//--------------------Mine-------------------
 				D3DXMatrixRotationY( &MatrixWorldY, -1.57f );
@@ -331,7 +331,7 @@ void RenderingDirect3D( CCell* Cell, int* Field )
 				g_Mesh[10].m_Alpha = 1.0f;
 				g_Mesh[10].DrawMyMesh();
 			}
-			if ( Cell[x*MaxField+y].m_Value == Empty )
+			if ( Field[x*MaxField+y] == Empty ) 
 			{		
 				//--------------------Empty-------------------
 				D3DXMatrixRotationY(   &MatrixWorldY, -1.57f );
@@ -343,7 +343,19 @@ void RenderingDirect3D( CCell* Cell, int* Field )
 				g_Mesh[0].m_Alpha = 1.0f;
 				g_Mesh[0].DrawMyMesh();
 			}
-			if ( Cell[x*MaxField+y].m_Value == 1 )
+			if ( Field[x*MaxField+y] == Flag ) 
+			{		
+				//--------------------Flag-------------------
+				D3DXMatrixRotationY(   &MatrixWorldY, -1.57f );
+				D3DXMatrixTranslation( &MatrixWorldX, ( y - t ), 0, ( x - t ) );
+				D3DXMatrixMultiply(&MatrixWorld, &MatrixWorldY, &MatrixWorldX);
+				g_Mesh[9].SetMatrixWorld( MatrixWorld );
+				g_Mesh[9].SetMatrixView( MatrixView );
+				g_Mesh[9].SetMatrixProjection( MatrixProjection );
+				g_Mesh[9].m_Alpha = 1.0f;
+				g_Mesh[9].DrawMyMesh();
+			}
+			if ( ( Cell[x*MaxField+y].m_Value == 1 ) && ( Field[x*MaxField+y] == -1 ) )
 			{		
 				//--------------------1-------------------
 				D3DXMatrixRotationY(   &MatrixWorldY, -1.57f );
@@ -356,7 +368,7 @@ void RenderingDirect3D( CCell* Cell, int* Field )
 				g_Mesh[1].m_Alpha = 1.0f;
 				g_Mesh[1].DrawMyMesh();
 			}
-			if ( Cell[x*MaxField+y].m_Value == 2 )
+			if ( ( Cell[x*MaxField+y].m_Value == 2 ) && ( Field[x*MaxField+y] == -1 ) )
 			{		
 				//--------------------2-------------------
 				D3DXMatrixRotationY(   &MatrixWorldY, -1.57f );
@@ -368,7 +380,7 @@ void RenderingDirect3D( CCell* Cell, int* Field )
 				g_Mesh[2].m_Alpha = 1.0f;
 				g_Mesh[2].DrawMyMesh();
 			}
-			if ( Cell[x*MaxField+y].m_Value == 3 )
+			if ( ( Cell[x*MaxField+y].m_Value == 3 ) && ( Field[x*MaxField+y] == -1 ) )
 			{		
 				//--------------------3-------------------
 				D3DXMatrixRotationY(   &MatrixWorldY, -1.57f );
@@ -380,7 +392,7 @@ void RenderingDirect3D( CCell* Cell, int* Field )
 				g_Mesh[3].m_Alpha = 1.0f;
 				g_Mesh[3].DrawMyMesh();
 			}
-			if ( Cell[x*MaxField+y].m_Value == 4 )
+			if ( ( Cell[x*MaxField+y].m_Value == 4 ) && ( Field[x*MaxField+y] == -1 ) )
 			{		
 				//--------------------4-------------------
 				D3DXMatrixRotationY(   &MatrixWorldY, -1.57f );
@@ -392,7 +404,7 @@ void RenderingDirect3D( CCell* Cell, int* Field )
 				g_Mesh[4].m_Alpha = 1.0f;
 				g_Mesh[4].DrawMyMesh();
 			}
-			if ( Cell[x*MaxField+y].m_Value == 5 )
+			if ( ( Cell[x*MaxField+y].m_Value == 5 ) && ( Field[x*MaxField+y] == -1 ) )
 			{		
 				//--------------------5-------------------
 				D3DXMatrixRotationY(   &MatrixWorldY, -1.57f );
@@ -405,7 +417,7 @@ void RenderingDirect3D( CCell* Cell, int* Field )
 				g_Mesh[5].m_Alpha = 1.0f;
 				g_Mesh[5].DrawMyMesh();
 			}
-			if ( Cell[x*MaxField+y].m_Value == 6 )
+			if ( ( Cell[x*MaxField+y].m_Value == 6 ) && ( Field[x*MaxField+y] == -1 ) )
 			{		
 				//--------------------6-------------------
 				D3DXMatrixRotationY(   &MatrixWorldY, -1.57f );
@@ -417,7 +429,7 @@ void RenderingDirect3D( CCell* Cell, int* Field )
 				g_Mesh[6].m_Alpha = 1.0f;
 				g_Mesh[6].DrawMyMesh();
 			}
-			if ( Cell[x*MaxField+y].m_Value == 7 )
+			if ( ( Cell[x*MaxField+y].m_Value == 7 ) && ( Field[x*MaxField+y] == -1 ) )
 			{		
 				//--------------------7-------------------
 				D3DXMatrixRotationY(   &MatrixWorldY, -1.57f );
@@ -429,7 +441,7 @@ void RenderingDirect3D( CCell* Cell, int* Field )
 				g_Mesh[7].m_Alpha = 1.0f;
 				g_Mesh[7].DrawMyMesh();
 			}
-			if ( Cell[x*MaxField+y].m_Value == 8 )
+			if ( ( Cell[x*MaxField+y].m_Value == 8 ) && ( Field[x*MaxField+y] == -1 ) )
 			{		
 				//--------------------8-------------------
 				D3DXMatrixRotationY(   &MatrixWorldY, -1.57f );
@@ -448,7 +460,7 @@ void RenderingDirect3D( CCell* Cell, int* Field )
 		//DrawMyText(g_pD3DDevice, str, 10, 10, 500, 700, D3DCOLOR_ARGB(250, 250, 250,50));	
 		if ( P.x >= 0)
 		{
-			if ( Cell[P.x*MaxField+P.y].m_Value == Empty )
+			if ( Field[P.x*MaxField+P.y] == Empty )
 			{
 				//--------------------X-------------------
 				D3DXMatrixRotationY( &MatrixWorldY, -1.57f );
@@ -610,6 +622,7 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance,
 			g_Mesh[6].InitialMesh( "model//6.x", g_FileLog );
 			g_Mesh[7].InitialMesh( "model//7.x", g_FileLog );
 			g_Mesh[8].InitialMesh( "model//8.x", g_FileLog );
+			g_Mesh[9].InitialMesh( "model//Flag.x", g_FileLog );
 			g_Mesh[10].InitialMesh( "model//Mine.x", g_FileLog );	
 			g_MeshWin.InitialMesh( "model//Win.x", g_FileLog );	
 			g_MeshLost.InitialMesh( "model//Lost.x", g_FileLog );
@@ -620,7 +633,7 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance,
 			g_fps.m_last_tick = GetTickCount();
 			while( !g_Exit )
 			{
-				g_DeviceInput.ScanInput( &g_Camera, &g_F.m_Cell[0][0] );				
+				g_DeviceInput.ScanInput( &g_Camera, &g_F.m_Cell[0][0], &g_F.m_Field[0][0] );				
 				RenderingDirect3D( &g_F.m_Cell[0][0], &g_F.m_Field[0][0]);				
 				if ( PeekMessage( &msg, 0, 0, 0, PM_REMOVE ) )
 				{
