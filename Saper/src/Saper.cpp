@@ -58,7 +58,7 @@ struct CField
 			}
 		int mine = 0;
 		srand( time(0) );
-		while ( mine < 10 )
+		while ( mine < 40 )
 		{
 			x = rand() % MaxField;
 			y = rand() % MaxField;
@@ -67,8 +67,7 @@ struct CField
 				m_Cell[x][y].m_Value = Mine;
 				++mine;
 			}
-		}		
-		//m_Cell[1][1].m_Value = Mine;
+		}			
 		for ( y = 0; y < MaxField; ++y )
 			for ( x = 0; x < MaxField; ++x )
 			{
@@ -246,7 +245,7 @@ void RenderingDirect3D( CCell* Cell, int* Field )
 	g_pD3DDevice -> SetSamplerState( 0, D3DSAMP_ADDRESSW, D3DTADDRESS_WRAP );
 	g_pD3DDevice -> SetRenderState(  D3DRS_ZENABLE, true );
 	//------------------------------------------Render Mesh----------------------------------------
-	D3DXMATRIX MatrixWorldX,MatrixWorldY;
+	D3DXMATRIX MatrixWorldX,MatrixWorldY,MatrixWorldZ;
 	int t = ( MaxField - 1) / 2;
 	//------------------Ограда--------------
 	//----------
@@ -348,8 +347,9 @@ void RenderingDirect3D( CCell* Cell, int* Field )
 			{		
 				//--------------------1-------------------
 				D3DXMatrixRotationY(   &MatrixWorldY, -1.57f );
+				D3DXMatrixRotationX(   &MatrixWorldZ, -Angle );
 				D3DXMatrixTranslation( &MatrixWorldX, ( y - t ), 0, ( x - t ) );
-				D3DXMatrixMultiply(&MatrixWorld, &MatrixWorldY, &MatrixWorldX);
+				MatrixWorld = MatrixWorldY * MatrixWorldZ * MatrixWorldX;
 				g_Mesh[1].SetMatrixWorld( MatrixWorld );
 				g_Mesh[1].SetMatrixView( MatrixView );
 				g_Mesh[1].SetMatrixProjection( MatrixProjection );
@@ -391,6 +391,55 @@ void RenderingDirect3D( CCell* Cell, int* Field )
 				g_Mesh[4].SetMatrixProjection( MatrixProjection );
 				g_Mesh[4].m_Alpha = 1.0f;
 				g_Mesh[4].DrawMyMesh();
+			}
+			if ( Cell[x*MaxField+y].m_Value == 5 )
+			{		
+				//--------------------5-------------------
+				D3DXMatrixRotationY(   &MatrixWorldY, -1.57f );
+				D3DXMatrixRotationX(   &MatrixWorldZ, -Angle );
+				D3DXMatrixTranslation( &MatrixWorldX, ( y - t ), 0, ( x - t ) );
+				MatrixWorld = MatrixWorldY * MatrixWorldZ * MatrixWorldX;
+				g_Mesh[5].SetMatrixWorld( MatrixWorld );
+				g_Mesh[5].SetMatrixView( MatrixView );
+				g_Mesh[5].SetMatrixProjection( MatrixProjection );
+				g_Mesh[5].m_Alpha = 1.0f;
+				g_Mesh[5].DrawMyMesh();
+			}
+			if ( Cell[x*MaxField+y].m_Value == 6 )
+			{		
+				//--------------------6-------------------
+				D3DXMatrixRotationY(   &MatrixWorldY, -1.57f );
+				D3DXMatrixTranslation( &MatrixWorldX, ( y - t ), 0, ( x - t ) );
+				D3DXMatrixMultiply(&MatrixWorld, &MatrixWorldY, &MatrixWorldX);
+				g_Mesh[6].SetMatrixWorld( MatrixWorld );
+				g_Mesh[6].SetMatrixView( MatrixView );
+				g_Mesh[6].SetMatrixProjection( MatrixProjection );
+				g_Mesh[6].m_Alpha = 1.0f;
+				g_Mesh[6].DrawMyMesh();
+			}
+			if ( Cell[x*MaxField+y].m_Value == 7 )
+			{		
+				//--------------------7-------------------
+				D3DXMatrixRotationY(   &MatrixWorldY, -1.57f );
+				D3DXMatrixTranslation( &MatrixWorldX, ( y - t ), 0, ( x - t ) );
+				D3DXMatrixMultiply(&MatrixWorld, &MatrixWorldY, &MatrixWorldX);
+				g_Mesh[7].SetMatrixWorld( MatrixWorld );
+				g_Mesh[7].SetMatrixView( MatrixView );
+				g_Mesh[7].SetMatrixProjection( MatrixProjection );
+				g_Mesh[7].m_Alpha = 1.0f;
+				g_Mesh[7].DrawMyMesh();
+			}
+			if ( Cell[x*MaxField+y].m_Value == 8 )
+			{		
+				//--------------------8-------------------
+				D3DXMatrixRotationY(   &MatrixWorldY, -1.57f );
+				D3DXMatrixTranslation( &MatrixWorldX, ( y - t ), 0, ( x - t ) );
+				D3DXMatrixMultiply(&MatrixWorld, &MatrixWorldY, &MatrixWorldX);
+				g_Mesh[8].SetMatrixWorld( MatrixWorld );
+				g_Mesh[8].SetMatrixView( MatrixView );
+				g_Mesh[8].SetMatrixProjection( MatrixProjection );
+				g_Mesh[8].m_Alpha = 1.0f;
+				g_Mesh[8].DrawMyMesh();
 			}
 		}
 		POINT P = PickObject( &Cell[0] );
@@ -557,6 +606,10 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance,
 			g_Mesh[2].InitialMesh( "model//2.x", g_FileLog );
 			g_Mesh[3].InitialMesh( "model//3.x", g_FileLog );
 			g_Mesh[4].InitialMesh( "model//4.x", g_FileLog );
+			g_Mesh[5].InitialMesh( "model//5.x", g_FileLog );
+			g_Mesh[6].InitialMesh( "model//6.x", g_FileLog );
+			g_Mesh[7].InitialMesh( "model//7.x", g_FileLog );
+			g_Mesh[8].InitialMesh( "model//8.x", g_FileLog );
 			g_Mesh[10].InitialMesh( "model//Mine.x", g_FileLog );	
 			g_MeshWin.InitialMesh( "model//Win.x", g_FileLog );	
 			g_MeshLost.InitialMesh( "model//Lost.x", g_FileLog );
