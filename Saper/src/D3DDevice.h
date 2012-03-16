@@ -26,7 +26,10 @@ extern "C"
 
 const UINT Width  = 1024;
 const UINT Height = 768;
+const int  MaxField = 10;
 enum  NameShader { Sky , Diffuse, MaxShader };
+enum  Values { Empty , One, Two, Three, Four, Five, Six, Seven, Eight, Flag, Mine };
+
 
 #define LEFT_BUTTON   0
 #define RIGHT_BUTTON  1
@@ -56,7 +59,7 @@ struct CCell
 	int         m_Value;
 	CCell()
 	{		
-		m_Value  = 10;
+		m_Value  = 0;
 		m_Radius = 0.5f;			
 		m_Centr  = D3DXVECTOR3( 0, 0, 0 );			
 	}
