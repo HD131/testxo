@@ -45,7 +45,7 @@ HRESULT CInputDevice::InitialInput( HWND hwnd, FILE *FileLog )
 	return S_OK;
 }
 
-bool CInputDevice::ScanInput( CameraDevice *m_Camera, bool *Check, CCell *Cell )
+bool CInputDevice::ScanInput( CameraDevice *m_Camera, CCell *Cell )
 {	
 	char     keyboard[256];     
 	LONG     dx, dy, dz;
@@ -77,13 +77,12 @@ bool CInputDevice::ScanInput( CameraDevice *m_Camera, bool *Check, CCell *Cell )
 	if ( m_Mouse.m_rgbButtons[LEFT_BUTTON]&0x80 )
 	{
 		POINT Point = PickObject( &Cell[0]);
-		if ( ( Point.x >= 0 ) && ( Cell[Point.x*3+Point.y].m_Value > 1 ) && ( GameOver() < 0 ) )
+		if ( ( Point.x >= 0 ) && ( Cell[Point.x*MaxField+Point.y].m_Value == Empty ) && ( GameOver() < 0 ) )
 		{
-			Cell[Point.x*3+Point.y].m_Value = 1;
+			Cell[Point.x*MaxField+Point.y].m_Value = Mine;
 			
 			if ( GameOver() > 0 )
-				return TRUE;
-			*Check = true;					
+				return TRUE;						
 		}
 	}
 	return TRUE;
