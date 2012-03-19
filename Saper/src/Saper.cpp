@@ -16,24 +16,25 @@ struct CSky
 class CMesh3D
 {
 public:
-	ID3DXMesh*              m_pMesh;
-	D3DMATERIAL9*           m_pMeshMaterial;
-	IDirect3DTexture9**     m_pMeshTextura;
-	DWORD                   m_TexturCount; 
-	IDirect3DVertexBuffer9* m_VertexBuffer;
-	IDirect3DIndexBuffer9*  m_IndexBuffer;
-	DWORD 					m_SizeFVF;
-	float                   m_Alpha;
-	HRESULT                 InitialMesh( LPCSTR Name, FILE* FileLog );
-	void					Release();
-	void                    DrawMyMesh();
-	void					SetMatrixWorld( const D3DXMATRIX& Matrix );
-	void					SetMatrixView( const D3DXMATRIX& Matrix );
-	void					SetMatrixProjection( const D3DXMATRIX& Matrix );
+	ID3DXMesh*							m_pMesh;
+	D3DMATERIAL9*						m_pMeshMaterial;
+	std::vector<IDirect3DTexture9*>     m_pMeshTextura;
+	DWORD								m_TexturCount; 
+	IDirect3DVertexBuffer9*				m_VertexBuffer;
+	IDirect3DIndexBuffer9*				m_IndexBuffer;
+	DWORD 								m_SizeFVF;
+	float								m_Alpha;
+	HRESULT								InitialMesh( LPCSTR Name, FILE* FileLog );
+	void								Release();
+	void								DrawMyMesh( ID3DXConstantTable** pConstTableVS, ID3DXConstantTable** pConstTablePS, 
+													IDirect3DVertexShader9** VertexShader, IDirect3DPixelShader9** PixelShader );
+	void								SetMatrixWorld( const D3DXMATRIX& Matrix );
+	void								SetMatrixView( const D3DXMATRIX& Matrix );
+	void								SetMatrixProjection( const D3DXMATRIX& Matrix );
 private:
-	D3DXMATRIX              m_MatrixWorld;
-	D3DXMATRIX              m_MatrixView;
-	D3DXMATRIX              m_MatrixProjection;
+	D3DXMATRIX							m_MatrixWorld;
+	D3DXMATRIX							m_MatrixView;
+	D3DXMATRIX							m_MatrixProjection;
 };
 
 struct CField
@@ -227,10 +228,10 @@ void RenderingDirect3D( CCell* Cell, int* Field )
 	D3DXMATRIX tmp = MatrixWorld * MatrixView * MatrixProjection;
 	if ( g_DeviceD3D.m_pConstTableVS[Sky] )
 	{
-		g_DeviceD3D.m_pConstTableVS[Sky] -> SetMatrix( g_pD3DDevice, "mat_mvp",   &tmp );
-		g_DeviceD3D.m_pConstTableVS[Sky] -> SetVector( g_pD3DDevice, "vec_light", &g_DeviceD3D.m_Light );
-		g_DeviceD3D.m_pConstTableVS[Sky] -> SetVector( g_pD3DDevice, "scale",     &Scale );
-		g_DeviceD3D.m_pConstTableVS[Sky] -> SetMatrix( g_pD3DDevice, "mat_view",  &MatrixView );
+		g_DeviceD3D.m_pConstTableVS[Sky]->SetMatrix( g_pD3DDevice, "mat_mvp",   &tmp );
+		g_DeviceD3D.m_pConstTableVS[Sky]->SetVector( g_pD3DDevice, "vec_light", &g_Light );
+		g_DeviceD3D.m_pConstTableVS[Sky]->SetVector( g_pD3DDevice, "scale",     &Scale );
+		g_DeviceD3D.m_pConstTableVS[Sky]->SetMatrix( g_pD3DDevice, "mat_view",  &MatrixView );
 	}
 	// здесь перерисовка сцены	
 	g_pD3DDevice -> SetStreamSource(0, g_Sky.m_pVerBufSky, 0, sizeof( CVertexFVF ) ); // связь буфера вершин с потоком данных
@@ -258,7 +259,7 @@ void RenderingDirect3D( CCell* Cell, int* Field )
 	g_MeshA.SetMatrixWorld( MatrixWorld );
 	g_MeshA.SetMatrixView( MatrixView );
 	g_MeshA.SetMatrixProjection( MatrixProjection );
-	g_MeshA.DrawMyMesh();
+	g_MeshA.DrawMyMesh(g_DeviceD3D.m_pConstTableVS, g_DeviceD3D.m_pConstTablePS, g_DeviceD3D.m_pVertexShader, g_DeviceD3D.m_pPixelShader);
 
 	D3DXMatrixRotationY( &MatrixWorldY, 0.0f );
 	D3DXMatrixTranslation( &MatrixWorldX, ( -1 - t ), 0, ( - t +  MaxField) );
@@ -266,7 +267,7 @@ void RenderingDirect3D( CCell* Cell, int* Field )
 	g_MeshA.SetMatrixWorld( MatrixWorld );
 	g_MeshA.SetMatrixView( MatrixView );
 	g_MeshA.SetMatrixProjection( MatrixProjection );
-	g_MeshA.DrawMyMesh();
+	g_MeshA.DrawMyMesh(g_DeviceD3D.m_pConstTableVS, g_DeviceD3D.m_pConstTablePS, g_DeviceD3D.m_pVertexShader, g_DeviceD3D.m_pPixelShader);
 
 	D3DXMatrixRotationY( &MatrixWorldY, 3.14f );
 	D3DXMatrixTranslation( &MatrixWorldX, (- t +  MaxField ), 0, ( -1 - t ) );
@@ -274,7 +275,7 @@ void RenderingDirect3D( CCell* Cell, int* Field )
 	g_MeshA.SetMatrixWorld( MatrixWorld );
 	g_MeshA.SetMatrixView( MatrixView );
 	g_MeshA.SetMatrixProjection( MatrixProjection );
-	g_MeshA.DrawMyMesh();
+	g_MeshA.DrawMyMesh(g_DeviceD3D.m_pConstTableVS, g_DeviceD3D.m_pConstTablePS, g_DeviceD3D.m_pVertexShader, g_DeviceD3D.m_pPixelShader);
 
 	D3DXMatrixRotationY( &MatrixWorldY, 1.57f );
 	D3DXMatrixTranslation( &MatrixWorldX, (- t +  MaxField ), 0, ( - t +  MaxField ) );
@@ -282,7 +283,7 @@ void RenderingDirect3D( CCell* Cell, int* Field )
 	g_MeshA.SetMatrixWorld( MatrixWorld );
 	g_MeshA.SetMatrixView( MatrixView );
 	g_MeshA.SetMatrixProjection( MatrixProjection );
-	g_MeshA.DrawMyMesh();
+	g_MeshA.DrawMyMesh(g_DeviceD3D.m_pConstTableVS, g_DeviceD3D.m_pConstTablePS, g_DeviceD3D.m_pVertexShader, g_DeviceD3D.m_pPixelShader);
 	for ( int x = 1; x < MaxField - 1; ++x )
 	{
 		D3DXMatrixRotationY( &MatrixWorldY, 1.57f );
@@ -291,7 +292,7 @@ void RenderingDirect3D( CCell* Cell, int* Field )
 		g_MeshS.SetMatrixWorld( MatrixWorld );
 		g_MeshS.SetMatrixView( MatrixView );
 		g_MeshS.SetMatrixProjection( MatrixProjection );
-		g_MeshS.DrawMyMesh();
+		g_MeshS.DrawMyMesh(g_DeviceD3D.m_pConstTableVS, g_DeviceD3D.m_pConstTablePS, g_DeviceD3D.m_pVertexShader, g_DeviceD3D.m_pPixelShader);
 
 		D3DXMatrixRotationY( &MatrixWorldY, 1.57f );
 		D3DXMatrixTranslation( &MatrixWorldX, ( - t +  MaxField ), 0, ( x - t ) );
@@ -299,7 +300,7 @@ void RenderingDirect3D( CCell* Cell, int* Field )
 		g_MeshS.SetMatrixWorld( MatrixWorld );
 		g_MeshS.SetMatrixView( MatrixView );
 		g_MeshS.SetMatrixProjection( MatrixProjection );
-		g_MeshS.DrawMyMesh();
+		g_MeshS.DrawMyMesh(g_DeviceD3D.m_pConstTableVS, g_DeviceD3D.m_pConstTablePS, g_DeviceD3D.m_pVertexShader, g_DeviceD3D.m_pPixelShader);
 
 		D3DXMatrixRotationY( &MatrixWorldY, 0.0f );
 		D3DXMatrixTranslation( &MatrixWorldX, ( x - t ), 0, ( -1 - t ) );
@@ -307,7 +308,7 @@ void RenderingDirect3D( CCell* Cell, int* Field )
 		g_MeshS.SetMatrixWorld( MatrixWorld );
 		g_MeshS.SetMatrixView( MatrixView );
 		g_MeshS.SetMatrixProjection( MatrixProjection );
-		g_MeshS.DrawMyMesh();
+		g_MeshS.DrawMyMesh(g_DeviceD3D.m_pConstTableVS, g_DeviceD3D.m_pConstTablePS, g_DeviceD3D.m_pVertexShader, g_DeviceD3D.m_pPixelShader);
 
 		D3DXMatrixRotationY( &MatrixWorldY, 0.0f );
 		D3DXMatrixTranslation( &MatrixWorldX, ( x - t ), 0, ( - t +  MaxField ) );
@@ -315,7 +316,7 @@ void RenderingDirect3D( CCell* Cell, int* Field )
 		g_MeshS.SetMatrixWorld( MatrixWorld );
 		g_MeshS.SetMatrixView( MatrixView );
 		g_MeshS.SetMatrixProjection( MatrixProjection );
-		g_MeshS.DrawMyMesh();
+		g_MeshS.DrawMyMesh(g_DeviceD3D.m_pConstTableVS, g_DeviceD3D.m_pConstTablePS, g_DeviceD3D.m_pVertexShader, g_DeviceD3D.m_pPixelShader);
 	}
 	
 	//-------------------------------------------------------------------------
@@ -331,8 +332,7 @@ void RenderingDirect3D( CCell* Cell, int* Field )
 				g_Mesh[10].SetMatrixWorld( MatrixWorld );
 				g_Mesh[10].SetMatrixView( MatrixView );
 				g_Mesh[10].SetMatrixProjection( MatrixProjection );
-				g_Mesh[10].m_Alpha = 1.0f;
-				g_Mesh[10].DrawMyMesh();
+				g_Mesh[10].DrawMyMesh(g_DeviceD3D.m_pConstTableVS, g_DeviceD3D.m_pConstTablePS, g_DeviceD3D.m_pVertexShader, g_DeviceD3D.m_pPixelShader);
 			}
 			if ( Field[x*MaxField+y] == Empty ) 
 			{		
@@ -343,8 +343,7 @@ void RenderingDirect3D( CCell* Cell, int* Field )
 				g_Mesh[0].SetMatrixWorld( MatrixWorld );
 				g_Mesh[0].SetMatrixView( MatrixView );
 				g_Mesh[0].SetMatrixProjection( MatrixProjection );
-				g_Mesh[0].m_Alpha = 1.0f;
-				g_Mesh[0].DrawMyMesh();
+				g_Mesh[0].DrawMyMesh(g_DeviceD3D.m_pConstTableVS, g_DeviceD3D.m_pConstTablePS, g_DeviceD3D.m_pVertexShader, g_DeviceD3D.m_pPixelShader);
 			}
 			if ( Field[x*MaxField+y] == Flag ) 
 			{		
@@ -355,8 +354,7 @@ void RenderingDirect3D( CCell* Cell, int* Field )
 				g_Mesh[9].SetMatrixWorld( MatrixWorld );
 				g_Mesh[9].SetMatrixView( MatrixView );
 				g_Mesh[9].SetMatrixProjection( MatrixProjection );
-				g_Mesh[9].m_Alpha = 1.0f;
-				g_Mesh[9].DrawMyMesh();
+				g_Mesh[9].DrawMyMesh(g_DeviceD3D.m_pConstTableVS, g_DeviceD3D.m_pConstTablePS, g_DeviceD3D.m_pVertexShader, g_DeviceD3D.m_pPixelShader);
 			}
 			if ( ( Cell[x*MaxField+y].m_Value == 1 ) && ( Field[x*MaxField+y] == -1 ) )
 			{		
@@ -367,8 +365,7 @@ void RenderingDirect3D( CCell* Cell, int* Field )
 				g_Mesh[1].SetMatrixWorld( MatrixWorld );
 				g_Mesh[1].SetMatrixView( MatrixView );
 				g_Mesh[1].SetMatrixProjection( MatrixProjection );
-				g_Mesh[1].m_Alpha = 1.0f;
-				g_Mesh[1].DrawMyMesh();
+				g_Mesh[1].DrawMyMesh(g_DeviceD3D.m_pConstTableVS, g_DeviceD3D.m_pConstTablePS, g_DeviceD3D.m_pVertexShader, g_DeviceD3D.m_pPixelShader);
 			}
 			if ( ( Cell[x*MaxField+y].m_Value == 2 ) && ( Field[x*MaxField+y] == -1 ) )
 			{		
@@ -379,8 +376,7 @@ void RenderingDirect3D( CCell* Cell, int* Field )
 				g_Mesh[2].SetMatrixWorld( MatrixWorld );
 				g_Mesh[2].SetMatrixView( MatrixView );
 				g_Mesh[2].SetMatrixProjection( MatrixProjection );
-				g_Mesh[2].m_Alpha = 1.0f;
-				g_Mesh[2].DrawMyMesh();
+				g_Mesh[2].DrawMyMesh(g_DeviceD3D.m_pConstTableVS, g_DeviceD3D.m_pConstTablePS, g_DeviceD3D.m_pVertexShader, g_DeviceD3D.m_pPixelShader);
 			}
 			if ( ( Cell[x*MaxField+y].m_Value == 3 ) && ( Field[x*MaxField+y] == -1 ) )
 			{		
@@ -391,8 +387,7 @@ void RenderingDirect3D( CCell* Cell, int* Field )
 				g_Mesh[3].SetMatrixWorld( MatrixWorld );
 				g_Mesh[3].SetMatrixView( MatrixView );
 				g_Mesh[3].SetMatrixProjection( MatrixProjection );
-				g_Mesh[3].m_Alpha = 1.0f;
-				g_Mesh[3].DrawMyMesh();
+				g_Mesh[3].DrawMyMesh(g_DeviceD3D.m_pConstTableVS, g_DeviceD3D.m_pConstTablePS, g_DeviceD3D.m_pVertexShader, g_DeviceD3D.m_pPixelShader);
 			}
 			if ( ( Cell[x*MaxField+y].m_Value == 4 ) && ( Field[x*MaxField+y] == -1 ) )
 			{		
@@ -403,8 +398,7 @@ void RenderingDirect3D( CCell* Cell, int* Field )
 				g_Mesh[4].SetMatrixWorld( MatrixWorld );
 				g_Mesh[4].SetMatrixView( MatrixView );
 				g_Mesh[4].SetMatrixProjection( MatrixProjection );
-				g_Mesh[4].m_Alpha = 1.0f;
-				g_Mesh[4].DrawMyMesh();
+				g_Mesh[4].DrawMyMesh(g_DeviceD3D.m_pConstTableVS, g_DeviceD3D.m_pConstTablePS, g_DeviceD3D.m_pVertexShader, g_DeviceD3D.m_pPixelShader);
 			}
 			if ( ( Cell[x*MaxField+y].m_Value == 5 ) && ( Field[x*MaxField+y] == -1 ) )
 			{		
@@ -416,8 +410,7 @@ void RenderingDirect3D( CCell* Cell, int* Field )
 				g_Mesh[5].SetMatrixWorld( MatrixWorld );
 				g_Mesh[5].SetMatrixView( MatrixView );
 				g_Mesh[5].SetMatrixProjection( MatrixProjection );
-				g_Mesh[5].m_Alpha = 1.0f;
-				g_Mesh[5].DrawMyMesh();
+				g_Mesh[5].DrawMyMesh(g_DeviceD3D.m_pConstTableVS, g_DeviceD3D.m_pConstTablePS, g_DeviceD3D.m_pVertexShader, g_DeviceD3D.m_pPixelShader);
 			}
 			if ( ( Cell[x*MaxField+y].m_Value == 6 ) && ( Field[x*MaxField+y] == -1 ) )
 			{		
@@ -428,8 +421,7 @@ void RenderingDirect3D( CCell* Cell, int* Field )
 				g_Mesh[6].SetMatrixWorld( MatrixWorld );
 				g_Mesh[6].SetMatrixView( MatrixView );
 				g_Mesh[6].SetMatrixProjection( MatrixProjection );
-				g_Mesh[6].m_Alpha = 1.0f;
-				g_Mesh[6].DrawMyMesh();
+				g_Mesh[6].DrawMyMesh(g_DeviceD3D.m_pConstTableVS, g_DeviceD3D.m_pConstTablePS, g_DeviceD3D.m_pVertexShader, g_DeviceD3D.m_pPixelShader);
 			}
 			if ( ( Cell[x*MaxField+y].m_Value == 7 ) && ( Field[x*MaxField+y] == -1 ) )
 			{		
@@ -440,8 +432,7 @@ void RenderingDirect3D( CCell* Cell, int* Field )
 				g_Mesh[7].SetMatrixWorld( MatrixWorld );
 				g_Mesh[7].SetMatrixView( MatrixView );
 				g_Mesh[7].SetMatrixProjection( MatrixProjection );
-				g_Mesh[7].m_Alpha = 1.0f;
-				g_Mesh[7].DrawMyMesh();
+				g_Mesh[7].DrawMyMesh(g_DeviceD3D.m_pConstTableVS, g_DeviceD3D.m_pConstTablePS, g_DeviceD3D.m_pVertexShader, g_DeviceD3D.m_pPixelShader);
 			}
 			if ( ( Cell[x*MaxField+y].m_Value == 8 ) && ( Field[x*MaxField+y] == -1 ) )
 			{		
@@ -452,8 +443,7 @@ void RenderingDirect3D( CCell* Cell, int* Field )
 				g_Mesh[8].SetMatrixWorld( MatrixWorld );
 				g_Mesh[8].SetMatrixView( MatrixView );
 				g_Mesh[8].SetMatrixProjection( MatrixProjection );
-				g_Mesh[8].m_Alpha = 1.0f;
-				g_Mesh[8].DrawMyMesh();
+				g_Mesh[8].DrawMyMesh(g_DeviceD3D.m_pConstTableVS, g_DeviceD3D.m_pConstTablePS, g_DeviceD3D.m_pVertexShader, g_DeviceD3D.m_pPixelShader);
 			}
 		}
 		POINT P = PickObject( &Cell[0] );
@@ -471,8 +461,7 @@ void RenderingDirect3D( CCell* Cell, int* Field )
 				g_Mesh[0].SetMatrixWorld( MatrixWorld );
 				g_Mesh[0].SetMatrixView( MatrixView );
 				g_Mesh[0].SetMatrixProjection( MatrixProjection );
-				g_Mesh[0].m_Alpha = 1.0f;
-				g_Mesh[0].DrawMyMesh();
+				g_Mesh[0].DrawMyMesh(g_DeviceD3D.m_pConstTableVS, g_DeviceD3D.m_pConstTablePS, g_DeviceD3D.m_pVertexShader, g_DeviceD3D.m_pPixelShader);
 			}
 		}
 
@@ -483,24 +472,21 @@ void RenderingDirect3D( CCell* Cell, int* Field )
 			g_MeshWin.SetMatrixWorld( MatrixWorld );
 			g_MeshWin.SetMatrixView( g_Camera.m_View );
 			g_MeshWin.SetMatrixProjection( g_Camera.m_Proj );
-			g_MeshWin.m_Alpha = 1.0f;
-			g_MeshWin.DrawMyMesh();
+			g_MeshWin.DrawMyMesh(g_DeviceD3D.m_pConstTableVS, g_DeviceD3D.m_pConstTablePS, g_DeviceD3D.m_pVertexShader, g_DeviceD3D.m_pPixelShader);
 			break;
 		case 2:
 			D3DXMatrixTranslation( &MatrixWorld, 0, 0, -7 );		
 			g_MeshLost.SetMatrixWorld( MatrixWorld );
 			g_MeshLost.SetMatrixView( g_Camera.m_View );
 			g_MeshLost.SetMatrixProjection( g_Camera.m_Proj );
-			g_MeshLost.m_Alpha = 1.0f;
-			g_MeshLost.DrawMyMesh();
+			g_MeshLost.DrawMyMesh(g_DeviceD3D.m_pConstTableVS, g_DeviceD3D.m_pConstTablePS, g_DeviceD3D.m_pVertexShader, g_DeviceD3D.m_pPixelShader);
 			break;
 		case 3:
 			D3DXMatrixTranslation( &MatrixWorld, 0, 0, -7 );		
 			g_MeshStalemate.SetMatrixWorld( MatrixWorld );
 			g_MeshStalemate.SetMatrixView( g_Camera.m_View );
 			g_MeshStalemate.SetMatrixProjection( g_Camera.m_Proj );
-			g_MeshStalemate.m_Alpha = 1.0f;
-			g_MeshStalemate.DrawMyMesh();
+			g_MeshStalemate.DrawMyMesh(g_DeviceD3D.m_pConstTableVS, g_DeviceD3D.m_pConstTablePS, g_DeviceD3D.m_pVertexShader, g_DeviceD3D.m_pPixelShader);
 			break;
 		}
 
@@ -583,7 +569,7 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
 	// Запись лога в файл 
 	FILE *FileLog = fopen( "log.txt", "w" );
-	CLuaScript   g_Lua( FileLog );
+	CLuaScript   LuaVM( FileLog );
 
 	memset(&w,0,sizeof(WNDCLASS));
 	w.style         = CS_HREDRAW | CS_VREDRAW;
@@ -717,7 +703,7 @@ HRESULT CMesh3D::InitialMesh(LPCSTR Name, FILE *FileLog )
 {
 	m_pMesh         = 0;
 	m_pMeshMaterial = 0;
-	m_pMeshTextura  = 0;
+	m_pMeshTextura.resize(0);
 	m_SizeFVF       = 0;
 	m_Alpha         = 1.0f;	
 	ID3DXBuffer *pMaterialBuffer  = 0;
@@ -726,7 +712,7 @@ HRESULT CMesh3D::InitialMesh(LPCSTR Name, FILE *FileLog )
 		if ( m_pMesh == 0 )
 		{		
 			if ( FileLog ) 
-				fprintf( FileLog, "error load x file '%s'\n", Name );
+				fprintf( FileLog, "error load x-file '%s'\n", Name );
 			return E_FAIL;
 		}
 	}
@@ -741,21 +727,32 @@ HRESULT CMesh3D::InitialMesh(LPCSTR Name, FILE *FileLog )
 	m_pMesh->GetVertexBuffer( &m_VertexBuffer );
 	m_pMesh->GetIndexBuffer(  &m_IndexBuffer  );
 	// Извлекаем свойства материала и названия{имена} структуры
-	D3DXMATERIAL *D3DXMeshMaterial = (D3DXMATERIAL *)pMaterialBuffer->GetBufferPointer();
+	D3DXMATERIAL *MaterialMesh = (D3DXMATERIAL *)pMaterialBuffer->GetBufferPointer();
 	m_pMeshMaterial  = new D3DMATERIAL9[m_TexturCount];
-	m_pMeshTextura   = new IDirect3DTexture9*[m_TexturCount];
+	
 	for ( DWORD i = 0; i < m_TexturCount; i++ )
 	{
 		// Копируем материал
-		m_pMeshMaterial[i] = D3DXMeshMaterial[i].MatD3D;
+		m_pMeshMaterial[i] = MaterialMesh[i].MatD3D;
 		// Установить окружающего свет
 		m_pMeshMaterial[i].Ambient = m_pMeshMaterial[i].Diffuse;
 		// Загружаем текстуру
-		std::string FileName = std::string( "model//" ) + std::string( D3DXMeshMaterial[i].pTextureFilename );
-		if ( FAILED( D3DXCreateTextureFromFile( g_pD3DDevice, FileName.c_str(), &m_pMeshTextura[i] )))
+		if( MaterialMesh[i].pTextureFilename != 0 )
+		{		
+			IDirect3DTexture9* Tex = 0;
+			std::string FileName = std::string( "model//" ) + std::string( MaterialMesh[i].pTextureFilename );
+			if ( FAILED( D3DXCreateTextureFromFile( g_pD3DDevice, FileName.c_str(), &Tex )))
+			{
+				fprintf( FileLog, "error load texture '%s'\n", MaterialMesh[i].pTextureFilename );
+				m_pMeshTextura.push_back(0);
+			}
+			// Сохраняем загруженную текстуру
+			m_pMeshTextura.push_back(Tex);
+		}
+		else 
 		{
-			fprintf( FileLog, "error load texture '%s'\n", D3DXMeshMaterial[i].pTextureFilename );
-			m_pMeshTextura[i] = 0;
+			// Нет текстуры для i-ой подгруппы
+			m_pMeshTextura.push_back(0);
 		}
 	}
 	// Уничтожаем буфер материала
@@ -778,23 +775,24 @@ void CMesh3D::SetMatrixProjection( const D3DXMATRIX& Matrix )
 {
 	m_MatrixProjection = Matrix;
 }
-void CMesh3D::DrawMyMesh()
+void CMesh3D::DrawMyMesh( ID3DXConstantTable**     pConstTableVS, ID3DXConstantTable**       pConstTablePS,
+						  IDirect3DVertexShader9** VertexShader, IDirect3DPixelShader9**     PixelShader )
 {
 	D3DXMATRIX  wvp;
 	if ( m_pMesh )
 	{
 		wvp = m_MatrixWorld * m_MatrixView * m_MatrixProjection;
-		if ( g_DeviceD3D.m_pConstTableVS[Diffuse] )
+		if ( pConstTableVS[Diffuse] )
 		{
-			g_DeviceD3D.m_pConstTableVS[Diffuse] -> SetMatrix( g_pD3DDevice, "mat_mvp",   &wvp );
-			g_DeviceD3D.m_pConstTableVS[Diffuse] -> SetMatrix( g_pD3DDevice, "mat_world", &m_MatrixWorld );
-			g_DeviceD3D.m_pConstTableVS[Diffuse] -> SetVector( g_pD3DDevice, "vec_light", &g_DeviceD3D.m_Light );
-			g_DeviceD3D.m_pConstTablePS[Diffuse] -> SetFloat(  g_pD3DDevice, "diffuse_intensity", g_DeviceD3D.m_Diffuse_intensity );	
-			g_DeviceD3D.m_pConstTablePS[Diffuse] -> SetFloat(  g_pD3DDevice, "Alpha", m_Alpha );	
+			pConstTableVS[Diffuse]->SetMatrix( g_pD3DDevice, "mat_mvp",   &wvp );
+			pConstTableVS[Diffuse]->SetMatrix( g_pD3DDevice, "mat_world", &m_MatrixWorld );
+			pConstTableVS[Diffuse]->SetVector( g_pD3DDevice, "vec_light", &g_Light );
+			pConstTablePS[Diffuse]->SetFloat(  g_pD3DDevice, "diffuse_intensity", g_Diffuse_intensity );	
+			pConstTablePS[Diffuse]->SetFloat(  g_pD3DDevice, "Alpha", m_Alpha );	
 		}
 		// устанавливаем шейдеры
-		g_pD3DDevice->SetVertexShader( g_DeviceD3D.m_pVertexShader[Diffuse] );
-		g_pD3DDevice->SetPixelShader(  g_DeviceD3D.m_pPixelShader [Diffuse] );
+		g_pD3DDevice->SetVertexShader( VertexShader[Diffuse] );
+		g_pD3DDevice->SetPixelShader(  PixelShader [Diffuse] );
 
 		g_pD3DDevice->SetStreamSource( 0, m_VertexBuffer, 0, m_SizeFVF );
 		g_pD3DDevice->SetIndices( m_IndexBuffer );
@@ -817,6 +815,7 @@ void CMesh3D::Release()
 
 	if ( m_pMeshMaterial )
 		delete[] m_pMeshMaterial;
+	/*
 	if ( m_pMeshTextura )
 	{
 		for ( int i = 1; i < m_TexturCount; ++i )
@@ -826,6 +825,7 @@ void CMesh3D::Release()
 		}
 		delete []m_pMeshTextura;
 	}
+	*/
 	if ( m_pMesh )
 		m_pMesh -> Release();
 }
