@@ -185,7 +185,15 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Field.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\InputDevice.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Mesh.cpp"
 				>
 			</File>
 			<File
@@ -207,7 +215,15 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Field.h"
+				>
+			</File>
+			<File
 				RelativePath=".\InputDevice.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Mesh.h"
 				>
 			</File>
 		</Filter>
