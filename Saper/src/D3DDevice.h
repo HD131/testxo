@@ -24,10 +24,13 @@ extern "C"
 #include "lua/lauxlib.h"
 }
 
-const UINT Width  = 1024;
-const UINT Height = 768;
-const int  MaxField = 10;
-const int  MaxMine  = 20;
+const UINT Width				= 1024;
+const UINT Height				= 768;
+const int  MaxField				= 10;
+const int  MaxMine				= 20;
+const D3DXVECTOR4 g_Light       = D3DXVECTOR4( 0.0f, 1.0f, 0.0f, 1.0f );
+const float	g_Diffuse_intensity = 1.0f;
+
 enum  NameShader { Sky , Diffuse, MaxShader };
 enum  Values { Empty , One, Two, Three, Four, Five, Six, Seven, Eight, Flag, Mine };
 
@@ -47,8 +50,6 @@ public:
 	IDirect3DVertexShader9* m_pVertexShader[MaxShader];
 	ID3DXConstantTable*     m_pConstTableVS[MaxShader];
 	ID3DXConstantTable*     m_pConstTablePS[MaxShader];	
-	D3DXVECTOR4	         	m_Light;
-	float				    m_Diffuse_intensity;
 	HRESULT                 IntialDirect3D( HWND hwnd, FILE *FileLog );
 	HRESULT                 InitialShader();
 	HRESULT				    LoadTexture( FILE *FileLog );

@@ -66,10 +66,8 @@ bool CInputDevice::ScanInput( CameraDevice *m_Camera, CCell *Cell, int* Field )
 		m_Camera->MoveBack();
 
 	if FAILED( m_pMouse -> GetDeviceState( sizeof( CMouseState ), (LPVOID)&m_Mouse ) )
-	{
 		m_pMouse -> Acquire();
-		return FALSE;
-	}
+
 	dx = m_Mouse.m_lX;
 	dy = m_Mouse.m_lY;
 	dz = m_Mouse.m_lZ;
