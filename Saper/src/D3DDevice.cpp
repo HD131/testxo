@@ -8,6 +8,8 @@ HRESULT CD3DDevice::InitialShader()
 {
 	LPD3DXBUFFER pErrors        = 0;
 	LPD3DXBUFFER pShaderBuff    = 0;
+	m_Light                     = D3DXVECTOR4( 0.0f, 1.0f, 0.0f, 1.0f );
+	m_Diffuse_intensity         = 1.0f;
 
 	for (int i = 0; i < MaxShader; ++i)
 	{	
