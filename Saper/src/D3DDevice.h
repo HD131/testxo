@@ -47,6 +47,8 @@ public:
 	IDirect3DVertexShader9* m_pVertexShader[MaxShader];
 	ID3DXConstantTable*     m_pConstTableVS[MaxShader];
 	ID3DXConstantTable*     m_pConstTablePS[MaxShader];	
+	D3DXVECTOR4	         	m_Light;
+	float				    m_Diffuse_intensity;
 	HRESULT                 IntialDirect3D( HWND hwnd, FILE *FileLog );
 	HRESULT                 InitialShader();
 	HRESULT				    LoadTexture( FILE *FileLog );

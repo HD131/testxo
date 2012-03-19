@@ -1,15 +1,9 @@
 #include "D3DDevice.h"
 #include "CameraDevice.h"
 #include "InputDevice.h"
-
-using namespace std;
+#include <vector>
 
 extern IDirect3DDevice9* g_pD3DDevice;
-
-const D3DXVECTOR4  Light( 0.0f, 1.0f, 0.0f, 1.0f );
-bool               g_Wireframe       = false;
-const float        Diffuse_intensity = 1.0f;
-
 
 struct CSky
 {
@@ -33,9 +27,9 @@ public:
 	HRESULT                 InitialMesh( LPCSTR Name, FILE* FileLog );
 	void					Release();
 	void                    DrawMyMesh();
-	void					SetMatrixWorld( D3DXMATRIX  Matrix );
-	void					SetMatrixView( D3DXMATRIX  Matrix );
-	void					SetMatrixProjection( D3DXMATRIX  Matrix );
+	void					SetMatrixWorld( const D3DXMATRIX& Matrix );
+	void					SetMatrixView( const D3DXMATRIX& Matrix );
+	void					SetMatrixProjection( const D3DXMATRIX& Matrix );
 private:
 	D3DXMATRIX              m_MatrixWorld;
 	D3DXMATRIX              m_MatrixView;
@@ -44,46 +38,53 @@ private:
 
 struct CField
 {
-	CCell   m_Cell[MaxField][MaxField];
-	int     m_Field[MaxField][MaxField];
-	CField()
+	std::vector<CCell>   m_Cell;
+	std::vector<int>     m_Field;
+	CField( int Size )
 	{
+		m_Cell.resize(Size*Size);
+		m_Field.resize(Size*Size);
 		int x,y;
-		for ( y = 0; y < MaxField; ++y )
-			for ( x = 0; x < MaxField; ++x )
+		for ( y = 0; y < Size; ++y )
+			for ( x = 0; x < Size; ++x )
 			{
-				m_Cell[x][y].SetCenter(  y - int((MaxField-1)/2) , 0 ,x - int((MaxField-1)/2));	
-				m_Cell[x][y].m_Value = Empty;
-				m_Field[x][y]        = Empty;
+				m_Cell[x*Size+y].SetCenter(  y - int((Size-1)/2) , 0 ,x - int((Size-1)/2));	
+				m_Cell[x*Size+y].m_Value = Empty;
+				m_Field[x*Size+y]        = Empty;
 			}
 		int mine = 0;
 		srand( time(0) );
 		while ( mine < MaxMine )
 		{
-			x = rand() % MaxField;
-			y = rand() % MaxField;
-			if ( m_Cell[x][y].m_Value == Empty )
+			x = rand() % Size;
+			y = rand() % Size;
+			if ( m_Cell[x*Size+y].m_Value == Empty )
 			{
-				m_Cell[x][y].m_Value = Mine;
+				m_Cell[x*Size+y].m_Value = Mine;
 				++mine;
 			}
 		}			
-		for ( y = 0; y < MaxField; ++y )
-			for ( x = 0; x < MaxField; ++x )
+		for ( y = 0; y < Size; ++y )
+			for ( x = 0; x < Size; ++x )
 			{
 				mine = 0;
-				if (  m_Cell[x][y].m_Value == Empty )
+				if (  m_Cell[x*Size+y].m_Value == Empty )
 				{					
 					for ( int a = x - 1; a < x + 2; ++a )
 						for ( int b = y - 1; b < y + 2; ++b)						
-							if (  (a >=0) && (b >= 0) && (a < MaxField) && (b < MaxField) && (m_Cell[a][b].m_Value == Mine) )							
+							if (  (a >=0) && (b >= 0) && (a < Size) && (b < Size) && (m_Cell[a*Size+b].m_Value == Mine) )							
 								++mine;	
 											
 				}
 				if ( mine > 0)
-					m_Cell[x][y].m_Value = mine;
+					m_Cell[x*Size+y].m_Value = mine;
 		   }
 	}
+   ~CField()
+   {
+		m_Cell.~vector();
+		m_Field.~vector();
+   }
 };
 
 
@@ -97,8 +98,10 @@ CMesh3D		 g_MeshWin;
 CMesh3D		 g_MeshLost;
 CMesh3D      g_MeshStalemate;
 CameraDevice g_Camera;
-CField       g_F;
-bool         g_Exit = false;
+CField       g_Field( MaxField);
+bool         g_Exit      = false;
+bool		 g_Wireframe = false;
+
 
 void DrawMyText( IDirect3DDevice9* g_pD3DDevice, char* StrokaTexta, int x, int y, int x1, int y1, D3DCOLOR MyColor )
 {
@@ -205,8 +208,8 @@ void RenderingDirect3D( CCell* Cell, int* Field )
 	//------------------------------------------------------------------------------------------	
 	float const Angle = timeGetTime() / 2000.0f;
 
-	const D3DXMATRIX MatrixView       = g_Camera.m_View;
-	const D3DXMATRIX MatrixProjection = g_Camera.m_Proj;
+	 D3DXMATRIX MatrixView       = g_Camera.m_View;
+	 D3DXMATRIX MatrixProjection = g_Camera.m_Proj;
 
 	if ( g_pD3DDevice == 0 )
 		return;
@@ -225,7 +228,7 @@ void RenderingDirect3D( CCell* Cell, int* Field )
 	if ( g_DeviceD3D.m_pConstTableVS[Sky] )
 	{
 		g_DeviceD3D.m_pConstTableVS[Sky] -> SetMatrix( g_pD3DDevice, "mat_mvp",   &tmp );
-		g_DeviceD3D.m_pConstTableVS[Sky] -> SetVector( g_pD3DDevice, "vec_light", &Light );
+		g_DeviceD3D.m_pConstTableVS[Sky] -> SetVector( g_pD3DDevice, "vec_light", &g_DeviceD3D.m_Light );
 		g_DeviceD3D.m_pConstTableVS[Sky] -> SetVector( g_pD3DDevice, "scale",     &Scale );
 		g_DeviceD3D.m_pConstTableVS[Sky] -> SetMatrix( g_pD3DDevice, "mat_view",  &MatrixView );
 	}
@@ -359,9 +362,8 @@ void RenderingDirect3D( CCell* Cell, int* Field )
 			{		
 				//--------------------1-------------------
 				D3DXMatrixRotationY(   &MatrixWorldY, -1.57f );
-				D3DXMatrixRotationX(   &MatrixWorldZ, -Angle );
 				D3DXMatrixTranslation( &MatrixWorldX, ( y - t ), 0, ( x - t ) );
-				MatrixWorld = MatrixWorldY * MatrixWorldZ * MatrixWorldX;
+				D3DXMatrixMultiply(&MatrixWorld, &MatrixWorldY, &MatrixWorldX);
 				g_Mesh[1].SetMatrixWorld( MatrixWorld );
 				g_Mesh[1].SetMatrixView( MatrixView );
 				g_Mesh[1].SetMatrixProjection( MatrixProjection );
@@ -548,40 +550,40 @@ LONG WINAPI WndProc( HWND hwnd, UINT Message, WPARAM wparam, LPARAM lparam )
 
 struct CFps
 {
-	int			 m_count;
-	int          m_fps;
-	int          m_last_tick;
-	int			 m_this_tick;
+	int          m_Count;
+	int          m_FPS;
+	int          m_LastTick;
+	int          m_ThisTick;
 	int			 Fps();
 
-	CFps(): m_count(0)
+	CFps(): m_Count(0)
 	{	}
 };
 
 int CFps::Fps()
 {	
-	m_this_tick = GetTickCount();
-	if ( m_this_tick - m_last_tick >= 1000 )
+	m_ThisTick = GetTickCount();
+	if ( m_ThisTick - m_LastTick >= 1000 )
 	{
-		m_last_tick = m_this_tick;
-		m_fps       = m_count;
-		m_count     = 0;
+		m_LastTick = m_ThisTick;
+		m_FPS      = m_Count;
+		m_Count    = 0;
 	}
-	else m_count++;
-	return m_fps;
+	else m_Count++;
+return m_FPS;
 }
 
 
 int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance,
 				   LPSTR     lpCmdLine, int       nCmdShow)
 {	
-	MSG			 msg;
+	MSG			 Msg;
 	WNDCLASS	 w;	
-	CFps         g_fps;		
+	CFps         g_Fieldps;		
 
 	// Запись лога в файл 
-	FILE *g_FileLog = fopen( "log.txt", "w" );
-	CLuaScript   g_Lua( g_FileLog );
+	FILE *FileLog = fopen( "log.txt", "w" );
+	CLuaScript   g_Lua( FileLog );
 
 	memset(&w,0,sizeof(WNDCLASS));
 	w.style         = CS_HREDRAW | CS_VREDRAW;
@@ -595,7 +597,7 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	HWND hwnd = CreateWindow( "My Class", "Сапёр", WS_SYSMENU | WS_MINIMIZEBOX,
 							  250, 150, Width, Height, 0, 0, hInstance, 0 );	
 	ShowWindow( hwnd, nCmdShow );
-	ZeroMemory( &msg, sizeof( msg ) );
+	ZeroMemory( &Msg, sizeof( MSG ) );
 	/*
 	HWND i;
 	i=LoadImage(0,"cursor1.cur",IMAGE_CURSOR,0,0,LR_LOADFROMFILE);
@@ -606,39 +608,39 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance,
 		Form1->Cursor=1;
 	}*/
 
-	if ( SUCCEEDED( g_DeviceD3D.IntialDirect3D( hwnd, g_FileLog) ) )
+	if ( SUCCEEDED( g_DeviceD3D.IntialDirect3D( hwnd, FileLog) ) )
 	{	
-		if ( SUCCEEDED( g_DeviceD3D.LoadTexture( g_FileLog ) ) )
+		if ( SUCCEEDED( g_DeviceD3D.LoadTexture( FileLog ) ) )
 		{			
 			
-			g_MeshS.InitialMesh( "model//Stena.x", g_FileLog );
-			g_MeshA.InitialMesh( "model//Angle.x", g_FileLog );
-			g_Mesh[0].InitialMesh( "model//Empty.x", g_FileLog );
-			g_Mesh[1].InitialMesh( "model//1.x", g_FileLog );
-			g_Mesh[2].InitialMesh( "model//2.x", g_FileLog );
-			g_Mesh[3].InitialMesh( "model//3.x", g_FileLog );
-			g_Mesh[4].InitialMesh( "model//4.x", g_FileLog );
-			g_Mesh[5].InitialMesh( "model//5.x", g_FileLog );
-			g_Mesh[6].InitialMesh( "model//6.x", g_FileLog );
-			g_Mesh[7].InitialMesh( "model//7.x", g_FileLog );
-			g_Mesh[8].InitialMesh( "model//8.x", g_FileLog );
-			g_Mesh[9].InitialMesh( "model//Flag.x", g_FileLog );
-			g_Mesh[10].InitialMesh( "model//Mine.x", g_FileLog );	
-			g_MeshWin.InitialMesh( "model//Win.x", g_FileLog );	
-			g_MeshLost.InitialMesh( "model//Lost.x", g_FileLog );
-			g_MeshStalemate.InitialMesh( "model//Stalemate.x", g_FileLog );
+			g_MeshS.InitialMesh( "model//Stena.x", FileLog );
+			g_MeshA.InitialMesh( "model//Angle.x", FileLog );
+			g_Mesh[0].InitialMesh( "model//Empty.x", FileLog );
+			g_Mesh[1].InitialMesh( "model//1.x", FileLog );
+			g_Mesh[2].InitialMesh( "model//2.x", FileLog );
+			g_Mesh[3].InitialMesh( "model//3.x", FileLog );
+			g_Mesh[4].InitialMesh( "model//4.x", FileLog );
+			g_Mesh[5].InitialMesh( "model//5.x", FileLog );
+			g_Mesh[6].InitialMesh( "model//6.x", FileLog );
+			g_Mesh[7].InitialMesh( "model//7.x", FileLog );
+			g_Mesh[8].InitialMesh( "model//8.x", FileLog );
+			g_Mesh[9].InitialMesh( "model//Flag.x", FileLog );
+			g_Mesh[10].InitialMesh( "model//Mine.x", FileLog );	
+			g_MeshWin.InitialMesh( "model//Win.x", FileLog );	
+			g_MeshLost.InitialMesh( "model//Lost.x", FileLog );
+			g_MeshStalemate.InitialMesh( "model//Stalemate.x", FileLog );
 			g_Sky.InitialSky();
-			g_DeviceInput.InitialInput( hwnd, g_FileLog );					
+			g_DeviceInput.InitialInput( hwnd, FileLog );					
 			g_DeviceD3D.InitialShader();
-			g_fps.m_last_tick = GetTickCount();
+			g_Fieldps.m_LastTick = GetTickCount();
 			while( !g_Exit )
 			{
-				g_DeviceInput.ScanInput( &g_Camera, &g_F.m_Cell[0][0], &g_F.m_Field[0][0] );				
-				RenderingDirect3D( &g_F.m_Cell[0][0], &g_F.m_Field[0][0]);				
-				if ( PeekMessage( &msg, 0, 0, 0, PM_REMOVE ) )
+				g_DeviceInput.ScanInput( &g_Camera, &g_Field.m_Cell[0], &g_Field.m_Field[0] );				
+				RenderingDirect3D( &g_Field.m_Cell[0], &g_Field.m_Field[0]);				
+				if ( PeekMessage( &Msg, 0, 0, 0, PM_REMOVE ) )
 				{
-					TranslateMessage( &msg );
-					DispatchMessage(  &msg );
+					TranslateMessage( &Msg );
+					DispatchMessage(  &Msg );
 				}
 			}						
 		}
@@ -654,8 +656,8 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	g_Sky.Release(); 
 	g_DeviceInput.Release();
 	g_DeviceD3D.Release();
-	if ( g_FileLog )
-		fclose( g_FileLog );
+	if ( FileLog )
+		fclose( FileLog );
 	return 0;
 }
 
@@ -749,7 +751,7 @@ HRESULT CMesh3D::InitialMesh(LPCSTR Name, FILE *FileLog )
 		// Установить окружающего свет
 		m_pMeshMaterial[i].Ambient = m_pMeshMaterial[i].Diffuse;
 		// Загружаем текстуру
-		string FileName = string( "model//" ) + string( D3DXMeshMaterial[i].pTextureFilename );
+		std::string FileName = std::string( "model//" ) + std::string( D3DXMeshMaterial[i].pTextureFilename );
 		if ( FAILED( D3DXCreateTextureFromFile( g_pD3DDevice, FileName.c_str(), &m_pMeshTextura[i] )))
 		{
 			fprintf( FileLog, "error load texture '%s'\n", D3DXMeshMaterial[i].pTextureFilename );
@@ -762,17 +764,17 @@ HRESULT CMesh3D::InitialMesh(LPCSTR Name, FILE *FileLog )
 	return S_OK;
 }
 
-void CMesh3D::SetMatrixWorld(D3DXMATRIX Matrix)
+void CMesh3D::SetMatrixWorld( const D3DXMATRIX& Matrix )
 {
 	m_MatrixWorld = Matrix;
 }
 
-void CMesh3D::SetMatrixView(D3DXMATRIX Matrix)
+void CMesh3D::SetMatrixView( const D3DXMATRIX& Matrix )
 {
 	m_MatrixView = Matrix;
 }
 
-void CMesh3D::SetMatrixProjection(D3DXMATRIX Matrix)
+void CMesh3D::SetMatrixProjection( const D3DXMATRIX& Matrix )
 {
 	m_MatrixProjection = Matrix;
 }
@@ -786,8 +788,8 @@ void CMesh3D::DrawMyMesh()
 		{
 			g_DeviceD3D.m_pConstTableVS[Diffuse] -> SetMatrix( g_pD3DDevice, "mat_mvp",   &wvp );
 			g_DeviceD3D.m_pConstTableVS[Diffuse] -> SetMatrix( g_pD3DDevice, "mat_world", &m_MatrixWorld );
-			g_DeviceD3D.m_pConstTableVS[Diffuse] -> SetVector( g_pD3DDevice, "vec_light", &Light );
-			g_DeviceD3D.m_pConstTablePS[Diffuse] -> SetFloat(  g_pD3DDevice, "diffuse_intensity", Diffuse_intensity );	
+			g_DeviceD3D.m_pConstTableVS[Diffuse] -> SetVector( g_pD3DDevice, "vec_light", &g_DeviceD3D.m_Light );
+			g_DeviceD3D.m_pConstTablePS[Diffuse] -> SetFloat(  g_pD3DDevice, "diffuse_intensity", g_DeviceD3D.m_Diffuse_intensity );	
 			g_DeviceD3D.m_pConstTablePS[Diffuse] -> SetFloat(  g_pD3DDevice, "Alpha", m_Alpha );	
 		}
 		// устанавливаем шейдеры

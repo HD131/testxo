@@ -181,7 +181,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\GoogleCode\xo\src\D3DDevice.cpp"
+				RelativePath=".\D3DDevice.cpp"
 				>
 			</File>
 			<File
