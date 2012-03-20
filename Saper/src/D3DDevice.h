@@ -17,13 +17,6 @@
 #include <string>
 #include <d3dx9mesh.h>
 
-extern "C"
-{
-#include "lua/lua.h"
-#include "lua/lualib.h"
-#include "lua/lauxlib.h"
-}
-
 const UINT Width				= 1024;
 const UINT Height				= 768;
 const int  MaxField				= 10;
@@ -83,14 +76,5 @@ struct CVertexFVF
 	FLOAT tu, tv;
 };
 
-struct CLuaScript
-{
-	lua_State*    m_luaVM;
-	void*		  m_FileBuffer;
-	unsigned int  m_FileSize;
-	FILE*         m_FileLog; 
-	bool          lua_dobuffer( lua_State* Lua, void const* Buffer, int Size );
-	CLuaScript( FILE *FileLog );
-	~CLuaScript();
-};
+
 

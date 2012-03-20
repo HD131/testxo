@@ -183,7 +183,15 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\GoogleCode\xo\src\CameraDevice.h"
+				>
+			</File>
+			<File
 				RelativePath=".\D3DDevice.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\D3DDevice.h"
 				>
 			</File>
 			<File
@@ -191,11 +199,23 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Field.h"
+				>
+			</File>
+			<File
 				RelativePath=".\InputDevice.cpp"
 				>
 			</File>
 			<File
+				RelativePath=".\InputDevice.h"
+				>
+			</File>
+			<File
 				RelativePath=".\Mesh.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Mesh.h"
 				>
 			</File>
 			<File
@@ -204,250 +224,102 @@
 			</File>
 		</Filter>
 		<Filter
-			Name="Header Files"
-			Filter="h;hpp;hxx;hm;inl;inc;xsd"
-			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
+			Name="item"
 			>
 			<File
-				RelativePath="..\..\GoogleCode\xo\src\CameraDevice.h"
+				RelativePath=".\items\item_base.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\D3DDevice.h"
+				RelativePath=".\items\item_base.h"
 				>
 			</File>
 			<File
-				RelativePath=".\Field.h"
+				RelativePath=".\items\item_eight.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\InputDevice.h"
+				RelativePath=".\items\item_eight.h"
 				>
 			</File>
 			<File
-				RelativePath=".\Mesh.h"
-				>
-			</File>
-		</Filter>
-		<Filter
-			Name="Resource Files"
-			Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav"
-			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
-			>
-		</Filter>
-		<Filter
-			Name="Lua"
-			>
-			<File
-				RelativePath=".\Lua\lapi.c"
+				RelativePath=".\items\item_empty.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\Lua\lapi.h"
+				RelativePath=".\items\item_empty.h"
 				>
 			</File>
 			<File
-				RelativePath=".\Lua\lauxlib.c"
+				RelativePath=".\items\item_five.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\Lua\lauxlib.h"
+				RelativePath=".\items\item_five.h"
 				>
 			</File>
 			<File
-				RelativePath=".\Lua\lbaselib.c"
+				RelativePath=".\items\item_flag.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\Lua\lcode.c"
+				RelativePath=".\items\item_flag.h"
 				>
 			</File>
 			<File
-				RelativePath=".\Lua\lcode.h"
+				RelativePath=".\items\item_four.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\Lua\ldblib.c"
+				RelativePath=".\items\item_four.h"
 				>
 			</File>
 			<File
-				RelativePath=".\Lua\ldebug.c"
+				RelativePath=".\items\item_mine.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\Lua\ldebug.h"
+				RelativePath=".\items\item_mine.h"
 				>
 			</File>
 			<File
-				RelativePath=".\Lua\ldo.c"
+				RelativePath=".\items\item_one.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\Lua\ldo.h"
+				RelativePath=".\items\item_one.h"
 				>
 			</File>
 			<File
-				RelativePath=".\Lua\ldump.c"
+				RelativePath=".\items\item_seven.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\Lua\lfunc.c"
+				RelativePath=".\items\item_seven.h"
 				>
 			</File>
 			<File
-				RelativePath=".\Lua\lfunc.h"
+				RelativePath=".\items\item_six.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\Lua\lgc.c"
+				RelativePath=".\items\item_six.h"
 				>
 			</File>
 			<File
-				RelativePath=".\Lua\lgc.h"
+				RelativePath=".\items\item_three.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\Lua\linit.c"
+				RelativePath=".\items\item_three.h"
 				>
 			</File>
 			<File
-				RelativePath=".\Lua\liolib.c"
+				RelativePath=".\items\item_two.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\Lua\llex.c"
-				>
-			</File>
-			<File
-				RelativePath=".\Lua\llex.h"
-				>
-			</File>
-			<File
-				RelativePath=".\Lua\llimits.h"
-				>
-			</File>
-			<File
-				RelativePath=".\Lua\lmathlib.c"
-				>
-			</File>
-			<File
-				RelativePath=".\Lua\lmem.c"
-				>
-			</File>
-			<File
-				RelativePath=".\Lua\lmem.h"
-				>
-			</File>
-			<File
-				RelativePath=".\Lua\loadlib.c"
-				>
-			</File>
-			<File
-				RelativePath=".\Lua\lobject.c"
-				>
-			</File>
-			<File
-				RelativePath=".\Lua\lobject.h"
-				>
-			</File>
-			<File
-				RelativePath=".\Lua\lopcodes.c"
-				>
-			</File>
-			<File
-				RelativePath=".\Lua\lopcodes.h"
-				>
-			</File>
-			<File
-				RelativePath=".\Lua\loslib.c"
-				>
-			</File>
-			<File
-				RelativePath=".\Lua\lparser.c"
-				>
-			</File>
-			<File
-				RelativePath=".\Lua\lparser.h"
-				>
-			</File>
-			<File
-				RelativePath=".\Lua\lstate.c"
-				>
-			</File>
-			<File
-				RelativePath=".\Lua\lstate.h"
-				>
-			</File>
-			<File
-				RelativePath=".\Lua\lstring.c"
-				>
-			</File>
-			<File
-				RelativePath=".\Lua\lstring.h"
-				>
-			</File>
-			<File
-				RelativePath=".\Lua\lstrlib.c"
-				>
-			</File>
-			<File
-				RelativePath=".\Lua\ltable.c"
-				>
-			</File>
-			<File
-				RelativePath=".\Lua\ltable.h"
-				>
-			</File>
-			<File
-				RelativePath=".\Lua\ltablib.c"
-				>
-			</File>
-			<File
-				RelativePath=".\Lua\ltm.c"
-				>
-			</File>
-			<File
-				RelativePath=".\Lua\ltm.h"
-				>
-			</File>
-			<File
-				RelativePath=".\Lua\lua.h"
-				>
-			</File>
-			<File
-				RelativePath=".\Lua\luaconf.h"
-				>
-			</File>
-			<File
-				RelativePath=".\Lua\lualib.h"
-				>
-			</File>
-			<File
-				RelativePath=".\Lua\lundump.c"
-				>
-			</File>
-			<File
-				RelativePath=".\Lua\lundump.h"
-				>
-			</File>
-			<File
-				RelativePath=".\Lua\lvm.c"
-				>
-			</File>
-			<File
-				RelativePath=".\Lua\lvm.h"
-				>
-			</File>
-			<File
-				RelativePath=".\Lua\lzio.c"
-				>
-			</File>
-			<File
-				RelativePath=".\Lua\lzio.h"
-				>
-			</File>
-			<File
-				RelativePath=".\Lua\print.c"
+				RelativePath=".\items\item_two.h"
 				>
 			</File>
 		</Filter>
