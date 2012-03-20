@@ -92,40 +92,20 @@ bool CInputDevice::ScanInput( CameraDevice *m_Camera, CCell *Cell, int* Field )
 			Field[Point.x*MaxField+Point.y] = -1;								
 		}
 	}
-	/*
-	if ( inputpress( key_a ) )   
-	{   
-		if ( !Pressed ) 
-		{ 
-			Pressed = true;   
-		ÍÀÆÀËÈ 
-		} 
-	}
-	else
-	{  
-		if ( Pressed )
-		{ 
-			Pressed = false;   
-			ÎÒÆÀËÈ 
-		} 
-	}
-	*/
 	if ( m_Mouse.m_rgbButtons[RIGHT_BUTTON]&0x80 )
 	{
 		 if ( !Pressed )
 		 {
 			 Pressed = true;
 			 POINT Point = PickObject( &Cell[0]);
-			 if ( ( Point.x >= 0 ) && ( Field[Point.x*MaxField+Point.y] == Flag ) )
+			 if ( ( Point.x >= 0 ) && ( Field[Point.x*MaxField+Point.y] == Flag ) && ( GameOver( Cell, Field ) < 0 ) )
 			 {			
-				 Field[Point.x*MaxField+Point.y] = Empty;
-				 
+				 Field[Point.x*MaxField+Point.y] = Empty;				 
 				 return TRUE;
 			 }		
-			 if ( ( Point.x >= 0 ) && ( Field[Point.x*MaxField+Point.y] == Empty ) )
+			 if ( ( Point.x >= 0 ) && ( Field[Point.x*MaxField+Point.y] == Empty ) && ( GameOver( Cell, Field ) < 0 ) )
 			 {
-				 Field[Point.x*MaxField+Point.y] = Flag;
-				 
+				 Field[Point.x*MaxField+Point.y] = Flag;				 
 				 return TRUE;
 			 }
 		 }
