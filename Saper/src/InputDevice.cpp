@@ -1,6 +1,6 @@
 #include "InputDevice.h"
 
-int   GameOver();
+int   GameOver( CCell* Cell, int* Field );
 POINT PickObject( CCell *Cell );
 void  ClearField( CCell* Cell, int* Field, int x, int y );
 
@@ -76,13 +76,20 @@ bool CInputDevice::ScanInput( CameraDevice *m_Camera, CCell *Cell, int* Field )
 	if ( m_Mouse.m_rgbButtons[LEFT_BUTTON]&0x80 )
 	{
 		POINT Point = PickObject( &Cell[0] );
-		if ( ( Point.x >= 0 ) && ( Field[Point.x*MaxField+Point.y] == Empty ) )
-		{
-			Beep(150, 50);
+		if ( ( Point.x >= 0 ) && ( Field[Point.x*MaxField+Point.y] == Empty ) && ( GameOver( Cell, Field ) < 0 ) )
+		{			
 			if ( Cell[Point.x*MaxField+Point.y].m_Value == Empty )
-				ClearField( Cell, Field, Point.x, Point.y);
-			else 
-				Field[Point.x*MaxField+Point.y] = -1;								
+			{
+				ClearField( Cell, Field, Point.x, Point.y );
+				return true;
+			}
+			if ( Cell[Point.x*MaxField+Point.y].m_Value == Mine )
+			{
+				Field[Point.x*MaxField+Point.y] = -1;
+				return true;
+			}
+			 
+			Field[Point.x*MaxField+Point.y] = -1;								
 		}
 	}
 	if ( m_Mouse.m_rgbButtons[RIGHT_BUTTON]&0x80 )

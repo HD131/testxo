@@ -120,9 +120,28 @@ POINT PickObject( CCell* Cell )
 		return NumObject[0];
 }
 
-int GameOver()
+void ShowBomb( CCell* Cell, int* Field )
 {
-	return -1;
+	for (int y = 0; y < MaxField; ++y)
+		for (int x = 0; x < MaxField; ++x)
+		{
+			if ( ( Cell[x*MaxField+y].m_Value == Mine) )
+				Field[x*MaxField+y] = -1;			
+		}
+}
+
+int GameOver( CCell* Cell, int* Field )
+{
+	for (int y = 0; y < MaxField; ++y)
+		for (int x = 0; x < MaxField; ++x)
+		{
+			if ( Field[x*MaxField+y] == -1 && Cell[x*MaxField+y].m_Value == Mine )
+			{
+				ShowBomb( Cell, Field );
+				return 0;
+			}
+		}
+return -1;
 }
 
 void RenderingDirect3D( CCell* Cell, int* Field )
@@ -392,7 +411,7 @@ void RenderingDirect3D( CCell* Cell, int* Field )
 			}
 		}
 
-		switch ( GameOver() )
+		switch ( GameOver( Cell, Field ) )
 		{
 		case 1:
 			D3DXMatrixTranslation( &MatrixWorld, 0, 0, -7 );		
@@ -402,7 +421,10 @@ void RenderingDirect3D( CCell* Cell, int* Field )
 			g_MeshWin.DrawMyMesh(g_DeviceD3D.m_pConstTableVS, g_DeviceD3D.m_pConstTablePS, g_DeviceD3D.m_pVertexShader, g_DeviceD3D.m_pPixelShader);
 			break;
 		case 2:
-			D3DXMatrixTranslation( &MatrixWorld, 0, 0, -7 );		
+			D3DXMatrixRotationY( &MatrixWorldY, -1.57f );
+			D3DXMatrixRotationZ( &MatrixWorld, 1.57f );
+			D3DXMatrixScaling( &MatrixWorldX, 0.2f, 0.2f, 0.2f );
+			MatrixWorld = MatrixWorldY * MatrixWorld * MatrixWorldX;
 			g_MeshLost.SetMatrixWorld( MatrixWorld );
 			g_MeshLost.SetMatrixView( g_Camera.m_View );
 			g_MeshLost.SetMatrixProjection( g_Camera.m_Proj );
@@ -432,7 +454,6 @@ void ClearField( CCell* Cell, int* Field, int x, int y )
 					ClearField(  Cell, Field, a, b);
 				Field[a*MaxField+b] = -1;				
 			}
-
 }
 
 
