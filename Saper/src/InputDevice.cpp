@@ -3,7 +3,7 @@
 int   GameOver( CCell* Cell, int* Field );
 POINT PickObject( CCell *Cell );
 void  ClearField( CCell* Cell, int* Field, int x, int y );
-
+bool Pressed = false;
 
 HRESULT CInputDevice::InitialInput( HWND hwnd, FILE *FileLog )
 {	
@@ -92,25 +92,48 @@ bool CInputDevice::ScanInput( CameraDevice *m_Camera, CCell *Cell, int* Field )
 			Field[Point.x*MaxField+Point.y] = -1;								
 		}
 	}
+	/*
+	if ( inputpress( key_a ) )   
+	{   
+		if ( !Pressed ) 
+		{ 
+			Pressed = true;   
+		ÍÀÆÀËÈ 
+		} 
+	}
+	else
+	{  
+		if ( Pressed )
+		{ 
+			Pressed = false;   
+			ÎÒÆÀËÈ 
+		} 
+	}
+	*/
 	if ( m_Mouse.m_rgbButtons[RIGHT_BUTTON]&0x80 )
 	{
-		POINT Point = PickObject( &Cell[0]);
-		if ( ( Point.x >= 0 ) && ( Field[Point.x*MaxField+Point.y] == Flag ) )
-		{
-			Beep(150, 50);
-			Field[Point.x*MaxField+Point.y] = Empty;
-			return TRUE;
-		}
+		 if ( !Pressed )
+		 {
+			 Pressed = true;
+			 POINT Point = PickObject( &Cell[0]);
+			 if ( ( Point.x >= 0 ) && ( Field[Point.x*MaxField+Point.y] == Flag ) )
+			 {			
+				 Field[Point.x*MaxField+Point.y] = Empty;
+				 
+				 return TRUE;
+			 }		
+			 if ( ( Point.x >= 0 ) && ( Field[Point.x*MaxField+Point.y] == Empty ) )
+			 {
+				 Field[Point.x*MaxField+Point.y] = Flag;
+				 
+				 return TRUE;
+			 }
+		 }
 	}
-	if ( m_Mouse.m_rgbButtons[RIGHT_BUTTON]&0x80 )
-	{
-		POINT Point = PickObject( &Cell[0]);
-		if ( ( Point.x >= 0 ) && ( Field[Point.x*MaxField+Point.y] == Empty ) )
-		{
-			Beep(150, 50);
-			Field[Point.x*MaxField+Point.y] = Flag;			
-		}
-	}
+	 else		 
+		 if ( Pressed )
+			Pressed = false;
+	
 return TRUE;
 }
 
