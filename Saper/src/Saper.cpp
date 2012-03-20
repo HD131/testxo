@@ -144,6 +144,19 @@ int GameOver( CCell* Cell, int* Field )
 return -1;
 }
 
+void RenderMesh( int Number, int x, int y )
+{
+	D3DXMATRIX MatrixWorld, MatrixWorldY, MatrixWorldX;
+	int t = ( MaxField - 1) / 2;
+	D3DXMatrixRotationY(   &MatrixWorldY, -1.57f );
+	D3DXMatrixTranslation( &MatrixWorldX, ( y - t ), 0, ( x - t ) );
+	D3DXMatrixMultiply(&MatrixWorld, &MatrixWorldY, &MatrixWorldX);
+	g_Mesh[Number].SetMatrixWorld( MatrixWorld );
+	g_Mesh[Number].SetMatrixView( g_Camera.m_View );
+	g_Mesh[Number].SetMatrixProjection( g_Camera.m_Proj );
+	g_Mesh[Number].DrawMyMesh(g_DeviceD3D.m_pConstTableVS, g_DeviceD3D.m_pConstTablePS, g_DeviceD3D.m_pVertexShader, g_DeviceD3D.m_pPixelShader);
+}
+
 void RenderingDirect3D( CCell* Cell, int* Field )
 {	
 	const D3DXVECTOR4 Scale( tan( D3DX_PI / 8 * (FLOAT)Height / Width), tan( D3DX_PI / 8 * (FLOAT)Height / Width  ), 1.0f, 1.0f );
@@ -280,117 +293,26 @@ void RenderingDirect3D( CCell* Cell, int* Field )
 				g_Mesh[10].SetMatrixProjection( MatrixProjection );
 				g_Mesh[10].DrawMyMesh(g_DeviceD3D.m_pConstTableVS, g_DeviceD3D.m_pConstTablePS, g_DeviceD3D.m_pVertexShader, g_DeviceD3D.m_pPixelShader);
 			}
-			if ( Field[x*MaxField+y] == Empty ) 
-			{		
-				//--------------------Empty-------------------
-				D3DXMatrixRotationY(   &MatrixWorldY, -1.57f );
-				D3DXMatrixTranslation( &MatrixWorldX, ( y - t ), 0, ( x - t ) );
-				D3DXMatrixMultiply(&MatrixWorld, &MatrixWorldY, &MatrixWorldX);
-				g_Mesh[0].SetMatrixWorld( MatrixWorld );
-				g_Mesh[0].SetMatrixView( MatrixView );
-				g_Mesh[0].SetMatrixProjection( MatrixProjection );
-				g_Mesh[0].DrawMyMesh(g_DeviceD3D.m_pConstTableVS, g_DeviceD3D.m_pConstTablePS, g_DeviceD3D.m_pVertexShader, g_DeviceD3D.m_pPixelShader);
-			}
+			if ( Field[x*MaxField+y] == Empty )					
+				RenderMesh( Empty, x, y);			
 			if ( Field[x*MaxField+y] == Flag ) 
-			{		
-				//--------------------Flag-------------------
-				D3DXMatrixRotationY(   &MatrixWorldY, -1.57f );
-				D3DXMatrixTranslation( &MatrixWorldX, ( y - t ), 0, ( x - t ) );
-				D3DXMatrixMultiply(&MatrixWorld, &MatrixWorldY, &MatrixWorldX);
-				g_Mesh[9].SetMatrixWorld( MatrixWorld );
-				g_Mesh[9].SetMatrixView( MatrixView );
-				g_Mesh[9].SetMatrixProjection( MatrixProjection );
-				g_Mesh[9].DrawMyMesh(g_DeviceD3D.m_pConstTableVS, g_DeviceD3D.m_pConstTablePS, g_DeviceD3D.m_pVertexShader, g_DeviceD3D.m_pPixelShader);
-			}
-			if ( ( Cell[x*MaxField+y].m_Value == 1 ) && ( Field[x*MaxField+y] == -1 ) )
-			{		
-				//--------------------1-------------------
-				D3DXMatrixRotationY(   &MatrixWorldY, -1.57f );
-				D3DXMatrixTranslation( &MatrixWorldX, ( y - t ), 0, ( x - t ) );
-				D3DXMatrixMultiply(&MatrixWorld, &MatrixWorldY, &MatrixWorldX);
-				g_Mesh[1].SetMatrixWorld( MatrixWorld );
-				g_Mesh[1].SetMatrixView( MatrixView );
-				g_Mesh[1].SetMatrixProjection( MatrixProjection );
-				g_Mesh[1].DrawMyMesh(g_DeviceD3D.m_pConstTableVS, g_DeviceD3D.m_pConstTablePS, g_DeviceD3D.m_pVertexShader, g_DeviceD3D.m_pPixelShader);
-			}
-			if ( ( Cell[x*MaxField+y].m_Value == 2 ) && ( Field[x*MaxField+y] == -1 ) )
-			{		
-				//--------------------2-------------------
-				D3DXMatrixRotationY(   &MatrixWorldY, -1.57f );
-				D3DXMatrixTranslation( &MatrixWorldX, ( y - t ), 0, ( x - t ) );
-				D3DXMatrixMultiply(&MatrixWorld, &MatrixWorldY, &MatrixWorldX);
-				g_Mesh[2].SetMatrixWorld( MatrixWorld );
-				g_Mesh[2].SetMatrixView( MatrixView );
-				g_Mesh[2].SetMatrixProjection( MatrixProjection );
-				g_Mesh[2].DrawMyMesh(g_DeviceD3D.m_pConstTableVS, g_DeviceD3D.m_pConstTablePS, g_DeviceD3D.m_pVertexShader, g_DeviceD3D.m_pPixelShader);
-			}
-			if ( ( Cell[x*MaxField+y].m_Value == 3 ) && ( Field[x*MaxField+y] == -1 ) )
-			{		
-				//--------------------3-------------------
-				D3DXMatrixRotationY(   &MatrixWorldY, -1.57f );
-				D3DXMatrixTranslation( &MatrixWorldX, ( y - t ), 0, ( x - t ) );
-				D3DXMatrixMultiply(&MatrixWorld, &MatrixWorldY, &MatrixWorldX);
-				g_Mesh[3].SetMatrixWorld( MatrixWorld );
-				g_Mesh[3].SetMatrixView( MatrixView );
-				g_Mesh[3].SetMatrixProjection( MatrixProjection );
-				g_Mesh[3].DrawMyMesh(g_DeviceD3D.m_pConstTableVS, g_DeviceD3D.m_pConstTablePS, g_DeviceD3D.m_pVertexShader, g_DeviceD3D.m_pPixelShader);
-			}
-			if ( ( Cell[x*MaxField+y].m_Value == 4 ) && ( Field[x*MaxField+y] == -1 ) )
-			{		
-				//--------------------4-------------------
-				D3DXMatrixRotationY(   &MatrixWorldY, -1.57f );
-				D3DXMatrixTranslation( &MatrixWorldX, ( y - t ), 0, ( x - t ) );
-				D3DXMatrixMultiply(&MatrixWorld, &MatrixWorldY, &MatrixWorldX);
-				g_Mesh[4].SetMatrixWorld( MatrixWorld );
-				g_Mesh[4].SetMatrixView( MatrixView );
-				g_Mesh[4].SetMatrixProjection( MatrixProjection );
-				g_Mesh[4].DrawMyMesh(g_DeviceD3D.m_pConstTableVS, g_DeviceD3D.m_pConstTablePS, g_DeviceD3D.m_pVertexShader, g_DeviceD3D.m_pPixelShader);
-			}
-			if ( ( Cell[x*MaxField+y].m_Value == 5 ) && ( Field[x*MaxField+y] == -1 ) )
-			{		
-				//--------------------5-------------------
-				D3DXMatrixRotationY(   &MatrixWorldY, -1.57f );
-				D3DXMatrixRotationX(   &MatrixWorldZ, -Angle );
-				D3DXMatrixTranslation( &MatrixWorldX, ( y - t ), 0, ( x - t ) );
-				MatrixWorld = MatrixWorldY * MatrixWorldZ * MatrixWorldX;
-				g_Mesh[5].SetMatrixWorld( MatrixWorld );
-				g_Mesh[5].SetMatrixView( MatrixView );
-				g_Mesh[5].SetMatrixProjection( MatrixProjection );
-				g_Mesh[5].DrawMyMesh(g_DeviceD3D.m_pConstTableVS, g_DeviceD3D.m_pConstTablePS, g_DeviceD3D.m_pVertexShader, g_DeviceD3D.m_pPixelShader);
-			}
-			if ( ( Cell[x*MaxField+y].m_Value == 6 ) && ( Field[x*MaxField+y] == -1 ) )
-			{		
-				//--------------------6-------------------
-				D3DXMatrixRotationY(   &MatrixWorldY, -1.57f );
-				D3DXMatrixTranslation( &MatrixWorldX, ( y - t ), 0, ( x - t ) );
-				D3DXMatrixMultiply(&MatrixWorld, &MatrixWorldY, &MatrixWorldX);
-				g_Mesh[6].SetMatrixWorld( MatrixWorld );
-				g_Mesh[6].SetMatrixView( MatrixView );
-				g_Mesh[6].SetMatrixProjection( MatrixProjection );
-				g_Mesh[6].DrawMyMesh(g_DeviceD3D.m_pConstTableVS, g_DeviceD3D.m_pConstTablePS, g_DeviceD3D.m_pVertexShader, g_DeviceD3D.m_pPixelShader);
-			}
-			if ( ( Cell[x*MaxField+y].m_Value == 7 ) && ( Field[x*MaxField+y] == -1 ) )
-			{		
-				//--------------------7-------------------
-				D3DXMatrixRotationY(   &MatrixWorldY, -1.57f );
-				D3DXMatrixTranslation( &MatrixWorldX, ( y - t ), 0, ( x - t ) );
-				D3DXMatrixMultiply(&MatrixWorld, &MatrixWorldY, &MatrixWorldX);
-				g_Mesh[7].SetMatrixWorld( MatrixWorld );
-				g_Mesh[7].SetMatrixView( MatrixView );
-				g_Mesh[7].SetMatrixProjection( MatrixProjection );
-				g_Mesh[7].DrawMyMesh(g_DeviceD3D.m_pConstTableVS, g_DeviceD3D.m_pConstTablePS, g_DeviceD3D.m_pVertexShader, g_DeviceD3D.m_pPixelShader);
-			}
-			if ( ( Cell[x*MaxField+y].m_Value == 8 ) && ( Field[x*MaxField+y] == -1 ) )
-			{		
-				//--------------------8-------------------
-				D3DXMatrixRotationY(   &MatrixWorldY, -1.57f );
-				D3DXMatrixTranslation( &MatrixWorldX, ( y - t ), 0, ( x - t ) );
-				D3DXMatrixMultiply(&MatrixWorld, &MatrixWorldY, &MatrixWorldX);
-				g_Mesh[8].SetMatrixWorld( MatrixWorld );
-				g_Mesh[8].SetMatrixView( MatrixView );
-				g_Mesh[8].SetMatrixProjection( MatrixProjection );
-				g_Mesh[8].DrawMyMesh(g_DeviceD3D.m_pConstTableVS, g_DeviceD3D.m_pConstTablePS, g_DeviceD3D.m_pVertexShader, g_DeviceD3D.m_pPixelShader);
-			}
+				RenderMesh( Flag, x, y);
+			if ( ( Cell[x*MaxField+y].m_Value == One )   && ( Field[x*MaxField+y] == -1 ) )
+				RenderMesh( One, x, y);
+			if ( ( Cell[x*MaxField+y].m_Value == Two )   && ( Field[x*MaxField+y] == -1 ) )
+				RenderMesh( Two, x, y);
+			if ( ( Cell[x*MaxField+y].m_Value == Three ) && ( Field[x*MaxField+y] == -1 ) )
+				RenderMesh( Three, x, y);
+			if ( ( Cell[x*MaxField+y].m_Value == Four )  && ( Field[x*MaxField+y] == -1 ) )
+				RenderMesh( Four, x, y);
+			if ( ( Cell[x*MaxField+y].m_Value == Five )  && ( Field[x*MaxField+y] == -1 ) )
+				RenderMesh( Five, x, y);
+			if ( ( Cell[x*MaxField+y].m_Value == Six )   && ( Field[x*MaxField+y] == -1 ) )
+				RenderMesh( Six, x, y);
+			if ( ( Cell[x*MaxField+y].m_Value == Seven ) && ( Field[x*MaxField+y] == -1 ) )
+				RenderMesh( Seven, x, y);
+			if ( ( Cell[x*MaxField+y].m_Value == Eight ) && ( Field[x*MaxField+y] == -1 ) )
+				RenderMesh( Eight, x, y);
 		}
 		POINT P = PickObject( &Cell[0] );
 		char  str[50];
@@ -438,7 +360,15 @@ void RenderingDirect3D( CCell* Cell, int* Field )
 			g_MeshStalemate.DrawMyMesh(g_DeviceD3D.m_pConstTableVS, g_DeviceD3D.m_pConstTablePS, g_DeviceD3D.m_pVertexShader, g_DeviceD3D.m_pPixelShader);
 			break;
 		}
-
+		//-------------------CountMine-----------------------------------------
+		int flag = 0;
+		for ( int y = 0; y < MaxField; ++y )
+			for ( int x = 0; x < MaxField; ++x )
+			{
+				if ( Field[x*MaxField+y] == Flag ) 
+					++flag;
+			}
+	
 		g_pD3DDevice -> EndScene();
 		g_pD3DDevice -> Present( 0, 0, 0, 0 ); // вывод содержимого заднего буфера в окно
 }
@@ -454,30 +384,6 @@ void ClearField( CCell* Cell, int* Field, int x, int y )
 					ClearField(  Cell, Field, a, b);
 				Field[a*MaxField+b] = -1;				
 			}
-}
-
-
-void CheckPC( lua_State* m_luaVM, CCell* Cell )
-{
-	Beep(150, 50); 
-	lua_getglobal( m_luaVM, "IO" );
-	lua_newtable( m_luaVM );//создать таблицу, поместить ее на вершину стэка
-	for (int y = 0; y < MaxField; ++y)
-		for (int x = 0; x < MaxField; ++x) 
-		{
-			lua_pushnumber( m_luaVM,  y * MaxField + x + 1 );               //кладем в стэк число (key)
-			lua_pushnumber( m_luaVM,  Cell[x*MaxField+y].m_Value );//добавляем значение ключа (m_Value)
-			lua_settable  ( m_luaVM, -3 );              //добавить к таблице пару ключ-значение: table[key] = m_Value		
-		}
-		if ( lua_pcall( m_luaVM, 1, 2, 0 ) )
-		{
-			//if ( FileLog ) 				fprintf( FileLog, lua_tostring( m_luaVM, -1 ) );
-			lua_pop( m_luaVM, 1 );
-		}	
-		int y = lua_tonumber( m_luaVM, -1 );
-		int x = lua_tonumber( m_luaVM, -2 );
-
-		//if ( Cell[x*MaxField+y].m_Value == 10 )			Cell[x*MaxField+y].m_Value = 0;			
 }
 
 LONG WINAPI WndProc( HWND hwnd, UINT Message, WPARAM wparam, LPARAM lparam )
@@ -532,7 +438,7 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
 	// Запись лога в файл 
 	FILE *FileLog = fopen( "log.txt", "w" );
-	CLuaScript   LuaVM( FileLog );
+	
 
 	memset(&w,0,sizeof(WNDCLASS));
 	w.style         = CS_HREDRAW | CS_VREDRAW;
