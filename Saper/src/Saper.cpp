@@ -157,61 +157,13 @@ void RenderMesh( int Number, int x, int y )
 	g_Mesh[Number].DrawMyMesh(g_DeviceD3D.m_pConstTableVS, g_DeviceD3D.m_pConstTablePS, g_DeviceD3D.m_pVertexShader, g_DeviceD3D.m_pPixelShader);
 }
 
-void RenderingDirect3D( CCell* Cell, int* Field )
-{	
-	const D3DXVECTOR4 Scale( tan( D3DX_PI / 8 * (FLOAT)Height / Width), tan( D3DX_PI / 8 * (FLOAT)Height / Width  ), 1.0f, 1.0f );
-	//----------------------------------------------режим каркаса-------------------------------
-	if ( g_Wireframe )
-		g_pD3DDevice -> SetRenderState( D3DRS_FILLMODE, D3DFILL_WIREFRAME);
-	else
-		g_pD3DDevice -> SetRenderState( D3DRS_FILLMODE, D3DFILL_SOLID);
-	//------------------------------------------------------------------------------------------	
-	float const Angle = timeGetTime() / 2000.0f;
-
-	 D3DXMATRIX MatrixView       = g_Camera.m_View;
-	 D3DXMATRIX MatrixProjection = g_Camera.m_Proj;
-
-	if ( g_pD3DDevice == 0 )
-		return;
-
-	g_pD3DDevice -> Clear(0, 0, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER,D3DCOLOR_XRGB(50, 50, 50), 1.0f, 0);// очистка заднего буфера
-	g_pD3DDevice -> BeginScene(); // начало рендеринга
-
-	//------------------------------------------Render Sky----------------------------------------
-	g_pD3DDevice -> SetRenderState(  D3DRS_ZENABLE, false );
-	g_pD3DDevice -> SetSamplerState( 0, D3DSAMP_ADDRESSU, D3DTADDRESS_CLAMP ); 
-	g_pD3DDevice -> SetSamplerState( 0, D3DSAMP_ADDRESSV, D3DTADDRESS_CLAMP ); 
-	g_pD3DDevice -> SetSamplerState( 0, D3DSAMP_ADDRESSW, D3DTADDRESS_CLAMP ); 
-	D3DXMATRIX MatrixWorld;
-	D3DXMatrixTranslation( &MatrixWorld, 1.0f, 1.0f, 1.0f );
-	D3DXMATRIX tmp = MatrixWorld * MatrixView * MatrixProjection;
-	if ( g_DeviceD3D.m_pConstTableVS[Sky] )
-	{
-		g_DeviceD3D.m_pConstTableVS[Sky]->SetMatrix( g_pD3DDevice, "mat_mvp",   &tmp );
-		g_DeviceD3D.m_pConstTableVS[Sky]->SetVector( g_pD3DDevice, "vec_light", &g_Light );
-		g_DeviceD3D.m_pConstTableVS[Sky]->SetVector( g_pD3DDevice, "scale",     &Scale );
-		g_DeviceD3D.m_pConstTableVS[Sky]->SetMatrix( g_pD3DDevice, "mat_view",  &MatrixView );
-	}
-	// здесь перерисовка сцены	
-	g_pD3DDevice -> SetStreamSource(0, g_Sky.m_pVerBufSky, 0, sizeof( CVertexFVF ) ); // связь буфера вершин с потоком данных
-	g_pD3DDevice -> SetFVF( D3DFVF_CUSTOMVERTEX ); // устанавливается формат вершин
-	g_pD3DDevice -> SetIndices( g_Sky.m_pBufIndexSky );
-	g_pD3DDevice -> SetTexture( 0, g_DeviceD3D.m_CubeTexture );
-	// устанавливаем шейдеры
-	g_pD3DDevice -> SetVertexShader( g_DeviceD3D.m_pVertexShader[Sky] );
-	g_pD3DDevice -> SetPixelShader(  g_DeviceD3D.m_pPixelShader [Sky] );
-	// вывод примитивов
-	g_pD3DDevice -> DrawIndexedPrimitive( D3DPT_TRIANGLELIST, 0, 0, 6, 0, 2 );
-
-	g_pD3DDevice -> SetSamplerState( 0, D3DSAMP_ADDRESSU, D3DTADDRESS_WRAP );
-	g_pD3DDevice -> SetSamplerState( 0, D3DSAMP_ADDRESSV, D3DTADDRESS_WRAP );
-	g_pD3DDevice -> SetSamplerState( 0, D3DSAMP_ADDRESSW, D3DTADDRESS_WRAP );
-	g_pD3DDevice -> SetRenderState(  D3DRS_ZENABLE, true );
-	//------------------------------------------Render Mesh----------------------------------------
-	D3DXMATRIX MatrixWorldX,MatrixWorldY,MatrixWorldZ;
+void RenderFence()
+{
+	D3DXMATRIX MatrixView       = g_Camera.m_View;
+	D3DXMATRIX MatrixProjection = g_Camera.m_Proj;
+	D3DXMATRIX MatrixWorld, MatrixWorldY, MatrixWorldX;
+	
 	int t = ( MaxField - 1) / 2;
-	//------------------Ограда--------------
-	//----------
 	D3DXMatrixRotationY( &MatrixWorldY, -1.57f );
 	D3DXMatrixTranslation( &MatrixWorldX, ( -1 - t ), 0, ( -1 - t ) );
 	MatrixWorld = MatrixWorldY * MatrixWorldX;
@@ -277,22 +229,68 @@ void RenderingDirect3D( CCell* Cell, int* Field )
 		g_MeshS.SetMatrixProjection( MatrixProjection );
 		g_MeshS.DrawMyMesh(g_DeviceD3D.m_pConstTableVS, g_DeviceD3D.m_pConstTablePS, g_DeviceD3D.m_pVertexShader, g_DeviceD3D.m_pPixelShader);
 	}
-	
+
+}
+
+void RenderingDirect3D( CCell* Cell, int* Field )
+{	
+	const D3DXVECTOR4 Scale( tan( D3DX_PI / 8 * (FLOAT)Height / Width), tan( D3DX_PI / 8 * (FLOAT)Height / Width  ), 1.0f, 1.0f );
+	//----------------------------------------------режим каркаса-------------------------------
+	if ( g_Wireframe )
+		g_pD3DDevice -> SetRenderState( D3DRS_FILLMODE, D3DFILL_WIREFRAME);
+	else
+		g_pD3DDevice -> SetRenderState( D3DRS_FILLMODE, D3DFILL_SOLID);
+	//------------------------------------------------------------------------------------------	
+	float const Angle = timeGetTime() / 2000.0f;
+
+	 D3DXMATRIX MatrixView       = g_Camera.m_View;
+	 D3DXMATRIX MatrixProjection = g_Camera.m_Proj;
+
+	if ( g_pD3DDevice == 0 )
+		return;
+
+	g_pD3DDevice -> Clear(0, 0, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER,D3DCOLOR_XRGB(50, 50, 50), 1.0f, 0);// очистка заднего буфера
+	g_pD3DDevice -> BeginScene(); // начало рендеринга
+
+	//------------------------------------------Render Sky----------------------------------------
+	g_pD3DDevice -> SetRenderState(  D3DRS_ZENABLE, false );
+	g_pD3DDevice -> SetSamplerState( 0, D3DSAMP_ADDRESSU, D3DTADDRESS_CLAMP ); 
+	g_pD3DDevice -> SetSamplerState( 0, D3DSAMP_ADDRESSV, D3DTADDRESS_CLAMP ); 
+	g_pD3DDevice -> SetSamplerState( 0, D3DSAMP_ADDRESSW, D3DTADDRESS_CLAMP ); 
+	D3DXMATRIX MatrixWorld;
+	D3DXMatrixTranslation( &MatrixWorld, 1.0f, 1.0f, 1.0f );
+	D3DXMATRIX tmp = MatrixWorld * MatrixView * MatrixProjection;
+	if ( g_DeviceD3D.m_pConstTableVS[Sky] )
+	{
+		g_DeviceD3D.m_pConstTableVS[Sky]->SetMatrix( g_pD3DDevice, "mat_mvp",   &tmp );
+		g_DeviceD3D.m_pConstTableVS[Sky]->SetVector( g_pD3DDevice, "vec_light", &g_Light );
+		g_DeviceD3D.m_pConstTableVS[Sky]->SetVector( g_pD3DDevice, "scale",     &Scale );
+		g_DeviceD3D.m_pConstTableVS[Sky]->SetMatrix( g_pD3DDevice, "mat_view",  &MatrixView );
+	}
+	// здесь перерисовка сцены	
+	g_pD3DDevice -> SetStreamSource(0, g_Sky.m_pVerBufSky, 0, sizeof( CVertexFVF ) ); // связь буфера вершин с потоком данных
+	g_pD3DDevice -> SetFVF( D3DFVF_CUSTOMVERTEX ); // устанавливается формат вершин
+	g_pD3DDevice -> SetIndices( g_Sky.m_pBufIndexSky );
+	g_pD3DDevice -> SetTexture( 0, g_DeviceD3D.m_CubeTexture );
+	// устанавливаем шейдеры
+	g_pD3DDevice -> SetVertexShader( g_DeviceD3D.m_pVertexShader[Sky] );
+	g_pD3DDevice -> SetPixelShader(  g_DeviceD3D.m_pPixelShader [Sky] );
+	// вывод примитивов
+	g_pD3DDevice -> DrawIndexedPrimitive( D3DPT_TRIANGLELIST, 0, 0, 6, 0, 2 );
+
+	g_pD3DDevice -> SetSamplerState( 0, D3DSAMP_ADDRESSU, D3DTADDRESS_WRAP );
+	g_pD3DDevice -> SetSamplerState( 0, D3DSAMP_ADDRESSV, D3DTADDRESS_WRAP );
+	g_pD3DDevice -> SetSamplerState( 0, D3DSAMP_ADDRESSW, D3DTADDRESS_WRAP );
+	g_pD3DDevice -> SetRenderState(  D3DRS_ZENABLE, true );
+	//------------------------------------------Render Mesh----------------------------------------
+	D3DXMATRIX MatrixWorldX,MatrixWorldY,MatrixWorldZ;
+	int t = ( MaxField - 1) / 2;
+	//-----------ограда---------------
+	RenderFence();
 	//-------------------------------------------------------------------------
 	for ( int y = 0; y < MaxField; ++y )
 		for ( int x = 0; x < MaxField; ++x )
-		{
-			if ( ( Cell[x*MaxField+y].m_Value == Mine ) && ( Field[x*MaxField+y] == -1 ) )
-			{
-				//--------------------Mine-------------------
-				D3DXMatrixRotationY( &MatrixWorldY, -1.57f );
-				D3DXMatrixTranslation( &MatrixWorldX, ( y - t ), 0, ( x - t ) );
-				MatrixWorld = MatrixWorldY * MatrixWorldX;
-				g_Mesh[10].SetMatrixWorld( MatrixWorld );
-				g_Mesh[10].SetMatrixView( MatrixView );
-				g_Mesh[10].SetMatrixProjection( MatrixProjection );
-				g_Mesh[10].DrawMyMesh(g_DeviceD3D.m_pConstTableVS, g_DeviceD3D.m_pConstTablePS, g_DeviceD3D.m_pVertexShader, g_DeviceD3D.m_pPixelShader);
-			}
+		{				
 			if ( Field[x*MaxField+y] == Empty )					
 				RenderMesh( Empty, x, y);			
 			if ( Field[x*MaxField+y] == Flag ) 
@@ -313,6 +311,8 @@ void RenderingDirect3D( CCell* Cell, int* Field )
 				RenderMesh( Seven, x, y);
 			if ( ( Cell[x*MaxField+y].m_Value == Eight ) && ( Field[x*MaxField+y] == -1 ) )
 				RenderMesh( Eight, x, y);
+			if ( ( Cell[x*MaxField+y].m_Value == Mine )  && ( Field[x*MaxField+y] == -1 ) )
+				RenderMesh( Mine, x, y);
 		}
 		POINT P = PickObject( &Cell[0] );
 		char  str[50];
@@ -368,7 +368,16 @@ void RenderingDirect3D( CCell* Cell, int* Field )
 				if ( Field[x*MaxField+y] == Flag ) 
 					++flag;
 			}
-	
+		flag = MaxMine - flag;
+		int Units = flag % 10;
+		int Tens  = (flag - Units)/10;
+		if ( flag > -1 )
+		{
+			RenderMesh( Units, t+1, 1-t );
+			RenderMesh( Tens, t, 1-t );
+		}
+
+
 		g_pD3DDevice -> EndScene();
 		g_pD3DDevice -> Present( 0, 0, 0, 0 ); // вывод содержимого заднего буфера в окно
 }
