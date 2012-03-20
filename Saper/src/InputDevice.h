@@ -1,6 +1,8 @@
 #pragma once
 #include "CameraDevice.h"
 
+
+
 struct CMouseState
 {
 	LONG     m_lX;

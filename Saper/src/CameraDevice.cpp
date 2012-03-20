@@ -10,7 +10,7 @@ CameraDevice::CameraDevice()
 	Point		    = D3DXVECTOR3( 0, 0, 0 );
 	D3DXMatrixLookAtLH( &m_View, &PositionCamera, &Point, &CameraUp );
 	D3DXMatrixPerspectiveFovLH(&m_Proj, D3DX_PI / 4, (FLOAT)Width / Height, 1.0f, 3000.0f);
-	StepCamera  = 2.5f;
+	StepCamera  = 0.8f;
 	AngleCamera = 1.0f * D3DX_PI / 180;
 	Sensivity   = 0.8f;
 }
