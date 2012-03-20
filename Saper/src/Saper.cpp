@@ -421,6 +421,21 @@ void RenderingDirect3D( CCell* Cell, int* Field )
 		g_pD3DDevice -> Present( 0, 0, 0, 0 ); // вывод содержимого заднего буфера в окно
 }
 
+void ClearField( CCell* Cell, int* Field, int x, int y )
+{	
+	Field[x*MaxField+y] = -1;
+	for (int b = y-1; b < y+2; ++b)
+		for (int a = x-1; a < x+2; ++a)
+			if ( (a >= 0) && (b >= 0) && (a < MaxField) && (b < MaxField) && ( Field[a*MaxField+b] == Empty ) )
+			{				
+				if ( ( Cell[a*MaxField+b].m_Value == Empty ) )
+					ClearField(  Cell, Field, a, b);
+				Field[a*MaxField+b] = -1;				
+			}
+
+}
+
+
 void CheckPC( lua_State* m_luaVM, CCell* Cell )
 {
 	Beep(150, 50); 

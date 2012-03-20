@@ -41,8 +41,4 @@ CField::CField( int Size )
 			}
 }
 
-CField::~CField()
-{
-	m_Cell.~vector();
-	m_Field.~vector();
-}
+

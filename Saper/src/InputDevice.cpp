@@ -2,6 +2,7 @@
 
 int   GameOver();
 POINT PickObject( CCell *Cell );
+void  ClearField( CCell* Cell, int* Field, int x, int y );
 
 
 HRESULT CInputDevice::InitialInput( HWND hwnd, FILE *FileLog )
@@ -74,11 +75,14 @@ bool CInputDevice::ScanInput( CameraDevice *m_Camera, CCell *Cell, int* Field )
 
 	if ( m_Mouse.m_rgbButtons[LEFT_BUTTON]&0x80 )
 	{
-		POINT Point = PickObject( &Cell[0]);
+		POINT Point = PickObject( &Cell[0] );
 		if ( ( Point.x >= 0 ) && ( Field[Point.x*MaxField+Point.y] == Empty ) )
 		{
 			Beep(150, 50);
-			Field[Point.x*MaxField+Point.y] = -1;								
+			if ( Cell[Point.x*MaxField+Point.y].m_Value == Empty )
+				ClearField( Cell, Field, Point.x, Point.y);
+			else 
+				Field[Point.x*MaxField+Point.y] = -1;								
 		}
 	}
 	if ( m_Mouse.m_rgbButtons[RIGHT_BUTTON]&0x80 )
