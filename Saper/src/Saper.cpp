@@ -323,8 +323,8 @@ void RenderingDirect3D( CCell* Cell, int* Field )
 				RenderMesh( Mine, x, y);
 		}
 		POINT P = PickObject( &Cell[0] );
-		char  str[50];
-		sprintf(str, "%d          %d", P.x, P.y);		
+		//char  str[50];
+		//sprintf(str, "%d          %d", P.x, P.y);		
 		//DrawMyText(g_pD3DDevice, str, 10, 10, 500, 700, D3DCOLOR_ARGB(250, 250, 250,50));	
 		if ( P.x >= 0)
 		{
@@ -366,13 +366,6 @@ void RenderingDirect3D( CCell* Cell, int* Field )
 			g_MeshLost.SetMatrixView( g_Camera.m_View );
 			g_MeshLost.SetMatrixProjection( g_Camera.m_Proj );
 			g_MeshLost.DrawMyMesh(g_DeviceD3D.m_pConstTableVS, g_DeviceD3D.m_pConstTablePS, g_DeviceD3D.m_pVertexShader, g_DeviceD3D.m_pPixelShader);
-			break;
-		case 3:
-			D3DXMatrixTranslation( &MatrixWorld, 0, 0, -7 );		
-			g_MeshStalemate.SetMatrixWorld( MatrixWorld );
-			g_MeshStalemate.SetMatrixView( g_Camera.m_View );
-			g_MeshStalemate.SetMatrixProjection( g_Camera.m_Proj );
-			g_MeshStalemate.DrawMyMesh(g_DeviceD3D.m_pConstTableVS, g_DeviceD3D.m_pConstTablePS, g_DeviceD3D.m_pVertexShader, g_DeviceD3D.m_pPixelShader);
 			break;
 		}
 		//-------------------CountMine-----------------------------------------
