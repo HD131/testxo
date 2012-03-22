@@ -4,16 +4,16 @@
 class CMesh3D
 {
 public:
+	ID3DXMesh*  GetMesh()   { return m_pMesh; }
+	HRESULT		InitialMesh( LPCSTR Name, FILE* FileLog );
+	void		Release();
+	void		DrawMyMesh( ID3DXConstantTable** pConstTableVS, ID3DXConstantTable** pConstTablePS,	IDirect3DVertexShader9** VertexShader, IDirect3DPixelShader9** PixelShader );
+	void		SetMatrixWorld( const D3DXMATRIX& Matrix );
+	void		SetMatrixView( const D3DXMATRIX& Matrix );
+	void		SetMatrixProjection( const D3DXMATRIX& Matrix );
+private:
 	ID3DXMesh*							m_pMesh;	
 	float								m_Alpha;
-	HRESULT								InitialMesh( LPCSTR Name, FILE* FileLog );
-	void								Release();
-	void								DrawMyMesh( ID3DXConstantTable** pConstTableVS, ID3DXConstantTable** pConstTablePS, 
-													IDirect3DVertexShader9** VertexShader, IDirect3DPixelShader9** PixelShader );
-	void								SetMatrixWorld( const D3DXMATRIX& Matrix );
-	void								SetMatrixView( const D3DXMATRIX& Matrix );
-	void								SetMatrixProjection( const D3DXMATRIX& Matrix );
-private:
 	D3DXMATRIX							m_MatrixWorld;
 	D3DXMATRIX							m_MatrixView;
 	D3DXMATRIX							m_MatrixProjection;
