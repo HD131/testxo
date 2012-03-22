@@ -1,6 +1,7 @@
 #include "InputDevice.h"
+#include "D3DDevice.h"
 
-int   GameOver( CCell* Cell, int* Field );
+Game_State GameOverCheck( CCell* Cell, int* Field );
 POINT PickObject( CCell *Cell );
 void  ClearField( CCell* Cell, int* Field, int x, int y );
 bool Pressed = false;
@@ -76,7 +77,7 @@ bool CInputDevice::ScanInput( CameraDevice *m_Camera, CCell *Cell, int* Field )
 	if ( m_Mouse.m_rgbButtons[LEFT_BUTTON]&0x80 )
 	{
 		POINT Point = PickObject( &Cell[0] );
-		if ( ( Point.x >= 0 ) && ( Field[Point.x*MaxField+Point.y] == Empty ) && ( GameOver( Cell, Field ) < 0 ) )
+		if ( ( Point.x >= 0 ) && ( Field[Point.x*MaxField+Point.y] == Empty ) && ( !GameOverCheck( Cell, Field ) ) )
 		{			
 			if ( Cell[Point.x*MaxField+Point.y].m_Value == Empty )
 			{
@@ -98,12 +99,12 @@ bool CInputDevice::ScanInput( CameraDevice *m_Camera, CCell *Cell, int* Field )
 		 {
 			 Pressed = true;
 			 POINT Point = PickObject( &Cell[0]);
-			 if ( ( Point.x >= 0 ) && ( Field[Point.x*MaxField+Point.y] == Flag ) && ( GameOver( Cell, Field ) < 0 ) )
+			 if ( ( Point.x >= 0 ) && ( Field[Point.x*MaxField+Point.y] == Flag ) && ( !GameOverCheck( Cell, Field ) ) )
 			 {			
 				 Field[Point.x*MaxField+Point.y] = Empty;				 
 				 return TRUE;
 			 }		
-			 if ( ( Point.x >= 0 ) && ( Field[Point.x*MaxField+Point.y] == Empty ) && ( GameOver( Cell, Field ) < 0 ) )
+			 if ( ( Point.x >= 0 ) && ( Field[Point.x*MaxField+Point.y] == Empty ) && ( !GameOverCheck( Cell, Field ) ) )
 			 {
 				 Field[Point.x*MaxField+Point.y] = Flag;				 
 				 return TRUE;
