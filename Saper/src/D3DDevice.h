@@ -25,7 +25,7 @@ const D3DXVECTOR4 g_Light       = D3DXVECTOR4( 0.0f, 1.0f, 0.0f, 1.0f );
 const float	g_Diffuse_intensity = 1.0f;
 
 enum  NameShader { Sky , Diffuse, MaxShader };
-enum  Values { Null , One, Two, Three, Four, Five, Six, Seven, Eight, Nine, Empty, Flag, Mine, MaxMesh };
+enum  Values { Zero, One, Two, Three, Four, Five, Six, Seven, Eight, Nine, Empty, Flag, Mine, Stena, Angle, MaxMesh, OpenCell };
 enum  Game_State { STATE_PLAY, STATE_WIN, STATE_LOST };
 
 
