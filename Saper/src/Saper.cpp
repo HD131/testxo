@@ -127,7 +127,7 @@ void ShowBomb( CCell* Cell, int* Field )
 		for (int x = 0; x < MaxField; ++x)
 		{
 			if ( ( Cell[x*MaxField+y].m_Value == Mine) )
-				Field[x*MaxField+y] = -1;			
+				Field[x*MaxField+y] = OpenCell;			
 		}
 }
 
@@ -136,7 +136,7 @@ Game_State GameOverCheck( CCell* Cell, int* Field )
 	for (int y = 0; y < MaxField; ++y)
 		for (int x = 0; x < MaxField; ++x)
 		{
-			if ( Field[x*MaxField+y] == -1 && Cell[x*MaxField+y].m_Value == Mine )
+			if ( Field[x*MaxField+y] == OpenCell && Cell[x*MaxField+y].m_Value == Mine )
 			{
 				ShowBomb( Cell, Field );
 				return STATE_LOST;
@@ -153,14 +153,14 @@ Game_State GameOverCheck( CCell* Cell, int* Field )
 return  STATE_PLAY;
 }
 
-void RenderMesh( int Number, float x, float y )
+void RenderMesh( int Number, float x, float y, float Ang )
 {
 	D3DXMATRIX MatrixWorld, MatrixWorldY, MatrixWorldX;
 
 	if ( Number < 0)
 		Number = 0;
 	int t = ( MaxField - 1) / 2;
-	D3DXMatrixRotationY(   &MatrixWorldY, -1.57f );
+	D3DXMatrixRotationY(   &MatrixWorldY, Ang );
 	D3DXMatrixTranslation( &MatrixWorldX, ( y - t ), 0, ( x - t ) );
 	D3DXMatrixMultiply(&MatrixWorld, &MatrixWorldY, &MatrixWorldX);		
 	g_Mesh[Number].SetMatrixWorld( MatrixWorld );
@@ -170,78 +170,18 @@ void RenderMesh( int Number, float x, float y )
 }
 
 void RenderFence()
-{
-	D3DXMATRIX MatrixView       = g_Camera.m_View;
-	D3DXMATRIX MatrixProjection = g_Camera.m_Proj;
-	D3DXMATRIX MatrixWorld, MatrixWorldY, MatrixWorldX;
-	
-	int t = ( MaxField - 1) / 2;
-	D3DXMatrixRotationY( &MatrixWorldY, -1.57f );
-	D3DXMatrixTranslation( &MatrixWorldX, ( -1 - t ), 0, ( -1 - t ) );
-	MatrixWorld = MatrixWorldY * MatrixWorldX;
-	g_MeshA.SetMatrixWorld( MatrixWorld );
-	g_MeshA.SetMatrixView( MatrixView );
-	g_MeshA.SetMatrixProjection( MatrixProjection );
-	g_MeshA.DrawMyMesh(g_DeviceD3D.m_pConstTableVS, g_DeviceD3D.m_pConstTablePS, g_DeviceD3D.m_pVertexShader, g_DeviceD3D.m_pPixelShader);
-
-	D3DXMatrixRotationY( &MatrixWorldY, 0.0f );
-	D3DXMatrixTranslation( &MatrixWorldX, ( -1 - t ), 0, ( - t +  MaxField) );
-	MatrixWorld = MatrixWorldY * MatrixWorldX;
-	g_MeshA.SetMatrixWorld( MatrixWorld );
-	g_MeshA.SetMatrixView( MatrixView );
-	g_MeshA.SetMatrixProjection( MatrixProjection );
-	g_MeshA.DrawMyMesh(g_DeviceD3D.m_pConstTableVS, g_DeviceD3D.m_pConstTablePS, g_DeviceD3D.m_pVertexShader, g_DeviceD3D.m_pPixelShader);
-
-	D3DXMatrixRotationY( &MatrixWorldY, 3.14f );
-	D3DXMatrixTranslation( &MatrixWorldX, (- t +  MaxField ), 0, ( -1 - t ) );
-	MatrixWorld = MatrixWorldY * MatrixWorldX;
-	g_MeshA.SetMatrixWorld( MatrixWorld );
-	g_MeshA.SetMatrixView( MatrixView );
-	g_MeshA.SetMatrixProjection( MatrixProjection );
-	g_MeshA.DrawMyMesh(g_DeviceD3D.m_pConstTableVS, g_DeviceD3D.m_pConstTablePS, g_DeviceD3D.m_pVertexShader, g_DeviceD3D.m_pPixelShader);
-
-	D3DXMatrixRotationY( &MatrixWorldY, 1.57f );
-	D3DXMatrixTranslation( &MatrixWorldX, (- t +  MaxField ), 0, ( - t +  MaxField ) );
-	MatrixWorld = MatrixWorldY * MatrixWorldX;
-	g_MeshA.SetMatrixWorld( MatrixWorld );
-	g_MeshA.SetMatrixView( MatrixView );
-	g_MeshA.SetMatrixProjection( MatrixProjection );
-	g_MeshA.DrawMyMesh(g_DeviceD3D.m_pConstTableVS, g_DeviceD3D.m_pConstTablePS, g_DeviceD3D.m_pVertexShader, g_DeviceD3D.m_pPixelShader);
+{	
+	RenderMesh( Angle, -1, -1, -1.57f );
+	RenderMesh( Angle, -1, MaxField, 3.14f );
+	RenderMesh( Angle, MaxField, -1, 0.0f );
+	RenderMesh( Angle, MaxField, MaxField, 1.57f );
 	for ( int x = 1; x < MaxField - 1; ++x )
-	{
-		D3DXMatrixRotationY( &MatrixWorldY, 1.57f );
-		D3DXMatrixTranslation( &MatrixWorldX, ( -1 - t ), 0, ( x - t ) );
-		MatrixWorld = MatrixWorldY * MatrixWorldX;
-		g_MeshS.SetMatrixWorld( MatrixWorld );
-		g_MeshS.SetMatrixView( MatrixView );
-		g_MeshS.SetMatrixProjection( MatrixProjection );
-		g_MeshS.DrawMyMesh(g_DeviceD3D.m_pConstTableVS, g_DeviceD3D.m_pConstTablePS, g_DeviceD3D.m_pVertexShader, g_DeviceD3D.m_pPixelShader);
-
-		D3DXMatrixRotationY( &MatrixWorldY, 1.57f );
-		D3DXMatrixTranslation( &MatrixWorldX, ( - t +  MaxField ), 0, ( x - t ) );
-		MatrixWorld = MatrixWorldY * MatrixWorldX;
-		g_MeshS.SetMatrixWorld( MatrixWorld );
-		g_MeshS.SetMatrixView( MatrixView );
-		g_MeshS.SetMatrixProjection( MatrixProjection );
-		g_MeshS.DrawMyMesh(g_DeviceD3D.m_pConstTableVS, g_DeviceD3D.m_pConstTablePS, g_DeviceD3D.m_pVertexShader, g_DeviceD3D.m_pPixelShader);
-
-		D3DXMatrixRotationY( &MatrixWorldY, 0.0f );
-		D3DXMatrixTranslation( &MatrixWorldX, ( x - t ), 0, ( -1 - t ) );
-		MatrixWorld = MatrixWorldY * MatrixWorldX;
-		g_MeshS.SetMatrixWorld( MatrixWorld );
-		g_MeshS.SetMatrixView( MatrixView );
-		g_MeshS.SetMatrixProjection( MatrixProjection );
-		g_MeshS.DrawMyMesh(g_DeviceD3D.m_pConstTableVS, g_DeviceD3D.m_pConstTablePS, g_DeviceD3D.m_pVertexShader, g_DeviceD3D.m_pPixelShader);
-
-		D3DXMatrixRotationY( &MatrixWorldY, 0.0f );
-		D3DXMatrixTranslation( &MatrixWorldX, ( x - t ), 0, ( - t +  MaxField ) );
-		MatrixWorld = MatrixWorldY * MatrixWorldX;
-		g_MeshS.SetMatrixWorld( MatrixWorld );
-		g_MeshS.SetMatrixView( MatrixView );
-		g_MeshS.SetMatrixProjection( MatrixProjection );
-		g_MeshS.DrawMyMesh(g_DeviceD3D.m_pConstTableVS, g_DeviceD3D.m_pConstTablePS, g_DeviceD3D.m_pVertexShader, g_DeviceD3D.m_pPixelShader);
+	{		
+		RenderMesh( Stena, -1, x, 0.0f );
+		RenderMesh( Stena, MaxField, x, 0.0f );
+		RenderMesh( Stena, x, -1, 1.57f );
+		RenderMesh( Stena, x, MaxField, 1.57f );
 	}
-
 }
 
 void RenderingDirect3D( CCell* Cell, int* Field )
@@ -253,7 +193,7 @@ void RenderingDirect3D( CCell* Cell, int* Field )
 	else
 		g_pD3DDevice -> SetRenderState( D3DRS_FILLMODE, D3DFILL_SOLID);
 	//------------------------------------------------------------------------------------------	
-	float const Angle = timeGetTime() / 2000.0f;
+	float const Ang = timeGetTime() / 2000.0f;
 
 	 D3DXMATRIX MatrixView       = g_Camera.m_View;
 	 D3DXMATRIX MatrixProjection = g_Camera.m_Proj;
@@ -304,27 +244,27 @@ void RenderingDirect3D( CCell* Cell, int* Field )
 		for ( int x = 0; x < MaxField; ++x )
 		{				
 			if ( Field[x*MaxField+y] == Empty )					
-				RenderMesh( Empty, x, y);			
+				RenderMesh( Empty, x, y, -1.57f );			
 			if ( Field[x*MaxField+y] == Flag ) 
-				RenderMesh( Flag, x, y);
-			if ( ( Cell[x*MaxField+y].m_Value == One )   && ( Field[x*MaxField+y] == -1 ) )
-				RenderMesh( One, x, y);
-			if ( ( Cell[x*MaxField+y].m_Value == Two )   && ( Field[x*MaxField+y] == -1 ) )
-				RenderMesh( Two, x, y);
-			if ( ( Cell[x*MaxField+y].m_Value == Three ) && ( Field[x*MaxField+y] == -1 ) )
-				RenderMesh( Three, x, y);
-			if ( ( Cell[x*MaxField+y].m_Value == Four )  && ( Field[x*MaxField+y] == -1 ) )
-				RenderMesh( Four, x, y);
-			if ( ( Cell[x*MaxField+y].m_Value == Five )  && ( Field[x*MaxField+y] == -1 ) )
-				RenderMesh( Five, x, y);
-			if ( ( Cell[x*MaxField+y].m_Value == Six )   && ( Field[x*MaxField+y] == -1 ) )
-				RenderMesh( Six, x, y);
-			if ( ( Cell[x*MaxField+y].m_Value == Seven ) && ( Field[x*MaxField+y] == -1 ) )
-				RenderMesh( Seven, x, y);
-			if ( ( Cell[x*MaxField+y].m_Value == Eight ) && ( Field[x*MaxField+y] == -1 ) )
-				RenderMesh( Eight, x, y);
-			if ( ( Cell[x*MaxField+y].m_Value == Mine )  && ( Field[x*MaxField+y] == -1 ) )
-				RenderMesh( Mine, x, y);
+				RenderMesh( Flag, x, y, -1.57f );
+			if ( ( Cell[x*MaxField+y].m_Value == One )   && ( Field[x*MaxField+y] == OpenCell ) )
+				RenderMesh( One, x, y, -1.57f );
+			if ( ( Cell[x*MaxField+y].m_Value == Two )   && ( Field[x*MaxField+y] == OpenCell ) )
+				RenderMesh( Two, x, y, -1.57f );
+			if ( ( Cell[x*MaxField+y].m_Value == Three ) && ( Field[x*MaxField+y] == OpenCell ) )
+				RenderMesh( Three, x, y, -1.57f );
+			if ( ( Cell[x*MaxField+y].m_Value == Four )  && ( Field[x*MaxField+y] == OpenCell ) )
+				RenderMesh( Four, x, y, -1.57f );
+			if ( ( Cell[x*MaxField+y].m_Value == Five )  && ( Field[x*MaxField+y] == OpenCell ) )
+				RenderMesh( Five, x, y, -1.57f );
+			if ( ( Cell[x*MaxField+y].m_Value == Six )   && ( Field[x*MaxField+y] == OpenCell ) )
+				RenderMesh( Six, x, y, -1.57f );
+			if ( ( Cell[x*MaxField+y].m_Value == Seven ) && ( Field[x*MaxField+y] == OpenCell ) )
+				RenderMesh( Seven, x, y, -1.57f );
+			if ( ( Cell[x*MaxField+y].m_Value == Eight ) && ( Field[x*MaxField+y] == OpenCell ) )
+				RenderMesh( Eight, x, y, -1.57f );
+			if ( ( Cell[x*MaxField+y].m_Value == Mine )  && ( Field[x*MaxField+y] == OpenCell ) )
+				RenderMesh( Mine, x, y, -1.57f );
 		}
 		POINT P = PickObject( &Cell[0] );		
 		if ( P.x >= 0)
@@ -370,7 +310,7 @@ void RenderingDirect3D( CCell* Cell, int* Field )
 			break;
 		}
 		//-------------------CountMine-----------------------------------------
-		if ( !GameOverCheck( Cell, Field ) )
+		if ( GameOverCheck( Cell, Field ) == STATE_PLAY )
 		{
 			int flag = 0;
 			for ( int y = 0; y < MaxField; ++y )
@@ -382,8 +322,8 @@ void RenderingDirect3D( CCell* Cell, int* Field )
 			flag = MaxMine - flag;
 			int Units = flag % 10;
 			int Tens  = (flag - Units)/10;						
-			RenderMesh( Units, t + 0.5f, 1-t );
-			RenderMesh( Tens, t, 1-t );
+			RenderMesh( Units, t + 0.5f, 1 - t, -1.57f );
+			RenderMesh( Tens, t, 1 - t, -1.57f  );
 			
 		}
 // 		char  str[50];
@@ -396,14 +336,14 @@ void RenderingDirect3D( CCell* Cell, int* Field )
 
 void ClearField( CCell* Cell, int* Field, int x, int y )
 {	
-	Field[x*MaxField+y] = -1;
+	Field[x*MaxField+y] = OpenCell;
 	for (int b = y-1; b < y+2; ++b)
 		for (int a = x-1; a < x+2; ++a)
 			if ( (a >= 0) && (b >= 0) && (a < MaxField) && (b < MaxField) && ( Field[a*MaxField+b] == Empty ) )
 			{				
 				if ( ( Cell[a*MaxField+b].m_Value == Empty ) )
 					ClearField(  Cell, Field, a, b);
-				Field[a*MaxField+b] = -1;				
+				Field[a*MaxField+b] = OpenCell;				
 			}
 }
 
@@ -424,44 +364,16 @@ LONG WINAPI WndProc( HWND hwnd, UINT Message, WPARAM wparam, LPARAM lparam )
 	return DefWindowProc( hwnd, Message, wparam, lparam );
 }  
 
-struct CFps
-{
-	int          m_Count;
-	int          m_FPS;
-	int          m_LastTick;
-	int          m_ThisTick;
-	int			 Fps();
-
-	CFps(): m_Count(0)
-	{	}
-};
-
-int CFps::Fps()
-{	
-	m_ThisTick = GetTickCount();
-	if ( m_ThisTick - m_LastTick >= 1000 )
-	{
-		m_LastTick = m_ThisTick;
-		m_FPS      = m_Count;
-		m_Count    = 0;
-	}
-	else m_Count++;
-return m_FPS;
-}
-
-
 int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance,
 				   LPSTR     lpCmdLine, int       nCmdShow)
 {	
 	MSG			 Msg;
-	WNDCLASS	 w;	
-	CFps         g_Fieldps;		
+	WNDCLASS	 w;			
 
 	// Запись лога в файл 
-	FILE *FileLog = fopen( "log.txt", "w" );
-	
+	FILE *FileLog = fopen( "log.txt", "w" );	
 
-	memset(&w,0,sizeof(WNDCLASS));
+	memset( &w, 0, sizeof(WNDCLASS) );
 	w.style         = CS_HREDRAW | CS_VREDRAW;
 	w.lpfnWndProc   = WndProc;
 	w.hInstance     = hInstance;
@@ -488,28 +400,30 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	{	
 		if ( SUCCEEDED( g_DeviceD3D.LoadTexture( FileLog ) ) )
 		{				 
-			g_MeshS.InitialMesh(   "model//Stena.x", FileLog );
-			g_MeshA.InitialMesh(   "model//Angle.x", FileLog );
-			g_Mesh[0].InitialMesh( "model//0.x", FileLog );
-			g_Mesh[1].InitialMesh( "model//1.x", FileLog );
-			g_Mesh[2].InitialMesh( "model//2.x", FileLog );
-			g_Mesh[3].InitialMesh( "model//3.x", FileLog );
-			g_Mesh[4].InitialMesh( "model//4.x", FileLog );
-			g_Mesh[5].InitialMesh( "model//5.x", FileLog );
-			g_Mesh[6].InitialMesh( "model//6.x", FileLog );
-			g_Mesh[7].InitialMesh( "model//7.x", FileLog );
-			g_Mesh[8].InitialMesh( "model//8.x", FileLog );
-			g_Mesh[9].InitialMesh( "model//9.x", FileLog );
-			g_Mesh[10].InitialMesh( "model//Empty.x", FileLog );
-			g_Mesh[11].InitialMesh( "model//Flag.x", FileLog );
-			g_Mesh[12].InitialMesh( "model//Mine.x", FileLog );	
+			
+			
+			g_Mesh[Zero].InitialMesh( "model//0.x", FileLog );
+			g_Mesh[One].InitialMesh( "model//1.x", FileLog );
+			g_Mesh[Two].InitialMesh( "model//2.x", FileLog );
+			g_Mesh[Three].InitialMesh( "model//3.x", FileLog );
+			g_Mesh[Four].InitialMesh( "model//4.x", FileLog );
+			g_Mesh[Five].InitialMesh( "model//5.x", FileLog );
+			g_Mesh[Six].InitialMesh( "model//6.x", FileLog );
+			g_Mesh[Seven].InitialMesh( "model//7.x", FileLog );
+			g_Mesh[Eight].InitialMesh( "model//8.x", FileLog );
+			g_Mesh[Nine].InitialMesh( "model//9.x", FileLog );
+			g_Mesh[Empty].InitialMesh( "model//Empty.x", FileLog );
+			g_Mesh[Flag].InitialMesh( "model//Flag.x", FileLog );
+			g_Mesh[Mine].InitialMesh( "model//Mine.x", FileLog );
+			g_Mesh[Stena].InitialMesh(   "model//Stena.x", FileLog );
+			g_Mesh[Angle].InitialMesh(   "model//Angle.x", FileLog );
 			g_MeshWin.InitialMesh( "model//Win.x", FileLog );	
 			g_MeshLost.InitialMesh( "model//Lost.x", FileLog );
-			g_MeshStalemate.InitialMesh( "model//Stalemate.x", FileLog );
+			
 			g_Sky.InitialSky();
 			g_DeviceInput.InitialInput( hwnd, FileLog );					
 			g_DeviceD3D.InitialShader();
-			g_Fieldps.m_LastTick = GetTickCount();
+			
 			while( !g_Exit )
 			{
 				g_DeviceInput.ScanInput( &g_Camera, &g_Field.m_Cell[0], &g_Field.m_Field[0] );				

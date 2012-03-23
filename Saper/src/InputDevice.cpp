@@ -19,12 +19,12 @@ HRESULT CInputDevice::InitialInput( HWND hwnd, FILE *FileLog )
 	dipdw.diph.dwHow		= DIPH_DEVICE;
 	dipdw.dwData			= 32;
 
-	if (FAILED(DirectInput8Create(GetModuleHandle(0), DIRECTINPUT_VERSION, IID_IDirectInput8, (void**)&m_pInput, NULL)))
+	if (FAILED(DirectInput8Create(GetModuleHandle(0), DIRECTINPUT_VERSION, IID_IDirectInput8, (void**)&m_pInput, 0 )))
 		return E_FAIL;
 	if ( FileLog ) 
 		fprintf( FileLog, "Initial DirectInput8\n" );
 
-	if FAILED(m_pInput -> CreateDevice(GUID_SysKeyboard, &m_pKeyboard, NULL)) //создание устройства клавиатура
+	if FAILED(m_pInput -> CreateDevice(GUID_SysKeyboard, &m_pKeyboard, 0 )) //создание устройства клавиатура
 		return E_FAIL;
 	if FAILED(m_pKeyboard -> SetDataFormat(&c_dfDIKeyboard))
 		return E_FAIL;
@@ -77,7 +77,7 @@ bool CInputDevice::ScanInput( CameraDevice *m_Camera, CCell *Cell, int* Field )
 	if ( m_Mouse.m_rgbButtons[LEFT_BUTTON]&0x80 )
 	{
 		POINT Point = PickObject( &Cell[0] );
-		if ( ( Point.x >= 0 ) && ( Field[Point.x*MaxField+Point.y] == Empty ) && ( !GameOverCheck( Cell, Field ) ) )
+		if ( ( Point.x >= 0 ) && ( Field[Point.x*MaxField+Point.y] == Empty ) && ( GameOverCheck( Cell, Field ) == STATE_PLAY ) )
 		{			
 			if ( Cell[Point.x*MaxField+Point.y].m_Value == Empty )
 			{
@@ -86,34 +86,34 @@ bool CInputDevice::ScanInput( CameraDevice *m_Camera, CCell *Cell, int* Field )
 			}
 			if ( Cell[Point.x*MaxField+Point.y].m_Value == Mine )
 			{
-				Field[Point.x*MaxField+Point.y] = -1;
+				Field[Point.x*MaxField+Point.y] = OpenCell;
 				return true;
 			}
 			 
-			Field[Point.x*MaxField+Point.y] = -1;								
+			Field[Point.x*MaxField+Point.y] = OpenCell;								
 		}
 	}
 	if ( m_Mouse.m_rgbButtons[RIGHT_BUTTON]&0x80 )
 	{
-		 if ( !Pressed )
+		 if ( !Pressed )		 
+			 Pressed = true;		 
+	}
+	 else		 
+		 if ( Pressed )
 		 {
-			 Pressed = true;
+			 Pressed = false;
 			 POINT Point = PickObject( &Cell[0]);
-			 if ( ( Point.x >= 0 ) && ( Field[Point.x*MaxField+Point.y] == Flag ) && ( !GameOverCheck( Cell, Field ) ) )
+			 if ( ( Point.x >= 0 ) && ( Field[Point.x*MaxField+Point.y] == Flag ) && ( GameOverCheck( Cell, Field ) == STATE_PLAY ) )
 			 {			
 				 Field[Point.x*MaxField+Point.y] = Empty;				 
 				 return TRUE;
 			 }		
-			 if ( ( Point.x >= 0 ) && ( Field[Point.x*MaxField+Point.y] == Empty ) && ( !GameOverCheck( Cell, Field ) ) )
+			 if ( ( Point.x >= 0 ) && ( Field[Point.x*MaxField+Point.y] == Empty ) && ( GameOverCheck( Cell, Field ) == STATE_PLAY ) )
 			 {
 				 Field[Point.x*MaxField+Point.y] = Flag;				 
 				 return TRUE;
 			 }
 		 }
-	}
-	 else		 
-		 if ( Pressed )
-			Pressed = false;
 	
 return TRUE;
 }
