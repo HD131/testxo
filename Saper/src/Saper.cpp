@@ -153,34 +153,18 @@ Game_State GameOverCheck( CCell* Cell, int* Field )
 return  STATE_PLAY;
 }
 
-void RenderMesh( int Number, float x, float y, float Ang )
-{
-	D3DXMATRIX MatrixWorld, MatrixWorldY, MatrixWorldX;
-
-	if ( Number < 0)
-		Number = 0;
-	int t = ( MaxField - 1) / 2;
-	D3DXMatrixRotationY(   &MatrixWorldY, Ang );
-	D3DXMatrixTranslation( &MatrixWorldX, ( y - t ), 0, ( x - t ) );
-	D3DXMatrixMultiply(&MatrixWorld, &MatrixWorldY, &MatrixWorldX);		
-	g_Mesh[Number].SetMatrixWorld( MatrixWorld );
-	g_Mesh[Number].SetMatrixView( g_Camera.m_View );
-	g_Mesh[Number].SetMatrixProjection( g_Camera.m_Proj );
-	g_Mesh[Number].DrawMyMesh(g_DeviceD3D.m_pConstTableVS, g_DeviceD3D.m_pConstTablePS, g_DeviceD3D.m_pVertexShader, g_DeviceD3D.m_pPixelShader);
-}
-
 void RenderFence()
 {	
-	RenderMesh( Angle, -1, -1, -1.57f );
-	RenderMesh( Angle, -1, MaxField, 3.14f );
-	RenderMesh( Angle, MaxField, -1, 0.0f );
-	RenderMesh( Angle, MaxField, MaxField, 1.57f );
+	g_Mesh[ Angle ].RenderMesh( g_Camera, -1, -1, -1.57f );
+	g_Mesh[ Angle ].RenderMesh( g_Camera, -1, MaxField, 3.14f );
+	g_Mesh[ Angle ].RenderMesh( g_Camera, MaxField, -1, 0.0f );
+	g_Mesh[ Angle ].RenderMesh( g_Camera, MaxField, MaxField, 1.57f );
 	for ( int x = 1; x < MaxField - 1; ++x )
 	{		
-		RenderMesh( Stena, -1, x, 0.0f );
-		RenderMesh( Stena, MaxField, x, 0.0f );
-		RenderMesh( Stena, x, -1, 1.57f );
-		RenderMesh( Stena, x, MaxField, 1.57f );
+		g_Mesh[ Stena ].RenderMesh( g_Camera, -1, x, 0.0f );
+		g_Mesh[ Stena ].RenderMesh( g_Camera, MaxField, x, 0.0f );
+		g_Mesh[ Stena ].RenderMesh( g_Camera, x, -1, 1.57f );
+		g_Mesh[ Stena ].RenderMesh( g_Camera, x, MaxField, 1.57f );
 	}
 }
 
@@ -244,27 +228,27 @@ void RenderingDirect3D( CCell* Cell, int* Field )
 		for ( int x = 0; x < MaxField; ++x )
 		{				
 			if ( Field[x*MaxField+y] == Empty )					
-				RenderMesh( Empty, x, y, -1.57f );			
+				g_Mesh[ Empty ].RenderMesh( g_Camera, x, y, -1.57f );			
 			if ( Field[x*MaxField+y] == Flag ) 
-				RenderMesh( Flag, x, y, -1.57f );
+				g_Mesh[ Flag ].RenderMesh( g_Camera, x, y, -1.57f );
 			if ( ( Cell[x*MaxField+y].m_Value == One )   && ( Field[x*MaxField+y] == OpenCell ) )
-				RenderMesh( One, x, y, -1.57f );
+				g_Mesh[ One ].RenderMesh( g_Camera, x, y, -1.57f );
 			if ( ( Cell[x*MaxField+y].m_Value == Two )   && ( Field[x*MaxField+y] == OpenCell ) )
-				RenderMesh( Two, x, y, -1.57f );
+				g_Mesh[ Two ].RenderMesh( g_Camera, x, y, -1.57f );
 			if ( ( Cell[x*MaxField+y].m_Value == Three ) && ( Field[x*MaxField+y] == OpenCell ) )
-				RenderMesh( Three, x, y, -1.57f );
+				g_Mesh[ Three ].RenderMesh( g_Camera, x, y, -1.57f );
 			if ( ( Cell[x*MaxField+y].m_Value == Four )  && ( Field[x*MaxField+y] == OpenCell ) )
-				RenderMesh( Four, x, y, -1.57f );
+				g_Mesh[ Four ].RenderMesh( g_Camera, x, y, -1.57f );
 			if ( ( Cell[x*MaxField+y].m_Value == Five )  && ( Field[x*MaxField+y] == OpenCell ) )
-				RenderMesh( Five, x, y, -1.57f );
+				g_Mesh[ Five ].RenderMesh( g_Camera, x, y, -1.57f );
 			if ( ( Cell[x*MaxField+y].m_Value == Six )   && ( Field[x*MaxField+y] == OpenCell ) )
-				RenderMesh( Six, x, y, -1.57f );
+				g_Mesh[ Six ].RenderMesh( g_Camera, x, y, -1.57f );
 			if ( ( Cell[x*MaxField+y].m_Value == Seven ) && ( Field[x*MaxField+y] == OpenCell ) )
-				RenderMesh( Seven, x, y, -1.57f );
+				g_Mesh[ Seven ].RenderMesh( g_Camera, x, y, -1.57f );
 			if ( ( Cell[x*MaxField+y].m_Value == Eight ) && ( Field[x*MaxField+y] == OpenCell ) )
-				RenderMesh( Eight, x, y, -1.57f );
+				g_Mesh[ Eight ].RenderMesh( g_Camera, x, y, -1.57f );
 			if ( ( Cell[x*MaxField+y].m_Value == Mine )  && ( Field[x*MaxField+y] == OpenCell ) )
-				RenderMesh( Mine, x, y, -1.57f );
+				g_Mesh[ Mine ].RenderMesh( g_Camera, x, y, -1.57f );
 		}
 		POINT P = PickObject( &Cell[0] );		
 		if ( P.x >= 0)
@@ -322,8 +306,8 @@ void RenderingDirect3D( CCell* Cell, int* Field )
 			flag = MaxMine - flag;
 			int Units = flag % 10;
 			int Tens  = (flag - Units)/10;						
-			RenderMesh( Units, t + 0.5f, 1 - t, -1.57f );
-			RenderMesh( Tens, t, 1 - t, -1.57f  );
+			g_Mesh[ Units ].RenderMesh( g_Camera, t + 0.5f, 1 - t, -1.57f );
+			g_Mesh[ Tens ].RenderMesh( g_Camera, t, 1 - t, -1.57f  );
 			
 		}
 // 		char  str[50];

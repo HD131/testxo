@@ -1,6 +1,9 @@
 #pragma once
 #include <vector>
 
+class CameraDevice;
+
+
 class CMesh3D
 {
 public:
@@ -11,6 +14,7 @@ public:
 	void		SetMatrixWorld( const D3DXMATRIX& Matrix );
 	void		SetMatrixView( const D3DXMATRIX& Matrix );
 	void		SetMatrixProjection( const D3DXMATRIX& Matrix );
+	void		RenderMesh( CameraDevice const& Camera, float x, float y, float Ang );
 private:
 	ID3DXMesh*							m_pMesh;	
 	float								m_Alpha;

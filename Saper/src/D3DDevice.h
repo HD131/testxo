@@ -6,16 +6,16 @@
 #include <mmsystem.h>
 #include <stdio.h>
 #include <winuser.h>
-#include <d3d9.h>
-#include <d3dx9.h>
-#include <d3dx9core.h>
-#include <d3dx9math.h>
+#include "../../sdk/dx9/Include/d3d9.h"
+#include "../../sdk/dx9/Include/d3dx9.h"
+#include "../../sdk/dx9/Include/d3dx9core.h"
+#include "../../sdk/dx9/Include/d3dx9math.h"
 #define  DIRECTINPUT_VERSION  0x0800
-#include <dinput.h>
+#include "../../sdk/dx9/Include/dinput.h"
 #define  INITGUID
 #include <fstream>
 #include <string>
-#include <d3dx9mesh.h>
+#include "../../sdk/dx9/Include/d3dx9mesh.h"
 
 const UINT Width				= 1024;
 const UINT Height				= 768;

@@ -1,7 +1,9 @@
 #include "D3DDevice.h"
 #include "Mesh.h"
+#include "CameraDevice.h"
 
 extern IDirect3DDevice9* g_pD3DDevice;
+extern CD3DDevice   g_DeviceD3D;
 
 HRESULT CMesh3D::InitialMesh(LPCSTR Name, FILE *FileLog )
 {
@@ -132,4 +134,19 @@ void CMesh3D::Release()
 	*/
 	if ( m_pMesh )
 		m_pMesh -> Release();
+}
+
+
+void CMesh3D::RenderMesh( CameraDevice const& Camera, float x, float y, float Ang )
+{
+	D3DXMATRIX MatrixWorld, MatrixWorldY, MatrixWorldX;
+
+	int t = ( MaxField - 1) / 2;
+	D3DXMatrixRotationY(   &MatrixWorldY, Ang );
+	D3DXMatrixTranslation( &MatrixWorldX, ( y - t ), 0, ( x - t ) );
+	D3DXMatrixMultiply(&MatrixWorld, &MatrixWorldY, &MatrixWorldX);		
+	SetMatrixWorld( MatrixWorld );
+	SetMatrixView( Camera.m_View );
+	SetMatrixProjection( Camera.m_Proj );
+	DrawMyMesh(g_DeviceD3D.m_pConstTableVS, g_DeviceD3D.m_pConstTablePS, g_DeviceD3D.m_pVertexShader, g_DeviceD3D.m_pPixelShader);
 }
