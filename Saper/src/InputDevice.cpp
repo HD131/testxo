@@ -2,9 +2,10 @@
 #include "D3DDevice.h"
 
 Game_State GameOverCheck( CCell* Cell, int* Field );
-POINT PickObject( CCell *Cell );
+POINT PickObject( IDirect3DDevice9* pD3DDevice, CCell* Cell );
 void  ClearField( CCell* Cell, int* Field, int x, int y );
 bool Pressed = false;
+extern CD3DDevice        g_DeviceD3D;
 
 HRESULT CInputDevice::InitialInput( HWND hwnd, FILE *FileLog )
 {	
@@ -76,7 +77,7 @@ bool CInputDevice::ScanInput( CameraDevice *m_Camera, CCell *Cell, int* Field )
 
 	if ( m_Mouse.m_rgbButtons[LEFT_BUTTON]&0x80 )
 	{
-		POINT Point = PickObject( &Cell[0] );
+		POINT Point = PickObject( g_DeviceD3D.GetDeviceD3D(), &Cell[0] );
 		if ( ( Point.x >= 0 ) && ( Field[Point.x*MaxField+Point.y] == Empty ) && ( GameOverCheck( Cell, Field ) == STATE_PLAY ) )
 		{			
 			if ( Cell[Point.x*MaxField+Point.y].m_Value == Empty )
@@ -102,7 +103,7 @@ bool CInputDevice::ScanInput( CameraDevice *m_Camera, CCell *Cell, int* Field )
 		 if ( Pressed )
 		 {
 			 Pressed = false;
-			 POINT Point = PickObject( &Cell[0]);
+			 POINT Point = PickObject( g_DeviceD3D.GetDeviceD3D(), &Cell[0]);
 			 if ( ( Point.x >= 0 ) && ( Field[Point.x*MaxField+Point.y] == Flag ) && ( GameOverCheck( Cell, Field ) == STATE_PLAY ) )
 			 {			
 				 Field[Point.x*MaxField+Point.y] = Empty;				 
