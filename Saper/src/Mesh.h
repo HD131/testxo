@@ -8,7 +8,7 @@ class CMesh3D
 {
 public:
 	ID3DXMesh*  GetMesh()   { return m_pMesh; }
-	HRESULT		InitialMesh( LPCSTR Name, FILE* FileLog );
+	HRESULT		InitialMesh( IDirect3DDevice9* D3DDevice, LPCSTR Name, FILE *FileLog );
 	void		Release();
 	void		DrawMyMesh( ID3DXConstantTable** pConstTableVS, ID3DXConstantTable** pConstTablePS,	IDirect3DVertexShader9** VertexShader, IDirect3DPixelShader9** PixelShader );
 	void		SetMatrixWorld( const D3DXMATRIX& Matrix );
@@ -16,7 +16,8 @@ public:
 	void		SetMatrixProjection( const D3DXMATRIX& Matrix );
 	void		RenderMesh( CameraDevice const& Camera, float x, float y, float Ang );
 private:
-	ID3DXMesh*							m_pMesh;	
+	ID3DXMesh*							m_pMesh;
+	IDirect3DDevice9*                   m_pD3DDevice;
 	float								m_Alpha;
 	D3DXMATRIX							m_MatrixWorld;
 	D3DXMATRIX							m_MatrixView;

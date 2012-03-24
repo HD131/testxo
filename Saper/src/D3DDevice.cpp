@@ -1,62 +1,11 @@
 #include "D3DDevice.h"
 
-
-IDirect3DDevice9* g_pD3DDevice  = 0; //Ќаше устройство
-
-
-HRESULT CD3DDevice::InitialShader()
-{
-	LPD3DXBUFFER pErrors        = 0;
-	LPD3DXBUFFER pShaderBuff    = 0;
-
-	for (int i = 0; i < MaxShader; ++i)
-	{	
-		m_pVertexShader[i] = 0;
-		m_pPixelShader[i]  = 0;
-		m_pConstTableVS[i] = 0;
-		m_pConstTablePS[i] = 0;
-	}
-	//-------------------------------SkyShader----------------------------
-	// вертексный шейдер
-	D3DXCompileShaderFromFile( "shader//Sky.vsh", 0, 0, "main", "vs_2_0", D3DXSHADER_OPTIMIZATION_LEVEL3,
-								&pShaderBuff, &pErrors, &m_pConstTableVS[Sky] );
-	if ( pShaderBuff )
-	{
-		g_pD3DDevice->CreateVertexShader(( DWORD* )pShaderBuff->GetBufferPointer(), &m_pVertexShader[Sky]);
-		pShaderBuff -> Release();
-	}
-	// пиксельный шейдер
-	D3DXCompileShaderFromFile( "shader//Sky.psh", 0, 0, "main", "ps_2_0", D3DXSHADER_OPTIMIZATION_LEVEL3,
-								&pShaderBuff, &pErrors, &m_pConstTablePS[Sky] );
-	if ( pShaderBuff )
-	{
-		g_pD3DDevice->CreatePixelShader(( DWORD* )pShaderBuff->GetBufferPointer(), &m_pPixelShader[Sky]);
-		pShaderBuff -> Release();
-	}
-	//-------------------------------Diffuse----------------------------
-	// вертексный шейдер
-	D3DXCompileShaderFromFile( "shader//Diffuse.vsh", 0, 0, "main", "vs_2_0", D3DXSHADER_OPTIMIZATION_LEVEL3,
-								&pShaderBuff, &pErrors, &m_pConstTableVS[Diffuse] );
-	if ( pShaderBuff )
-	{
-		g_pD3DDevice->CreateVertexShader(( DWORD* )pShaderBuff->GetBufferPointer(), &m_pVertexShader[Diffuse]);
-		pShaderBuff -> Release();
-	}
-	// пиксельный шейдер
-	D3DXCompileShaderFromFile( "shader//Diffuse.psh", 0, 0, "main", "ps_2_0", D3DXSHADER_OPTIMIZATION_LEVEL3,
-								&pShaderBuff, &pErrors, &m_pConstTablePS[Diffuse] );
-	if ( pShaderBuff )
-	{
-		g_pD3DDevice->CreatePixelShader(( DWORD* )pShaderBuff->GetBufferPointer(), &m_pPixelShader[Diffuse]);
-		pShaderBuff -> Release();
-	}
-	return S_OK;
-}
+//IDirect3DDevice9* g_pD3DDevice  = 0; //Ќаше устройство
 
 HRESULT CD3DDevice::IntialDirect3D( HWND hwnd , FILE* FileLog)
 {
 	m_pDirect3D  = 0;
-	g_pD3DDevice = 0;
+	m_pD3DDevice = 0;
 	D3DPRESENT_PARAMETERS Direct3DParametr; // структура задающа€ парметры рендеринга 
 	D3DDISPLAYMODE        Display; // возвращает параметры диспле€
 
@@ -76,18 +25,18 @@ HRESULT CD3DDevice::IntialDirect3D( HWND hwnd , FILE* FileLog)
 	Direct3DParametr.PresentationInterval	= D3DPRESENT_INTERVAL_DEFAULT; 
 
 	if ( FAILED( m_pDirect3D -> CreateDevice( D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, hwnd, D3DCREATE_HARDWARE_VERTEXPROCESSING,
-											  &Direct3DParametr, &g_pD3DDevice ) ) ) // создаЄтс€ интерфейс устройства
+											  &Direct3DParametr, &m_pD3DDevice ) ) ) // создаЄтс€ интерфейс устройства
 		return E_FAIL;
 	if ( FileLog ) 
 		fprintf( FileLog, "Initial CreateDevice Direct3D\n" );
-	g_pD3DDevice -> SetRenderState( D3DRS_CULLMODE, D3DCULL_CCW );				//  режим отсечени€ включено и происходит по часовой стрелке
-	g_pD3DDevice -> SetRenderState( D3DRS_LIGHTING, FALSE );					// запрещаетс€ работа со светом
-	g_pD3DDevice -> SetRenderState( D3DRS_ZENABLE, D3DZB_TRUE );				// разрешает использовать Z-буфер
-	g_pD3DDevice -> SetRenderState( D3DRS_ALPHABLENDENABLE, TRUE );            // включает альфа-канал
-	g_pD3DDevice -> SetRenderState( D3DRS_SRCBLEND,  D3DBLEND_SRCALPHA );
-	g_pD3DDevice -> SetRenderState( D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA );
-	g_pD3DDevice -> SetRenderState( D3DRS_AMBIENT, 0xffffffff );
-	g_pD3DDevice -> SetSamplerState( 0, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR ); // фильтраци€ текстуры дл€ плавности перехода
+	m_pD3DDevice -> SetRenderState( D3DRS_CULLMODE, D3DCULL_CCW );				//  режим отсечени€ включено и происходит по часовой стрелке
+	m_pD3DDevice -> SetRenderState( D3DRS_LIGHTING, FALSE );					// запрещаетс€ работа со светом
+	m_pD3DDevice -> SetRenderState( D3DRS_ZENABLE, D3DZB_TRUE );				// разрешает использовать Z-буфер
+	m_pD3DDevice -> SetRenderState( D3DRS_ALPHABLENDENABLE, TRUE );            // включает альфа-канал
+	m_pD3DDevice -> SetRenderState( D3DRS_SRCBLEND,  D3DBLEND_SRCALPHA );
+	m_pD3DDevice -> SetRenderState( D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA );
+	m_pD3DDevice -> SetRenderState( D3DRS_AMBIENT, 0xffffffff );
+	m_pD3DDevice -> SetSamplerState( 0, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR ); // фильтраци€ текстуры дл€ плавности перехода
 
 	return S_OK;
 }
@@ -96,7 +45,7 @@ HRESULT	CD3DDevice::LoadTexture( FILE* FileLog )
 {	
 	m_CubeTexture = 0;
 
-	if ( FAILED( D3DXCreateCubeTextureFromFileEx( g_pD3DDevice, "model//sky_cube_mipmap.dds", D3DX_DEFAULT, D3DX_FROM_FILE, 0, 
+	if ( FAILED( D3DXCreateCubeTextureFromFileEx( m_pD3DDevice, "model//sky_cube_mipmap.dds", D3DX_DEFAULT, D3DX_FROM_FILE, 0, 
 		                                          D3DFMT_UNKNOWN, D3DPOOL_DEFAULT, D3DX_FILTER_NONE, D3DX_FILTER_NONE, 0, 0, 0, &m_CubeTexture )))
 		if ( FileLog ) 
 			fprintf( FileLog, "error load sky texture\n" );
@@ -104,6 +53,66 @@ HRESULT	CD3DDevice::LoadTexture( FILE* FileLog )
 }
 
 void CD3DDevice::Release()
+{	
+	if ( m_CubeTexture )
+		m_CubeTexture -> Release();
+	if ( m_pD3DDevice )
+		m_pD3DDevice -> Release();
+	if ( m_pDirect3D )
+		m_pDirect3D -> Release();	
+};
+
+
+HRESULT CShader::InitialShader( IDirect3DDevice9* D3DDevice )
+{
+	LPD3DXBUFFER pErrors        = 0;
+	LPD3DXBUFFER pShaderBuff    = 0;
+
+	for (int i = 0; i < MaxShader; ++i)
+	{	
+		m_pVertexShader[i] = 0;
+		m_pPixelShader[i]  = 0;
+		m_pConstTableVS[i] = 0;
+		m_pConstTablePS[i] = 0;
+	}
+	//-------------------------------SkyShader----------------------------
+	// вертексный шейдер
+	D3DXCompileShaderFromFile( "shader//Sky.vsh", 0, 0, "main", "vs_2_0", D3DXSHADER_OPTIMIZATION_LEVEL3,
+								&pShaderBuff, &pErrors, &m_pConstTableVS[Sky] );
+	if ( pShaderBuff )
+	{
+		D3DDevice->CreateVertexShader(( DWORD* )pShaderBuff->GetBufferPointer(), &m_pVertexShader[Sky]);
+		pShaderBuff -> Release();
+	}
+	// пиксельный шейдер
+	D3DXCompileShaderFromFile( "shader//Sky.psh", 0, 0, "main", "ps_2_0", D3DXSHADER_OPTIMIZATION_LEVEL3,
+								&pShaderBuff, &pErrors, &m_pConstTablePS[Sky] );
+	if ( pShaderBuff )
+	{
+		D3DDevice->CreatePixelShader(( DWORD* )pShaderBuff->GetBufferPointer(), &m_pPixelShader[Sky]);
+		pShaderBuff -> Release();
+	}
+	//-------------------------------Diffuse----------------------------
+	// вертексный шейдер
+	D3DXCompileShaderFromFile( "shader//Diffuse.vsh", 0, 0, "main", "vs_2_0", D3DXSHADER_OPTIMIZATION_LEVEL3,
+								&pShaderBuff, &pErrors, &m_pConstTableVS[Diffuse] );
+	if ( pShaderBuff )
+	{
+		D3DDevice->CreateVertexShader(( DWORD* )pShaderBuff->GetBufferPointer(), &m_pVertexShader[Diffuse]);
+		pShaderBuff -> Release();
+	}
+	// пиксельный шейдер
+	D3DXCompileShaderFromFile( "shader//Diffuse.psh", 0, 0, "main", "ps_2_0", D3DXSHADER_OPTIMIZATION_LEVEL3,
+								&pShaderBuff, &pErrors, &m_pConstTablePS[Diffuse] );
+	if ( pShaderBuff )
+	{
+		D3DDevice->CreatePixelShader(( DWORD* )pShaderBuff->GetBufferPointer(), &m_pPixelShader[Diffuse]);
+		pShaderBuff -> Release();
+	}
+return S_OK;
+}
+
+void CShader::Release()
 {
 	for (int i = 0; i < MaxShader; ++i)
 	{	
@@ -116,12 +125,4 @@ void CD3DDevice::Release()
 		if ( m_pConstTablePS[i] )
 			m_pConstTablePS[i] -> Release();
 	}
-	if ( m_CubeTexture )
-		m_CubeTexture -> Release();
-	if ( g_pD3DDevice )
-		g_pD3DDevice -> Release();
-	if ( m_pDirect3D )
-		m_pDirect3D -> Release();	
-};
-
-
+}

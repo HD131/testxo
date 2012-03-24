@@ -5,19 +5,20 @@
 #include "Mesh.h"
 #include <vector>
 
-extern IDirect3DDevice9* g_pD3DDevice;
+
 
 
 struct CSky
 {
 	IDirect3DVertexBuffer9* m_pVerBufSky;
 	IDirect3DIndexBuffer9*  m_pBufIndexSky;
-	HRESULT                 InitialSky();
+	HRESULT                 InitialSky( IDirect3DDevice9* pD3DDevice );
 	void                    Release();
 };
 
-
-CD3DDevice   g_DeviceD3D;
+CD3DDevice        g_DeviceD3D;
+CShader			  g_Shader;
+//IDirect3DDevice9* g_pD3DDevice = g_DeviceD3D.GetDeviceD3D();
 CInputDevice g_DeviceInput;
 CSky         g_Sky;
 CMesh3D      g_MeshA;
@@ -25,7 +26,7 @@ CMesh3D      g_Mesh[MaxMesh];
 CMesh3D      g_MeshS;
 CMesh3D		 g_MeshWin;
 CMesh3D		 g_MeshLost;
-CMesh3D      g_MeshStalemate;
+
 CameraDevice g_Camera;
 CField       g_Field( MaxField );
 bool         g_Exit      = false;
@@ -34,21 +35,22 @@ bool		 g_Wireframe = false;
 
 void DrawMyText( IDirect3DDevice9* g_pD3DDevice, char* StrokaTexta, int x, int y, int x1, int y1, D3DCOLOR MyColor )
 {
-	RECT  Rec;
-	HFONT hFont;
-	ID3DXFont* pFont = 0; 
-	hFont = CreateFont(30, 10, 0, 0, FW_NORMAL, FALSE, FALSE, 0, 1, 0, 0, 0, DEFAULT_PITCH | FF_MODERN, "Arial");
+	RECT       Rec;	
+	ID3DXFont* pFont = 0;
+
+	HFONT hFont = CreateFont( 30, 10, 0, 0, FW_NORMAL, FALSE, FALSE, 0, 1, 0, 0, 0, DEFAULT_PITCH | FF_MODERN, "Arial" );
 	Rec.left   = x;
 	Rec.top    = y;
 	Rec.right  = x1;
 	Rec.bottom = y1;
 	D3DXCreateFont( g_pD3DDevice, 30, 10, FW_NORMAL, 0, FALSE, 0, 0, 0, DEFAULT_PITCH | FF_MODERN, "Arial", &pFont );
-	pFont->DrawText(0, StrokaTexta, -1, &Rec, DT_WORDBREAK, MyColor);
-	if (pFont)
+	pFont->DrawText( 0, StrokaTexta, -1, &Rec, DT_WORDBREAK, MyColor );
+	if ( pFont )
 		pFont->Release();
+	DeleteObject(hFont);
 }
 
-POINT PickObject( CCell* Cell )
+POINT PickObject( IDirect3DDevice9* pD3DDevice, CCell* Cell )
 {
 	POINT        Point;
 	D3DVIEWPORT9 ViewPort;
@@ -59,7 +61,7 @@ POINT PickObject( CCell* Cell )
 	GetCursorPos( &Point );
 	int x = Point.x - ClientRec.left;
 	int y = Point.y - ClientRec.top;
-	g_pD3DDevice->GetViewport( &ViewPort );
+	pD3DDevice->GetViewport( &ViewPort );
 
 	float px = (  2.0f * x / ViewPort.Width  - 1.0f) / g_Camera.m_Proj._11;
 	float py = ( -2.0f * y / ViewPort.Height + 1.0f) / g_Camera.m_Proj._22;	
@@ -168,56 +170,58 @@ void RenderFence()
 	}
 }
 
-void RenderingDirect3D( CCell* Cell, int* Field )
+void RenderingDirect3D( IDirect3DDevice9* pD3DDevice, CCell* Cell, int* Field )
 {	
 	const D3DXVECTOR4 Scale( tan( D3DX_PI / 8 * (FLOAT)Height / Width), tan( D3DX_PI / 8 * (FLOAT)Height / Width  ), 1.0f, 1.0f );
+
+	if ( !pD3DDevice )
+		return;
 	//----------------------------------------------режим каркаса-------------------------------
 	if ( g_Wireframe )
-		g_pD3DDevice -> SetRenderState( D3DRS_FILLMODE, D3DFILL_WIREFRAME);
+		pD3DDevice -> SetRenderState( D3DRS_FILLMODE, D3DFILL_WIREFRAME);
 	else
-		g_pD3DDevice -> SetRenderState( D3DRS_FILLMODE, D3DFILL_SOLID);
+		pD3DDevice -> SetRenderState( D3DRS_FILLMODE, D3DFILL_SOLID);
 	//------------------------------------------------------------------------------------------	
 	float const Ang = timeGetTime() / 2000.0f;
 
 	 D3DXMATRIX MatrixView       = g_Camera.m_View;
 	 D3DXMATRIX MatrixProjection = g_Camera.m_Proj;
 
-	if ( g_pD3DDevice == 0 )
-		return;
+	
 
-	g_pD3DDevice -> Clear(0, 0, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER,D3DCOLOR_XRGB(50, 50, 50), 1.0f, 0);// очистка заднего буфера
-	g_pD3DDevice -> BeginScene(); // начало рендеринга
+	pD3DDevice -> Clear(0, 0, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER,D3DCOLOR_XRGB(50, 50, 50), 1.0f, 0);// очистка заднего буфера
+	pD3DDevice -> BeginScene(); // начало рендеринга
 
 	//------------------------------------------Render Sky----------------------------------------
-	g_pD3DDevice -> SetRenderState(  D3DRS_ZENABLE, false );
-	g_pD3DDevice -> SetSamplerState( 0, D3DSAMP_ADDRESSU, D3DTADDRESS_CLAMP ); 
-	g_pD3DDevice -> SetSamplerState( 0, D3DSAMP_ADDRESSV, D3DTADDRESS_CLAMP ); 
-	g_pD3DDevice -> SetSamplerState( 0, D3DSAMP_ADDRESSW, D3DTADDRESS_CLAMP ); 
+	pD3DDevice -> SetRenderState(  D3DRS_ZENABLE, false );
+	pD3DDevice -> SetSamplerState( 0, D3DSAMP_ADDRESSU, D3DTADDRESS_CLAMP ); 
+	pD3DDevice -> SetSamplerState( 0, D3DSAMP_ADDRESSV, D3DTADDRESS_CLAMP ); 
+	pD3DDevice -> SetSamplerState( 0, D3DSAMP_ADDRESSW, D3DTADDRESS_CLAMP ); 
 	D3DXMATRIX MatrixWorld;
 	D3DXMatrixTranslation( &MatrixWorld, 1.0f, 1.0f, 1.0f );
 	D3DXMATRIX tmp = MatrixWorld * MatrixView * MatrixProjection;
-	if ( g_DeviceD3D.m_pConstTableVS[Sky] )
+	if ( g_Shader.m_pConstTableVS[Sky] )
 	{
-		g_DeviceD3D.m_pConstTableVS[Sky]->SetMatrix( g_pD3DDevice, "mat_mvp",   &tmp );
-		g_DeviceD3D.m_pConstTableVS[Sky]->SetVector( g_pD3DDevice, "vec_light", &g_Light );
-		g_DeviceD3D.m_pConstTableVS[Sky]->SetVector( g_pD3DDevice, "scale",     &Scale );
-		g_DeviceD3D.m_pConstTableVS[Sky]->SetMatrix( g_pD3DDevice, "mat_view",  &MatrixView );
+		g_Shader.m_pConstTableVS[Sky]->SetMatrix( pD3DDevice, "mat_mvp",   &tmp );
+		g_Shader.m_pConstTableVS[Sky]->SetVector( pD3DDevice, "vec_light", &g_Light );
+		g_Shader.m_pConstTableVS[Sky]->SetVector( pD3DDevice, "scale",     &Scale );
+		g_Shader.m_pConstTableVS[Sky]->SetMatrix( pD3DDevice, "mat_view",  &MatrixView );
 	}
 	// здесь перерисовка сцены	
-	g_pD3DDevice -> SetStreamSource(0, g_Sky.m_pVerBufSky, 0, sizeof( CVertexFVF ) ); // связь буфера вершин с потоком данных
-	g_pD3DDevice -> SetFVF( D3DFVF_CUSTOMVERTEX ); // устанавливается формат вершин
-	g_pD3DDevice -> SetIndices( g_Sky.m_pBufIndexSky );
-	g_pD3DDevice -> SetTexture( 0, g_DeviceD3D.m_CubeTexture );
+	pD3DDevice -> SetStreamSource(0, g_Sky.m_pVerBufSky, 0, sizeof( CVertexFVF ) ); // связь буфера вершин с потоком данных
+	pD3DDevice -> SetFVF( D3DFVF_CUSTOMVERTEX ); // устанавливается формат вершин
+	pD3DDevice -> SetIndices( g_Sky.m_pBufIndexSky );
+	pD3DDevice -> SetTexture( 0, g_DeviceD3D.m_CubeTexture );
 	// устанавливаем шейдеры
-	g_pD3DDevice -> SetVertexShader( g_DeviceD3D.m_pVertexShader[Sky] );
-	g_pD3DDevice -> SetPixelShader(  g_DeviceD3D.m_pPixelShader [Sky] );
+	pD3DDevice -> SetVertexShader( g_Shader.m_pVertexShader[Sky] );
+	pD3DDevice -> SetPixelShader(  g_Shader.m_pPixelShader [Sky] );
 	// вывод примитивов
-	g_pD3DDevice -> DrawIndexedPrimitive( D3DPT_TRIANGLELIST, 0, 0, 6, 0, 2 );
+	pD3DDevice -> DrawIndexedPrimitive( D3DPT_TRIANGLELIST, 0, 0, 6, 0, 2 );
 
-	g_pD3DDevice -> SetSamplerState( 0, D3DSAMP_ADDRESSU, D3DTADDRESS_WRAP );
-	g_pD3DDevice -> SetSamplerState( 0, D3DSAMP_ADDRESSV, D3DTADDRESS_WRAP );
-	g_pD3DDevice -> SetSamplerState( 0, D3DSAMP_ADDRESSW, D3DTADDRESS_WRAP );
-	g_pD3DDevice -> SetRenderState(  D3DRS_ZENABLE, true );
+	pD3DDevice -> SetSamplerState( 0, D3DSAMP_ADDRESSU, D3DTADDRESS_WRAP );
+	pD3DDevice -> SetSamplerState( 0, D3DSAMP_ADDRESSV, D3DTADDRESS_WRAP );
+	pD3DDevice -> SetSamplerState( 0, D3DSAMP_ADDRESSW, D3DTADDRESS_WRAP );
+	pD3DDevice -> SetRenderState(  D3DRS_ZENABLE, true );
 	//------------------------------------------Render Mesh----------------------------------------
 	D3DXMATRIX MatrixWorldX,MatrixWorldY,MatrixWorldZ;
 	int t = ( MaxField - 1) / 2;
@@ -250,7 +254,7 @@ void RenderingDirect3D( CCell* Cell, int* Field )
 			if ( ( Cell[x*MaxField+y].m_Value == Mine )  && ( Field[x*MaxField+y] == OpenCell ) )
 				g_Mesh[ Mine ].RenderMesh( g_Camera, x, y, -1.57f );
 		}
-		POINT P = PickObject( &Cell[0] );		
+		POINT P = PickObject( pD3DDevice, &Cell[0] );		
 		if ( P.x >= 0)
 		{
 			if ( Field[P.x*MaxField+P.y] == Empty )
@@ -262,7 +266,7 @@ void RenderingDirect3D( CCell* Cell, int* Field )
 				g_Mesh[Empty].SetMatrixWorld( MatrixWorld );
 				g_Mesh[Empty].SetMatrixView( MatrixView );
 				g_Mesh[Empty].SetMatrixProjection( MatrixProjection );
-				g_Mesh[Empty].DrawMyMesh(g_DeviceD3D.m_pConstTableVS, g_DeviceD3D.m_pConstTablePS, g_DeviceD3D.m_pVertexShader, g_DeviceD3D.m_pPixelShader);
+				g_Mesh[Empty].DrawMyMesh(g_Shader.m_pConstTableVS, g_Shader.m_pConstTablePS, g_Shader.m_pVertexShader, g_Shader.m_pPixelShader);
 			}
 		}
 
@@ -278,7 +282,7 @@ void RenderingDirect3D( CCell* Cell, int* Field )
 			g_MeshWin.SetMatrixWorld( MatrixWorld );
 			g_MeshWin.SetMatrixView( g_Camera.m_View );
 			g_MeshWin.SetMatrixProjection( g_Camera.m_Proj );
-			g_MeshWin.DrawMyMesh(g_DeviceD3D.m_pConstTableVS, g_DeviceD3D.m_pConstTablePS, g_DeviceD3D.m_pVertexShader, g_DeviceD3D.m_pPixelShader);
+			g_MeshWin.DrawMyMesh(g_Shader.m_pConstTableVS, g_Shader.m_pConstTablePS, g_Shader.m_pVertexShader, g_Shader.m_pPixelShader);
 			break;
 		case STATE_LOST:
 			D3DXMatrixRotationY( &MatrixWorldY, -1.57f );
@@ -290,7 +294,7 @@ void RenderingDirect3D( CCell* Cell, int* Field )
 			g_MeshLost.SetMatrixWorld( MatrixWorld );
 			g_MeshLost.SetMatrixView( g_Camera.m_View );
 			g_MeshLost.SetMatrixProjection( g_Camera.m_Proj );
-			g_MeshLost.DrawMyMesh(g_DeviceD3D.m_pConstTableVS, g_DeviceD3D.m_pConstTablePS, g_DeviceD3D.m_pVertexShader, g_DeviceD3D.m_pPixelShader);
+			g_MeshLost.DrawMyMesh(g_Shader.m_pConstTableVS, g_Shader.m_pConstTablePS, g_Shader.m_pVertexShader, g_Shader.m_pPixelShader);
 			break;
 		}
 		//-------------------CountMine-----------------------------------------
@@ -314,8 +318,8 @@ void RenderingDirect3D( CCell* Cell, int* Field )
 // 		sprintf(str, "%d:%d", Tens,Units);		
 // 		DrawMyText(g_pD3DDevice, str, 10, 10, 500, 700, D3DCOLOR_ARGB(250, 250, 250,50));	
 
-		g_pD3DDevice -> EndScene();
-		g_pD3DDevice -> Present( 0, 0, 0, 0 ); // вывод содержимого заднего буфера в окно
+		pD3DDevice -> EndScene();
+		pD3DDevice -> Present( 0, 0, 0, 0 ); // вывод содержимого заднего буфера в окно
 }
 
 void ClearField( CCell* Cell, int* Field, int x, int y )
@@ -386,32 +390,32 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance,
 		{				 
 			
 			
-			g_Mesh[Zero].InitialMesh( "model//0.x", FileLog );
-			g_Mesh[One].InitialMesh( "model//1.x", FileLog );
-			g_Mesh[Two].InitialMesh( "model//2.x", FileLog );
-			g_Mesh[Three].InitialMesh( "model//3.x", FileLog );
-			g_Mesh[Four].InitialMesh( "model//4.x", FileLog );
-			g_Mesh[Five].InitialMesh( "model//5.x", FileLog );
-			g_Mesh[Six].InitialMesh( "model//6.x", FileLog );
-			g_Mesh[Seven].InitialMesh( "model//7.x", FileLog );
-			g_Mesh[Eight].InitialMesh( "model//8.x", FileLog );
-			g_Mesh[Nine].InitialMesh( "model//9.x", FileLog );
-			g_Mesh[Empty].InitialMesh( "model//Empty.x", FileLog );
-			g_Mesh[Flag].InitialMesh( "model//Flag.x", FileLog );
-			g_Mesh[Mine].InitialMesh( "model//Mine.x", FileLog );
-			g_Mesh[Stena].InitialMesh(   "model//Stena.x", FileLog );
-			g_Mesh[Angle].InitialMesh(   "model//Angle.x", FileLog );
-			g_MeshWin.InitialMesh( "model//Win.x", FileLog );	
-			g_MeshLost.InitialMesh( "model//Lost.x", FileLog );
+			g_Mesh[Zero].InitialMesh( g_DeviceD3D.GetDeviceD3D(), "model//0.x", FileLog );
+			g_Mesh[One].InitialMesh( g_DeviceD3D.GetDeviceD3D(), "model//1.x", FileLog );
+			g_Mesh[Two].InitialMesh( g_DeviceD3D.GetDeviceD3D(), "model//2.x", FileLog );
+			g_Mesh[Three].InitialMesh( g_DeviceD3D.GetDeviceD3D(), "model//3.x", FileLog );
+			g_Mesh[Four].InitialMesh( g_DeviceD3D.GetDeviceD3D(), "model//4.x", FileLog );
+			g_Mesh[Five].InitialMesh( g_DeviceD3D.GetDeviceD3D(), "model//5.x", FileLog );
+			g_Mesh[Six].InitialMesh( g_DeviceD3D.GetDeviceD3D(), "model//6.x", FileLog );
+			g_Mesh[Seven].InitialMesh( g_DeviceD3D.GetDeviceD3D(), "model//7.x", FileLog );
+			g_Mesh[Eight].InitialMesh( g_DeviceD3D.GetDeviceD3D(), "model//8.x", FileLog );
+			g_Mesh[Nine].InitialMesh( g_DeviceD3D.GetDeviceD3D(), "model//9.x", FileLog );
+			g_Mesh[Empty].InitialMesh( g_DeviceD3D.GetDeviceD3D(), "model//Empty.x", FileLog );
+			g_Mesh[Flag].InitialMesh( g_DeviceD3D.GetDeviceD3D(), "model//Flag.x", FileLog );
+			g_Mesh[Mine].InitialMesh( g_DeviceD3D.GetDeviceD3D(), "model//Mine.x", FileLog );
+			g_Mesh[Stena].InitialMesh( g_DeviceD3D.GetDeviceD3D(),   "model//Stena.x", FileLog );
+			g_Mesh[Angle].InitialMesh( g_DeviceD3D.GetDeviceD3D(),   "model//Angle.x", FileLog );
+			g_MeshWin.InitialMesh( g_DeviceD3D.GetDeviceD3D(), "model//Win.x", FileLog );	
+			g_MeshLost.InitialMesh( g_DeviceD3D.GetDeviceD3D(), "model//Lost.x", FileLog );
 			
-			g_Sky.InitialSky();
+			g_Sky.InitialSky( g_DeviceD3D.GetDeviceD3D() );
 			g_DeviceInput.InitialInput( hwnd, FileLog );					
-			g_DeviceD3D.InitialShader();
+			g_Shader.InitialShader( g_DeviceD3D.GetDeviceD3D() );
 			
 			while( !g_Exit )
 			{
 				g_DeviceInput.ScanInput( &g_Camera, &g_Field.m_Cell[0], &g_Field.m_Field[0] );				
-				RenderingDirect3D( &g_Field.m_Cell[0], &g_Field.m_Field[0]);				
+				RenderingDirect3D( g_DeviceD3D.GetDeviceD3D(), &g_Field.m_Cell[0], &g_Field.m_Field[0]);				
 				if ( PeekMessage( &Msg, 0, 0, 0, PM_REMOVE ) )
 				{
 					TranslateMessage( &Msg );
@@ -420,14 +424,14 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance,
 			}						
 		}
 	}	
-	g_MeshStalemate.Release();
+	
 	g_MeshLost.Release();
 	g_MeshWin.Release();
 	g_MeshS.Release();
 	for (int i = 0; i < MaxMesh; ++i)
 		if ( g_Mesh[i].GetMesh() )
 			g_Mesh[i].Release();
-		
+	g_Shader.Release();	
 	g_Sky.Release(); 
 	g_DeviceInput.Release();
 	g_DeviceD3D.Release();
@@ -441,7 +445,7 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
 
 
-HRESULT CSky::InitialSky()
+HRESULT CSky::InitialSky( IDirect3DDevice9* pD3DDevice )
 {
 	void *pBV;
 	void *pBI;
@@ -461,7 +465,9 @@ HRESULT CSky::InitialSky()
 	{
 		0,1,2,    2,3,0,		
 	};
-	if ( FAILED( g_pD3DDevice -> CreateVertexBuffer( 4 * sizeof( CVertexFVF ), 0, // создаём буфер вершин
+	if ( !pD3DDevice )
+		return E_FAIL;
+	if ( FAILED( pD3DDevice -> CreateVertexBuffer( 4 * sizeof( CVertexFVF ), 0, // создаём буфер вершин
 		D3DFVF_CUSTOMVERTEX, D3DPOOL_DEFAULT, &m_pVerBufSky, 0 ) ) )
 		return E_FAIL;
 	if ( FAILED( m_pVerBufSky -> Lock( 0, sizeof( SkyVershin ), ( void** )&pBV, 0 ) ) ) // Блокирование
@@ -469,7 +475,7 @@ HRESULT CSky::InitialSky()
 	memcpy( pBV, SkyVershin, sizeof( SkyVershin ) ); // копирование данных о вершинах в буфер вершин
 	m_pVerBufSky -> Unlock(); // разблокирование
 
-	if ( FAILED( g_pD3DDevice -> CreateIndexBuffer( 6 * sizeof( short ), 0, D3DFMT_INDEX16,         // создаём буфер вершин
+	if ( FAILED( pD3DDevice -> CreateIndexBuffer( 6 * sizeof( short ), 0, D3DFMT_INDEX16,         // создаём буфер вершин
 		D3DPOOL_DEFAULT, &m_pBufIndexSky, 0 ) ) )
 		return E_FAIL;
 	if ( FAILED( m_pBufIndexSky -> Lock( 0, sizeof( SkyIndex ), ( void** )&pBI, 0 ) ) ) // Блокирование
@@ -477,7 +483,7 @@ HRESULT CSky::InitialSky()
 	memcpy( pBI, SkyIndex, sizeof( SkyIndex ) ); // копирование данных о вершинах в буфер вершин
 	m_pBufIndexSky -> Unlock(); // разблокирование	
 
-	return S_OK;
+return S_OK;
 }
 
 void CSky::Release()
