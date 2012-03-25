@@ -130,7 +130,7 @@ Material PDX01_-_Default {
  0.000000;0.000000;0.000000;;
 
  TextureFilename {
-  "Mine.png";
+  "1.png";
  }
 }
 
