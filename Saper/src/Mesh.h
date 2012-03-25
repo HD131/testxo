@@ -9,7 +9,7 @@ public:
 	ID3DXMesh*  GetMesh()   { return m_pMesh; }
 	HRESULT		InitialMesh( LPCSTR Name, FILE* FileLog );
 	void		Release();
-	void		DrawMyMesh( ID3DXConstantTable** pConstTableVS, ID3DXConstantTable** pConstTablePS,	IDirect3DVertexShader9** VertexShader, IDirect3DPixelShader9** PixelShader );
+	void		DrawMyMesh( CShader const& Shader  );
 	void		SetMatrixWorld( const D3DXMATRIX& Matrix );
 	void		SetMatrixView( const D3DXMATRIX& Matrix );
 	void		SetMatrixProjection( const D3DXMATRIX& Matrix );
