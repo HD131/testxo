@@ -12,10 +12,10 @@
 #include "../../sdk/dx9/Include/d3dx9math.h"
 #define  DIRECTINPUT_VERSION  0x0800
 #include "../../sdk/dx9/Include/dinput.h"
+#include "../../sdk/dx9/Include/d3dx9mesh.h"
 #define  INITGUID
 #include <fstream>
 #include <string>
-#include "../../sdk/dx9/Include/d3dx9mesh.h"
 
 const UINT Width				= 1024;
 const UINT Height				= 768;
@@ -37,24 +37,16 @@ enum  Game_State { STATE_PLAY, STATE_WIN, STATE_LOST };
 
 class CD3DDevice
 {
-	IDirect3D9*			    m_pDirect3D; // указатель на Главный интерфейс отвечающий за Direct3D
-	IDirect3DDevice9*       m_pD3DDevice;	
 public:
-	HRESULT                 IntialDirect3D( HWND hwnd, FILE *FileLog );	
-	HRESULT				    LoadTexture( FILE *FileLog );
-	IDirect3DDevice9*       GetDeviceD3D(){return m_pD3DDevice;}
-	IDirect3DCubeTexture9*  m_CubeTexture;
-	void				    Release();
-};
-
-class CShader 
-{
-public:
+	IDirect3D9*			    m_pDirect3D; // указатель на Главный интерфейс отвечающий за Direct3D	
+	IDirect3DCubeTexture9*  m_CubeTexture;	
 	IDirect3DPixelShader9*  m_pPixelShader [MaxShader];
 	IDirect3DVertexShader9* m_pVertexShader[MaxShader];
 	ID3DXConstantTable*     m_pConstTableVS[MaxShader];
-	ID3DXConstantTable*     m_pConstTablePS[MaxShader];
-	HRESULT                 InitialShader( IDirect3DDevice9* D3DDevice );
+	ID3DXConstantTable*     m_pConstTablePS[MaxShader];	
+	HRESULT                 IntialDirect3D( HWND hwnd, FILE *FileLog );
+	HRESULT                 InitialShader();
+	HRESULT				    LoadTexture( FILE *FileLog );
 	void				    Release();
 };
 

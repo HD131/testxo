@@ -2,19 +2,18 @@
 #include "Mesh.h"
 #include "CameraDevice.h"
 
+extern IDirect3DDevice9* g_pD3DDevice;
+extern CD3DDevice   g_DeviceD3D;
 
-extern CShader   g_Shader;
-
-HRESULT CMesh3D::InitialMesh( IDirect3DDevice9* D3DDevice, LPCSTR Name, FILE *FileLog )
+HRESULT CMesh3D::InitialMesh(LPCSTR Name, FILE *FileLog )
 {
 	m_pMesh         = 0;
 	m_pMeshMaterial = 0;
 	m_pMeshTextura.resize(0);
 	m_SizeFVF       = 0;
 	m_Alpha         = 1.0f;	
-	m_pD3DDevice    = D3DDevice;
 	ID3DXBuffer *pMaterialBuffer  = 0;
-	if ( FAILED( D3DXLoadMeshFromX( Name, D3DXMESH_SYSTEMMEM, m_pD3DDevice, 0, &pMaterialBuffer, 0, &m_TexturCount, &m_pMesh ) ) )
+	if ( FAILED( D3DXLoadMeshFromX( Name, D3DXMESH_SYSTEMMEM, g_pD3DDevice, 0, &pMaterialBuffer, 0, &m_TexturCount, &m_pMesh ) ) )
 	{
 		if ( m_pMesh == 0 )
 		{		
@@ -48,7 +47,7 @@ HRESULT CMesh3D::InitialMesh( IDirect3DDevice9* D3DDevice, LPCSTR Name, FILE *Fi
 		{		
 			IDirect3DTexture9* Tex = 0;
 			std::string FileName = std::string( "model//" ) + std::string( MaterialMesh[i].pTextureFilename );
-			if ( FAILED( D3DXCreateTextureFromFile( m_pD3DDevice, FileName.c_str(), &Tex )))
+			if ( FAILED( D3DXCreateTextureFromFile( g_pD3DDevice, FileName.c_str(), &Tex )))
 			{
 				fprintf( FileLog, "error load texture '%s'\n", MaterialMesh[i].pTextureFilename );
 				m_pMeshTextura.push_back(0);
@@ -91,25 +90,25 @@ void CMesh3D::DrawMyMesh( ID3DXConstantTable**     pConstTableVS, ID3DXConstantT
 		wvp = m_MatrixWorld * m_MatrixView * m_MatrixProjection;
 		if ( pConstTableVS[Diffuse] )
 		{
-			pConstTableVS[Diffuse]->SetMatrix( m_pD3DDevice, "mat_mvp",   &wvp );
-			pConstTableVS[Diffuse]->SetMatrix( m_pD3DDevice, "mat_world", &m_MatrixWorld );
-			pConstTableVS[Diffuse]->SetVector( m_pD3DDevice, "vec_light", &g_Light );
-			pConstTablePS[Diffuse]->SetFloat(  m_pD3DDevice, "diffuse_intensity", g_Diffuse_intensity );	
-			pConstTablePS[Diffuse]->SetFloat(  m_pD3DDevice, "Alpha", m_Alpha );	
+			pConstTableVS[Diffuse]->SetMatrix( g_pD3DDevice, "mat_mvp",   &wvp );
+			pConstTableVS[Diffuse]->SetMatrix( g_pD3DDevice, "mat_world", &m_MatrixWorld );
+			pConstTableVS[Diffuse]->SetVector( g_pD3DDevice, "vec_light", &g_Light );
+			pConstTablePS[Diffuse]->SetFloat(  g_pD3DDevice, "diffuse_intensity", g_Diffuse_intensity );	
+			pConstTablePS[Diffuse]->SetFloat(  g_pD3DDevice, "Alpha", m_Alpha );	
 		}
 		// устанавливаем шейдеры
-		m_pD3DDevice->SetVertexShader( VertexShader[Diffuse] );
-		m_pD3DDevice->SetPixelShader(  PixelShader [Diffuse] );
+		g_pD3DDevice->SetVertexShader( VertexShader[Diffuse] );
+		g_pD3DDevice->SetPixelShader(  PixelShader [Diffuse] );
 
-		m_pD3DDevice->SetStreamSource( 0, m_VertexBuffer, 0, m_SizeFVF );
-		m_pD3DDevice->SetIndices( m_IndexBuffer );
+		g_pD3DDevice->SetStreamSource( 0, m_VertexBuffer, 0, m_SizeFVF );
+		g_pD3DDevice->SetIndices( m_IndexBuffer );
 		for ( int i = 0; i < m_TexturCount; ++i )
 		{
-			m_pD3DDevice -> SetMaterial( &m_pMeshMaterial[i] );
-			m_pD3DDevice -> SetTexture( 0, m_pMeshTextura[i] );
+			g_pD3DDevice -> SetMaterial( &m_pMeshMaterial[i] );
+			g_pD3DDevice -> SetTexture( 0, m_pMeshTextura[i] );
 			//m_pMesh -> DrawSubset(i);
 		}
-		m_pD3DDevice->DrawIndexedPrimitive( D3DPT_TRIANGLELIST, 0, 0, m_pMesh->GetNumVertices(), 0, m_pMesh->GetNumFaces() ); 
+		g_pD3DDevice->DrawIndexedPrimitive( D3DPT_TRIANGLELIST, 0, 0, m_pMesh->GetNumVertices(), 0, m_pMesh->GetNumFaces() ); 
 	}
 }
 
@@ -137,7 +136,6 @@ void CMesh3D::Release()
 		m_pMesh -> Release();
 }
 
-
 void CMesh3D::RenderMesh( CameraDevice const& Camera, float x, float y, float Ang )
 {
 	D3DXMATRIX MatrixWorld, MatrixWorldY, MatrixWorldX;
@@ -149,5 +147,5 @@ void CMesh3D::RenderMesh( CameraDevice const& Camera, float x, float y, float An
 	SetMatrixWorld( MatrixWorld );
 	SetMatrixView( Camera.m_View );
 	SetMatrixProjection( Camera.m_Proj );
-	DrawMyMesh(g_Shader.m_pConstTableVS, g_Shader.m_pConstTablePS, g_Shader.m_pVertexShader, g_Shader.m_pPixelShader);
+	DrawMyMesh(g_DeviceD3D.m_pConstTableVS, g_DeviceD3D.m_pConstTablePS, g_DeviceD3D.m_pVertexShader, g_DeviceD3D.m_pPixelShader);
 }
