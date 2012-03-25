@@ -9,11 +9,10 @@ public:
 	ID3DXMesh*  GetMesh()   { return m_pMesh; }
 	HRESULT		InitialMesh( LPCSTR Name, FILE* FileLog );
 	void		Release();
-	void		DrawMyMesh( CShader const& Shader  );
 	void		SetMatrixWorld( const D3DXMATRIX& Matrix );
 	void		SetMatrixView( const D3DXMATRIX& Matrix );
 	void		SetMatrixProjection( const D3DXMATRIX& Matrix );
-	void        RenderMesh( CameraDevice const& Camera, float x, float y, float Ang );
+	void        RenderMesh( CameraDevice const& Camera, const D3DXMATRIX&  MatrixWorld, CShader const& Shader );
 private:
 	ID3DXMesh*							m_pMesh;	
 	float								m_Alpha;

@@ -156,18 +156,29 @@ Game_State GameOverCheck( CCell* Cell, int* Field )
 return  STATE_PLAY;
 }
 
+D3DXMATRIX MatWorld( float x, float y, float z, float Ang )
+{
+	D3DXMATRIX MatrixWorld, MatrixWorldY, MatrixWorldX;
+	int t = ( MaxField - 1) / 2;
+	D3DXMatrixRotationY(   &MatrixWorldY, Ang );
+	D3DXMatrixTranslation( &MatrixWorldX, ( z - t ), y, ( x - t ) );
+	D3DXMatrixMultiply(&MatrixWorld, &MatrixWorldY, &MatrixWorldX);
+
+return MatrixWorld;
+}
+
 void RenderFence()
-{	
-	g_Mesh[ Angle ].RenderMesh( g_Camera, -1, -1, -D3DX_PI / 2 );
-	g_Mesh[ Angle ].RenderMesh( g_Camera, -1, MaxField, D3DX_PI );
-	g_Mesh[ Angle ].RenderMesh( g_Camera, MaxField, -1, 0.0f );
-	g_Mesh[ Angle ].RenderMesh( g_Camera, MaxField, MaxField, D3DX_PI / 2 );
+{
+	g_Mesh[ Angle ].RenderMesh( g_Camera, MatWorld( -1, 0, -1, -D3DX_PI / 2 ), g_Diffuse );
+	g_Mesh[ Angle ].RenderMesh( g_Camera, MatWorld( -1, 0, MaxField, D3DX_PI ), g_Diffuse );
+	g_Mesh[ Angle ].RenderMesh( g_Camera, MatWorld( MaxField, 0, -1, 0.0f ), g_Diffuse );
+	g_Mesh[ Angle ].RenderMesh( g_Camera, MatWorld( MaxField, 0, MaxField, D3DX_PI / 2 ), g_Diffuse );
 	for ( int x = 1; x < MaxField - 1; ++x )
 	{		
-		g_Mesh[ Stena ].RenderMesh( g_Camera, -1, x, 0.0f );
-		g_Mesh[ Stena ].RenderMesh( g_Camera, MaxField, x, 0.0f );
-		g_Mesh[ Stena ].RenderMesh( g_Camera, x, -1, D3DX_PI / 2 );
-		g_Mesh[ Stena ].RenderMesh( g_Camera, x, MaxField, D3DX_PI / 2 );
+		g_Mesh[ Stena ].RenderMesh( g_Camera, MatWorld( -1, 0, x, 0.0f ), g_Diffuse );
+		g_Mesh[ Stena ].RenderMesh( g_Camera, MatWorld( MaxField, 0, x, 0.0f ), g_Diffuse );
+		g_Mesh[ Stena ].RenderMesh( g_Camera, MatWorld( x, 0, -1, D3DX_PI / 2 ), g_Diffuse );
+		g_Mesh[ Stena ].RenderMesh( g_Camera, MatWorld( x, 0, MaxField, D3DX_PI / 2 ), g_Diffuse );
 	}
 }
 
@@ -203,27 +214,27 @@ void RenderingDirect3D( CCell* Cell, int* Field )
 		for ( int x = 0; x < MaxField; ++x )
 		{				
 			if ( Field[x*MaxField+y] == Empty )					
-				g_Mesh[ Empty ].RenderMesh( g_Camera, x, y, -D3DX_PI / 2 );			
+				g_Mesh[ Empty ].RenderMesh( g_Camera, MatWorld( x, 0, y, -D3DX_PI / 2 ), g_Diffuse );			
 			if ( Field[x*MaxField+y] == Flag ) 
-				g_Mesh[ Flag ].RenderMesh( g_Camera, x, y, -1.57f );
+				g_Mesh[ Flag ].RenderMesh( g_Camera, MatWorld( x, 0, y, -D3DX_PI / 2 ), g_Diffuse );	
 			if ( ( Cell[x*MaxField+y].m_Value == One )   && ( Field[x*MaxField+y] == OpenCell ) )
-				g_Mesh[ One ].RenderMesh( g_Camera, x, y, -D3DX_PI / 2 );
+				g_Mesh[ One ].RenderMesh( g_Camera, MatWorld( x, 0, y, -D3DX_PI / 2 ), g_Diffuse );	
 			if ( ( Cell[x*MaxField+y].m_Value == Two )   && ( Field[x*MaxField+y] == OpenCell ) )
-				g_Mesh[ Two ].RenderMesh( g_Camera, x, y, -D3DX_PI / 2 );
+				g_Mesh[ Two ].RenderMesh( g_Camera, MatWorld( x, 0, y, -D3DX_PI / 2 ), g_Diffuse );	
 			if ( ( Cell[x*MaxField+y].m_Value == Three ) && ( Field[x*MaxField+y] == OpenCell ) )
-				g_Mesh[ Three ].RenderMesh( g_Camera, x, y, -D3DX_PI / 2 );
+				g_Mesh[ Three ].RenderMesh( g_Camera, MatWorld( x, 0, y, -D3DX_PI / 2 ), g_Diffuse );	
 			if ( ( Cell[x*MaxField+y].m_Value == Four )  && ( Field[x*MaxField+y] == OpenCell ) )
-				g_Mesh[ Four ].RenderMesh( g_Camera, x, y, -D3DX_PI / 2 );
+				g_Mesh[ Four ].RenderMesh( g_Camera, MatWorld( x, 0, y, -D3DX_PI / 2 ), g_Diffuse );	
 			if ( ( Cell[x*MaxField+y].m_Value == Five )  && ( Field[x*MaxField+y] == OpenCell ) )
-				g_Mesh[ Five ].RenderMesh( g_Camera, x, y, -D3DX_PI / 2 );
+				g_Mesh[ Five ].RenderMesh( g_Camera, MatWorld( x, 0, y, -D3DX_PI / 2 ), g_Diffuse );	
 			if ( ( Cell[x*MaxField+y].m_Value == Six )   && ( Field[x*MaxField+y] == OpenCell ) )
-				g_Mesh[ Six ].RenderMesh( g_Camera, x, y, -D3DX_PI / 2 );
+				g_Mesh[ Six ].RenderMesh( g_Camera, MatWorld( x, 0, y, -D3DX_PI / 2 ), g_Diffuse );	
 			if ( ( Cell[x*MaxField+y].m_Value == Seven ) && ( Field[x*MaxField+y] == OpenCell ) )
-				g_Mesh[ Seven ].RenderMesh( g_Camera, x, y, -D3DX_PI / 2 );
+				g_Mesh[ Seven ].RenderMesh( g_Camera, MatWorld( x, 0, y, -D3DX_PI / 2 ), g_Diffuse );	
 			if ( ( Cell[x*MaxField+y].m_Value == Eight ) && ( Field[x*MaxField+y] == OpenCell ) )
-				g_Mesh[ Eight ].RenderMesh( g_Camera, x, y, -D3DX_PI / 2 );
+				g_Mesh[ Eight ].RenderMesh( g_Camera, MatWorld( x, 0, y, -D3DX_PI / 2 ), g_Diffuse );	
 			if ( ( Cell[x*MaxField+y].m_Value == Mine )  && ( Field[x*MaxField+y] == OpenCell ) )
-				g_Mesh[ Mine ].RenderMesh( g_Camera, x, y, -D3DX_PI / 2 );
+				g_Mesh[ Mine ].RenderMesh( g_Camera, MatWorld( x, 0, y, -D3DX_PI / 2 ), g_Diffuse );	
 		}
 		POINT P = PickObject( &Cell[0] );		
 		if ( P.x >= 0)
@@ -233,10 +244,7 @@ void RenderingDirect3D( CCell* Cell, int* Field )
 				D3DXMatrixRotationY( &MatrixWorldY, -D3DX_PI / 2 );
 				D3DXMatrixTranslation( &MatrixWorldX, ( P.y - t ), 0.2, ( P.x - t ) );
 				MatrixWorld = MatrixWorldY * MatrixWorldX;
-				g_Mesh[Empty].SetMatrixWorld( MatrixWorld );
-				g_Mesh[Empty].SetMatrixView( MatrixView );
-				g_Mesh[Empty].SetMatrixProjection( MatrixProjection );
-				g_Mesh[Empty].DrawMyMesh( g_Diffuse );				
+				g_Mesh[Empty].RenderMesh( g_Camera, MatrixWorld, g_Diffuse );								
 			}
 		}
 
@@ -249,10 +257,7 @@ void RenderingDirect3D( CCell* Cell, int* Field )
 			MatrixWorld = MatrixWorldY * MatrixWorld * MatrixWorldX;
 			D3DXMatrixTranslation( &MatrixWorldY, MaxField - 2, 0, 1 );
 			MatrixWorld = MatrixWorld * MatrixWorldY;		
-			g_MeshWin.SetMatrixWorld( MatrixWorld );
-			g_MeshWin.SetMatrixView( g_Camera.m_View );
-			g_MeshWin.SetMatrixProjection( g_Camera.m_Proj );
-			g_MeshWin.DrawMyMesh( g_Diffuse );
+			g_MeshWin.RenderMesh( g_Camera, MatrixWorld, g_Diffuse );
 			break;
 		case STATE_LOST:
 			D3DXMatrixRotationY( &MatrixWorldY, -D3DX_PI / 2 );
@@ -261,10 +266,7 @@ void RenderingDirect3D( CCell* Cell, int* Field )
 			MatrixWorld = MatrixWorldY * MatrixWorld * MatrixWorldX;
 			D3DXMatrixTranslation( &MatrixWorldY, MaxField - 2, 0, 0.5f );
 			MatrixWorld = MatrixWorld * MatrixWorldY;
-			g_MeshLost.SetMatrixWorld( MatrixWorld );
-			g_MeshLost.SetMatrixView( g_Camera.m_View );
-			g_MeshLost.SetMatrixProjection( g_Camera.m_Proj );
-			g_MeshLost.DrawMyMesh( g_Diffuse );
+			g_MeshLost.RenderMesh( g_Camera, MatrixWorld, g_Diffuse );
 			break;
 		}
 		//-------------------CountMine-----------------------------------------
@@ -284,8 +286,8 @@ void RenderingDirect3D( CCell* Cell, int* Field )
 				Tens = 0;
 			if ( Units < 0 )
 				Tens = 0;
-			g_Mesh[ Units ].RenderMesh( g_Camera, t + 0.5f, 1 - t, -D3DX_PI / 2 );
-			g_Mesh[ Tens ].RenderMesh( g_Camera, t, 1 - t, -D3DX_PI / 2  );
+			g_Mesh[ Units ].RenderMesh( g_Camera, MatWorld( t + 0.5f, 0, 1 - t, -D3DX_PI / 2), g_Diffuse );
+			g_Mesh[ Tens ].RenderMesh( g_Camera, MatWorld( t, 0, 1 - t, -D3DX_PI / 2), g_Diffuse );
 			
 		}
 // 		char  str[50];
