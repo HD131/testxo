@@ -20,7 +20,7 @@
 const UINT Width				= 1024;
 const UINT Height				= 768;
 const int  MaxField				= 10;
-const int  MaxMine				= 20;
+const int  MaxMine				= 13;
 const D3DXVECTOR4 g_Light       = D3DXVECTOR4( 0.0f, 1.0f, 0.0f, 1.0f );
 const float	g_Diffuse_intensity = 1.0f;
 
@@ -39,15 +39,24 @@ class CD3DDevice
 {
 public:
 	IDirect3D9*			    m_pDirect3D; // указатель на Главный интерфейс отвечающий за Direct3D	
-	IDirect3DCubeTexture9*  m_CubeTexture;	
 	IDirect3DPixelShader9*  m_pPixelShader [MaxShader];
 	IDirect3DVertexShader9* m_pVertexShader[MaxShader];
 	ID3DXConstantTable*     m_pConstTableVS[MaxShader];
 	ID3DXConstantTable*     m_pConstTablePS[MaxShader];	
 	HRESULT                 IntialDirect3D( HWND hwnd, FILE *FileLog );
-	HRESULT                 InitialShader();
-	HRESULT				    LoadTexture( FILE *FileLog );
 	void				    Release();
+};
+
+class CShader
+{
+public:
+	IDirect3DPixelShader9*  m_pPixelShader;
+	IDirect3DVertexShader9* m_pVertexShader;
+	ID3DXConstantTable*     m_pConstTableVS;
+	ID3DXConstantTable*     m_pConstTablePS;
+
+	HRESULT LoadShader( std::string FileName, IDirect3DDevice9* pD3DDevice, FILE* FileLog );
+	void	Release();
 };
 
 struct CCell

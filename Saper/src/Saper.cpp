@@ -12,12 +12,14 @@ struct CSky
 {
 	IDirect3DVertexBuffer9* m_pVerBufSky;
 	IDirect3DIndexBuffer9*  m_pBufIndexSky;
-	HRESULT                 InitialSky();
+	IDirect3DCubeTexture9*  m_CubeTexture;	
+	HRESULT                 InitialSky(  FILE* FileLog  );
+	void                    RenderSky( IDirect3DDevice9* D3DDevice, CameraDevice const& Camera, CShader const& Shader );
 	void                    Release();
 };
 
 
-CD3DDevice   g_DeviceD3D;
+CD3DDevice   g_Direct3D;
 CInputDevice g_DeviceInput;
 CSky         g_Sky;
 CMesh3D      g_MeshA;
@@ -25,7 +27,8 @@ CMesh3D      g_Mesh[MaxMesh];
 CMesh3D      g_MeshS;
 CMesh3D		 g_MeshWin;
 CMesh3D		 g_MeshLost;
-CMesh3D      g_MeshStalemate;
+CShader      g_Diffuse;
+CShader      g_ShaderSky;
 CameraDevice g_Camera;
 CField       g_Field( MaxField );
 bool         g_Exit      = false;
@@ -171,7 +174,6 @@ void RenderFence()
 
 void RenderingDirect3D( CCell* Cell, int* Field )
 {	
-	const D3DXVECTOR4 Scale( tan( D3DX_PI / 8 * (FLOAT)Height / Width), tan( D3DX_PI / 8 * (FLOAT)Height / Width  ), 1.0f, 1.0f );
 	//----------------------------------------------режим каркаса-------------------------------
 	if ( g_Wireframe )
 		g_pD3DDevice -> SetRenderState( D3DRS_FILLMODE, D3DFILL_WIREFRAME);
@@ -190,37 +192,9 @@ void RenderingDirect3D( CCell* Cell, int* Field )
 	g_pD3DDevice -> BeginScene(); // начало рендеринга
 
 	//------------------------------------------Render Sky----------------------------------------
-	g_pD3DDevice -> SetRenderState(  D3DRS_ZENABLE, false );
-	g_pD3DDevice -> SetSamplerState( 0, D3DSAMP_ADDRESSU, D3DTADDRESS_CLAMP ); 
-	g_pD3DDevice -> SetSamplerState( 0, D3DSAMP_ADDRESSV, D3DTADDRESS_CLAMP ); 
-	g_pD3DDevice -> SetSamplerState( 0, D3DSAMP_ADDRESSW, D3DTADDRESS_CLAMP ); 
-	D3DXMATRIX MatrixWorld;
-	D3DXMatrixTranslation( &MatrixWorld, 1.0f, 1.0f, 1.0f );
-	D3DXMATRIX tmp = MatrixWorld * MatrixView * MatrixProjection;
-	if ( g_DeviceD3D.m_pConstTableVS[Sky] )
-	{
-		g_DeviceD3D.m_pConstTableVS[Sky]->SetMatrix( g_pD3DDevice, "mat_mvp",   &tmp );
-		g_DeviceD3D.m_pConstTableVS[Sky]->SetVector( g_pD3DDevice, "vec_light", &g_Light );
-		g_DeviceD3D.m_pConstTableVS[Sky]->SetVector( g_pD3DDevice, "scale",     &Scale );
-		g_DeviceD3D.m_pConstTableVS[Sky]->SetMatrix( g_pD3DDevice, "mat_view",  &MatrixView );
-	}
-	// здесь перерисовка сцены	
-	g_pD3DDevice -> SetStreamSource(0, g_Sky.m_pVerBufSky, 0, sizeof( CVertexFVF ) ); // связь буфера вершин с потоком данных
-	g_pD3DDevice -> SetFVF( D3DFVF_CUSTOMVERTEX ); // устанавливается формат вершин
-	g_pD3DDevice -> SetIndices( g_Sky.m_pBufIndexSky );
-	g_pD3DDevice -> SetTexture( 0, g_DeviceD3D.m_CubeTexture );
-	// устанавливаем шейдеры
-	g_pD3DDevice -> SetVertexShader( g_DeviceD3D.m_pVertexShader[Sky] );
-	g_pD3DDevice -> SetPixelShader(  g_DeviceD3D.m_pPixelShader [Sky] );
-	// вывод примитивов
-	g_pD3DDevice -> DrawIndexedPrimitive( D3DPT_TRIANGLELIST, 0, 0, 6, 0, 2 );
-
-	g_pD3DDevice -> SetSamplerState( 0, D3DSAMP_ADDRESSU, D3DTADDRESS_WRAP );
-	g_pD3DDevice -> SetSamplerState( 0, D3DSAMP_ADDRESSV, D3DTADDRESS_WRAP );
-	g_pD3DDevice -> SetSamplerState( 0, D3DSAMP_ADDRESSW, D3DTADDRESS_WRAP );
-	g_pD3DDevice -> SetRenderState(  D3DRS_ZENABLE, true );
+	g_Sky.RenderSky( g_pD3DDevice, g_Camera, g_ShaderSky );
 	//------------------------------------------Render Mesh----------------------------------------
-	D3DXMATRIX MatrixWorldX,MatrixWorldY,MatrixWorldZ;
+	D3DXMATRIX MatrixWorld, MatrixWorldX, MatrixWorldY, MatrixWorldZ;
 	int t = ( MaxField - 1) / 2;
 	//-----------ограда---------------
 	RenderFence();
@@ -262,7 +236,7 @@ void RenderingDirect3D( CCell* Cell, int* Field )
 				g_Mesh[Empty].SetMatrixWorld( MatrixWorld );
 				g_Mesh[Empty].SetMatrixView( MatrixView );
 				g_Mesh[Empty].SetMatrixProjection( MatrixProjection );
-				g_Mesh[Empty].DrawMyMesh(g_DeviceD3D.m_pConstTableVS, g_DeviceD3D.m_pConstTablePS, g_DeviceD3D.m_pVertexShader, g_DeviceD3D.m_pPixelShader);				
+				g_Mesh[Empty].DrawMyMesh( g_Diffuse );				
 			}
 		}
 
@@ -278,7 +252,7 @@ void RenderingDirect3D( CCell* Cell, int* Field )
 			g_MeshWin.SetMatrixWorld( MatrixWorld );
 			g_MeshWin.SetMatrixView( g_Camera.m_View );
 			g_MeshWin.SetMatrixProjection( g_Camera.m_Proj );
-			g_MeshWin.DrawMyMesh(g_DeviceD3D.m_pConstTableVS, g_DeviceD3D.m_pConstTablePS, g_DeviceD3D.m_pVertexShader, g_DeviceD3D.m_pPixelShader);
+			g_MeshWin.DrawMyMesh( g_Diffuse );
 			break;
 		case STATE_LOST:
 			D3DXMatrixRotationY( &MatrixWorldY, -D3DX_PI / 2 );
@@ -290,7 +264,7 @@ void RenderingDirect3D( CCell* Cell, int* Field )
 			g_MeshLost.SetMatrixWorld( MatrixWorld );
 			g_MeshLost.SetMatrixView( g_Camera.m_View );
 			g_MeshLost.SetMatrixProjection( g_Camera.m_Proj );
-			g_MeshLost.DrawMyMesh(g_DeviceD3D.m_pConstTableVS, g_DeviceD3D.m_pConstTablePS, g_DeviceD3D.m_pVertexShader, g_DeviceD3D.m_pPixelShader);
+			g_MeshLost.DrawMyMesh( g_Diffuse );
 			break;
 		}
 		//-------------------CountMine-----------------------------------------
@@ -384,47 +358,45 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance,
 		Form1->Cursor=1;
 	}*/
 
-	if ( SUCCEEDED( g_DeviceD3D.IntialDirect3D( hwnd, FileLog) ) )
-	{	
-		if ( SUCCEEDED( g_DeviceD3D.LoadTexture( FileLog ) ) )
-		{				 
-			
-			
-			g_Mesh[Zero].InitialMesh( "model//0.x", FileLog );
-			g_Mesh[One].InitialMesh( "model//1.x", FileLog );
-			g_Mesh[Two].InitialMesh( "model//2.x", FileLog );
-			g_Mesh[Three].InitialMesh( "model//3.x", FileLog );
-			g_Mesh[Four].InitialMesh( "model//4.x", FileLog );
-			g_Mesh[Five].InitialMesh( "model//5.x", FileLog );
-			g_Mesh[Six].InitialMesh( "model//6.x", FileLog );
-			g_Mesh[Seven].InitialMesh( "model//7.x", FileLog );
-			g_Mesh[Eight].InitialMesh( "model//8.x", FileLog );
-			g_Mesh[Nine].InitialMesh( "model//9.x", FileLog );
-			g_Mesh[Empty].InitialMesh( "model//Empty.x", FileLog );
-			g_Mesh[Flag].InitialMesh( "model//Flag.x", FileLog );
-			g_Mesh[Mine].InitialMesh( "model//Mine.x", FileLog );
-			g_Mesh[Stena].InitialMesh(   "model//Stena.x", FileLog );
-			g_Mesh[Angle].InitialMesh(   "model//Angle.x", FileLog );
-			g_MeshWin.InitialMesh( "model//Win.x", FileLog );	
-			g_MeshLost.InitialMesh( "model//Lost.x", FileLog );
-			
-			g_Sky.InitialSky();
-			g_DeviceInput.InitialInput( hwnd, FileLog );					
-			g_DeviceD3D.InitialShader();
-			
-			while( !g_Exit )
+	if ( SUCCEEDED( g_Direct3D.IntialDirect3D( hwnd, FileLog) ) )
+	{
+		g_Mesh[Zero].InitialMesh( "model//0.x", FileLog );
+		g_Mesh[One].InitialMesh( "model//1.x", FileLog );
+		g_Mesh[Two].InitialMesh( "model//2.x", FileLog );
+		g_Mesh[Three].InitialMesh( "model//3.x", FileLog );
+		g_Mesh[Four].InitialMesh( "model//4.x", FileLog );
+		g_Mesh[Five].InitialMesh( "model//5.x", FileLog );
+		g_Mesh[Six].InitialMesh( "model//6.x", FileLog );
+		g_Mesh[Seven].InitialMesh( "model//7.x", FileLog );
+		g_Mesh[Eight].InitialMesh( "model//8.x", FileLog );
+		g_Mesh[Nine].InitialMesh( "model//9.x", FileLog );
+		g_Mesh[Empty].InitialMesh( "model//Empty.x", FileLog );
+		g_Mesh[Flag].InitialMesh( "model//Flag.x", FileLog );
+		g_Mesh[Mine].InitialMesh( "model//Mine.x", FileLog );
+		g_Mesh[Stena].InitialMesh(   "model//Stena.x", FileLog );
+		g_Mesh[Angle].InitialMesh(   "model//Angle.x", FileLog );
+		g_MeshWin.InitialMesh( "model//Win.x", FileLog );	
+		g_MeshLost.InitialMesh( "model//Lost.x", FileLog );
+		
+		g_Sky.InitialSky( FileLog );
+		g_DeviceInput.InitialInput( hwnd, FileLog );					
+		g_Diffuse.LoadShader( "shader//Diffuse", g_pD3DDevice, FileLog );
+		g_ShaderSky.LoadShader( "shader//Sky", g_pD3DDevice, FileLog );
+		
+		while( !g_Exit )
+		{
+			g_DeviceInput.ScanInput( &g_Camera, &g_Field.m_Cell[0], &g_Field.m_Field[0] );				
+			RenderingDirect3D( &g_Field.m_Cell[0], &g_Field.m_Field[0]);				
+			if ( PeekMessage( &Msg, 0, 0, 0, PM_REMOVE ) )
 			{
-				g_DeviceInput.ScanInput( &g_Camera, &g_Field.m_Cell[0], &g_Field.m_Field[0] );				
-				RenderingDirect3D( &g_Field.m_Cell[0], &g_Field.m_Field[0]);				
-				if ( PeekMessage( &Msg, 0, 0, 0, PM_REMOVE ) )
-				{
-					TranslateMessage( &Msg );
-					DispatchMessage(  &Msg );
-				}
-			}						
-		}
-	}	
-	g_MeshStalemate.Release();
+				TranslateMessage( &Msg );
+				DispatchMessage(  &Msg );
+			}
+		}						
+		
+	}
+	g_ShaderSky.Release();
+	g_Diffuse.Release();
 	g_MeshLost.Release();
 	g_MeshWin.Release();
 	g_MeshS.Release();
@@ -434,7 +406,7 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance,
 		
 	g_Sky.Release(); 
 	g_DeviceInput.Release();
-	g_DeviceD3D.Release();
+	g_Direct3D.Release();
 	if ( FileLog )
 		fclose( FileLog );
 	return 0;
@@ -445,7 +417,7 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
 
 
-HRESULT CSky::InitialSky()
+HRESULT CSky::InitialSky( FILE* FileLog )
 {
 	void *pBV;
 	void *pBI;
@@ -481,7 +453,48 @@ HRESULT CSky::InitialSky()
 	memcpy( pBI, SkyIndex, sizeof( SkyIndex ) ); // копирование данных о вершинах в буфер вершин
 	m_pBufIndexSky -> Unlock(); // разблокирование	
 
+	m_CubeTexture = 0;
+	if ( FAILED( D3DXCreateCubeTextureFromFileEx( g_pD3DDevice, "model//sky_cube_mipmap.dds", D3DX_DEFAULT, D3DX_FROM_FILE, 0, 
+		D3DFMT_UNKNOWN, D3DPOOL_DEFAULT, D3DX_FILTER_NONE, D3DX_FILTER_NONE, 0, 0, 0, &m_CubeTexture )))
+		if ( FileLog ) 
+			fprintf( FileLog, "error load sky texture\n" );
+
 	return S_OK;
+}
+
+void CSky::RenderSky( IDirect3DDevice9* D3DDevice, CameraDevice const& Camera, CShader const& Shader )
+{
+	const D3DXVECTOR4 Scale( tan( D3DX_PI / 8 * (FLOAT)Height / Width), tan( D3DX_PI / 8 * (FLOAT)Height / Width  ), 1.0f, 1.0f );
+
+	D3DDevice -> SetRenderState(  D3DRS_ZENABLE, false );
+	D3DDevice -> SetSamplerState( 0, D3DSAMP_ADDRESSU, D3DTADDRESS_CLAMP ); 
+	D3DDevice -> SetSamplerState( 0, D3DSAMP_ADDRESSV, D3DTADDRESS_CLAMP ); 
+	D3DDevice -> SetSamplerState( 0, D3DSAMP_ADDRESSW, D3DTADDRESS_CLAMP ); 
+	D3DXMATRIX MatrixWorld;
+	D3DXMatrixTranslation( &MatrixWorld, 1.0f, 1.0f, 1.0f );
+	D3DXMATRIX tmp = MatrixWorld * Camera.m_View * Camera.m_Proj;
+	if ( Shader.m_pConstTableVS )
+	{
+		Shader.m_pConstTableVS->SetMatrix( g_pD3DDevice, "mat_mvp",   &tmp );
+		Shader.m_pConstTableVS->SetVector( g_pD3DDevice, "vec_light", &g_Light );
+		Shader.m_pConstTableVS->SetVector( g_pD3DDevice, "scale",     &Scale );
+		Shader.m_pConstTableVS->SetMatrix( g_pD3DDevice, "mat_view",  &Camera.m_View );
+	}
+	// здесь перерисовка сцены	
+	D3DDevice -> SetStreamSource(0, g_Sky.m_pVerBufSky, 0, sizeof( CVertexFVF ) ); // связь буфера вершин с потоком данных
+	D3DDevice -> SetFVF( D3DFVF_CUSTOMVERTEX ); // устанавливается формат вершин
+	D3DDevice -> SetIndices( m_pBufIndexSky );
+	D3DDevice -> SetTexture( 0, m_CubeTexture );
+	// устанавливаем шейдеры
+	D3DDevice -> SetVertexShader( Shader.m_pVertexShader );
+	D3DDevice -> SetPixelShader(  Shader.m_pPixelShader  );
+	// вывод примитивов
+	D3DDevice -> DrawIndexedPrimitive( D3DPT_TRIANGLELIST, 0, 0, 6, 0, 2 );
+
+	D3DDevice -> SetSamplerState( 0, D3DSAMP_ADDRESSU, D3DTADDRESS_WRAP );
+	D3DDevice -> SetSamplerState( 0, D3DSAMP_ADDRESSV, D3DTADDRESS_WRAP );
+	D3DDevice -> SetSamplerState( 0, D3DSAMP_ADDRESSW, D3DTADDRESS_WRAP );
+	D3DDevice -> SetRenderState(  D3DRS_ZENABLE, true );
 }
 
 void CSky::Release()
@@ -490,5 +503,7 @@ void CSky::Release()
 		m_pBufIndexSky -> Release();
 	if ( m_pVerBufSky )
 		m_pVerBufSky -> Release();
+	if ( m_CubeTexture )
+		m_CubeTexture -> Release();
 }
 

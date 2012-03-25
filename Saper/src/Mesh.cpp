@@ -3,7 +3,8 @@
 #include "CameraDevice.h"
 
 extern IDirect3DDevice9* g_pD3DDevice;
-extern CD3DDevice   g_DeviceD3D;
+extern CD3DDevice        g_Direct3D;
+extern CShader           g_Diffuse;
 
 HRESULT CMesh3D::InitialMesh(LPCSTR Name, FILE *FileLog )
 {
@@ -81,24 +82,23 @@ void CMesh3D::SetMatrixProjection( const D3DXMATRIX& Matrix )
 {
 	m_MatrixProjection = Matrix;
 }
-void CMesh3D::DrawMyMesh( ID3DXConstantTable**     pConstTableVS, ID3DXConstantTable**       pConstTablePS,
-						 IDirect3DVertexShader9** VertexShader, IDirect3DPixelShader9**     PixelShader )
+void CMesh3D::DrawMyMesh( CShader const& Shader )
 {
 	D3DXMATRIX  wvp;
 	if ( m_pMesh )
 	{
 		wvp = m_MatrixWorld * m_MatrixView * m_MatrixProjection;
-		if ( pConstTableVS[Diffuse] )
+		if ( Shader.m_pConstTableVS )
 		{
-			pConstTableVS[Diffuse]->SetMatrix( g_pD3DDevice, "mat_mvp",   &wvp );
-			pConstTableVS[Diffuse]->SetMatrix( g_pD3DDevice, "mat_world", &m_MatrixWorld );
-			pConstTableVS[Diffuse]->SetVector( g_pD3DDevice, "vec_light", &g_Light );
-			pConstTablePS[Diffuse]->SetFloat(  g_pD3DDevice, "diffuse_intensity", g_Diffuse_intensity );	
-			pConstTablePS[Diffuse]->SetFloat(  g_pD3DDevice, "Alpha", m_Alpha );	
+			Shader.m_pConstTableVS->SetMatrix( g_pD3DDevice, "mat_mvp",   &wvp );
+			Shader.m_pConstTableVS->SetMatrix( g_pD3DDevice, "mat_world", &m_MatrixWorld );
+			Shader.m_pConstTableVS->SetVector( g_pD3DDevice, "vec_light", &g_Light );
+			Shader.m_pConstTablePS->SetFloat(  g_pD3DDevice, "diffuse_intensity", g_Diffuse_intensity );	
+			Shader.m_pConstTablePS->SetFloat(  g_pD3DDevice, "Alpha", m_Alpha );	
 		}
 		// устанавливаем шейдеры
-		g_pD3DDevice->SetVertexShader( VertexShader[Diffuse] );
-		g_pD3DDevice->SetPixelShader(  PixelShader [Diffuse] );
+		g_pD3DDevice->SetVertexShader( Shader.m_pVertexShader );
+		g_pD3DDevice->SetPixelShader(  Shader.m_pPixelShader );
 
 		g_pD3DDevice->SetStreamSource( 0, m_VertexBuffer, 0, m_SizeFVF );
 		g_pD3DDevice->SetIndices( m_IndexBuffer );
@@ -147,5 +147,5 @@ void CMesh3D::RenderMesh( CameraDevice const& Camera, float x, float y, float An
 	SetMatrixWorld( MatrixWorld );
 	SetMatrixView( Camera.m_View );
 	SetMatrixProjection( Camera.m_Proj );
-	DrawMyMesh(g_DeviceD3D.m_pConstTableVS, g_DeviceD3D.m_pConstTablePS, g_DeviceD3D.m_pVertexShader, g_DeviceD3D.m_pPixelShader);
+	DrawMyMesh( g_Diffuse );
 }
