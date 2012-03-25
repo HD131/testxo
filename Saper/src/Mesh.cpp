@@ -82,16 +82,20 @@ void CMesh3D::SetMatrixProjection( const D3DXMATRIX& Matrix )
 {
 	m_MatrixProjection = Matrix;
 }
-void CMesh3D::DrawMyMesh( CShader const& Shader )
+
+void CMesh3D::RenderMesh( CameraDevice const& Camera, const D3DXMATRIX&  MatrixWorld, CShader const& Shader )
 {
-	D3DXMATRIX  wvp;
+	D3DXMATRIX wvp;
+
+	
+	
 	if ( m_pMesh )
 	{
-		wvp = m_MatrixWorld * m_MatrixView * m_MatrixProjection;
+		wvp = MatrixWorld * Camera.m_View * Camera.m_Proj;
 		if ( Shader.m_pConstTableVS )
 		{
 			Shader.m_pConstTableVS->SetMatrix( g_pD3DDevice, "mat_mvp",   &wvp );
-			Shader.m_pConstTableVS->SetMatrix( g_pD3DDevice, "mat_world", &m_MatrixWorld );
+			Shader.m_pConstTableVS->SetMatrix( g_pD3DDevice, "mat_world", &MatrixWorld );
 			Shader.m_pConstTableVS->SetVector( g_pD3DDevice, "vec_light", &g_Light );
 			Shader.m_pConstTablePS->SetFloat(  g_pD3DDevice, "diffuse_intensity", g_Diffuse_intensity );	
 			Shader.m_pConstTablePS->SetFloat(  g_pD3DDevice, "Alpha", m_Alpha );	
@@ -134,18 +138,4 @@ void CMesh3D::Release()
 	*/
 	if ( m_pMesh )
 		m_pMesh -> Release();
-}
-
-void CMesh3D::RenderMesh( CameraDevice const& Camera, float x, float y, float Ang )
-{
-	D3DXMATRIX MatrixWorld, MatrixWorldY, MatrixWorldX;
-
-	int t = ( MaxField - 1) / 2;
-	D3DXMatrixRotationY(   &MatrixWorldY, Ang );
-	D3DXMatrixTranslation( &MatrixWorldX, ( y - t ), 0, ( x - t ) );
-	D3DXMatrixMultiply(&MatrixWorld, &MatrixWorldY, &MatrixWorldX);		
-	SetMatrixWorld( MatrixWorld );
-	SetMatrixView( Camera.m_View );
-	SetMatrixProjection( Camera.m_Proj );
-	DrawMyMesh( g_Diffuse );
 }
