@@ -146,11 +146,16 @@ Game_State GameOverCheck( CCell* Cell, int* Field )
 			}
 		}
 	int Count = 0;
+	int Empt  = 0;
 	for (int y = 0; y < MaxField; ++y)
-		for (int x = 0; x < MaxField; ++x)		
+		for (int x = 0; x < MaxField; ++x)
+		{
 			if ( Field[x*MaxField+y] == Flag && Cell[x*MaxField+y].m_Value == Mine )
 				++Count;
-	if ( MaxMine == Count )			
+			if ( Field[x*MaxField+y] == Empty )
+				++Empt;
+		}
+	if ( ( MaxMine == Count ) && ( Empt == 0 ) )		
 		return STATE_WIN;	
 		
 return  STATE_PLAY;
@@ -181,7 +186,6 @@ void RenderFence()
 		g_Mesh[ Stena ].RenderMesh( g_Camera, MatWorld( x, 0, MaxField, D3DX_PI / 2 ), g_Diffuse );
 	}
 }
-
 
 void RenderingDirect3D( CCell* Cell, int* Field )
 {	
@@ -290,9 +294,6 @@ void RenderingDirect3D( CCell* Cell, int* Field )
 			g_Mesh[ Tens ].RenderMesh( g_Camera, MatWorld( t, 0, 1 - t, -D3DX_PI / 2), g_Diffuse );
 			
 		}
-// 		char  str[50];
-// 		sprintf(str, "%d:%d", Tens,Units);		
-// 		DrawMyText(g_pD3DDevice, str, 10, 10, 500, 700, D3DCOLOR_ARGB(250, 250, 250,50));	
 
 		g_pD3DDevice -> EndScene();
 		g_pD3DDevice -> Present( 0, 0, 0, 0 ); // вывод содержимого заднего буфера в окно
@@ -350,16 +351,7 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance,
 							  250, 150, Width, Height, 0, 0, hInstance, 0 );	
 	ShowWindow( hwnd, nCmdShow );
 	ZeroMemory( &Msg, sizeof( MSG ) );
-	/*
-	HWND i;
-	i=LoadImage(0,"cursor1.cur",IMAGE_CURSOR,0,0,LR_LOADFROMFILE);
-	if (i==0) ShowMessage("Ошибка загрузки курсора!");
-	else
-	{
-		Screen->Cursors[1]=i;
-		Form1->Cursor=1;
-	}*/
-
+	
 	if ( SUCCEEDED( g_Direct3D.IntialDirect3D( hwnd, FileLog) ) )
 	{
 		g_Mesh[Zero].InitialMesh( "model//0.x", FileLog );
