@@ -12,26 +12,8 @@ HRESULT CShader::LoadShader( std::string FileName, IDirect3DDevice9* pD3DDevice,
 	m_pVertexShader = 0;
 	m_pPixelShader  = 0;
 	m_pConstTableVS = 0;
-	m_pConstTablePS = 0;
+	m_pConstTablePS = 0;	
 	
-	//-------------------------------SkyShader----------------------------
-	/*/ вертексный шейдер
-	D3DXCompileShaderFromFile( "shader//Sky.vsh", 0, 0, "main", "vs_2_0", D3DXSHADER_OPTIMIZATION_LEVEL3,
-								&pShaderBuff, &pErrors, &m_pConstTableVS[Sky] );
-	if ( pShaderBuff )
-	{
-		g_pD3DDevice->CreateVertexShader(( DWORD* )pShaderBuff->GetBufferPointer(), &m_pVertexShader[Sky]);
-		pShaderBuff -> Release();
-	}
-	// пиксельный шейдер
-	D3DXCompileShaderFromFile( "shader//Sky.psh", 0, 0, "main", "ps_2_0", D3DXSHADER_OPTIMIZATION_LEVEL3,
-								&pShaderBuff, &pErrors, &m_pConstTablePS[Sky] );
-	if ( pShaderBuff )
-	{
-		g_pD3DDevice->CreatePixelShader(( DWORD* )pShaderBuff->GetBufferPointer(), &m_pPixelShader[Sky]);
-		pShaderBuff -> Release();
-	}*/
-	//-------------------------------Diffuse----------------------------
 	HRESULT hr;
 	// вертексный шейдер
 	std::string FileNameVS = FileName + std::string( ".vsh" );
