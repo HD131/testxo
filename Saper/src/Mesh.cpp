@@ -85,9 +85,7 @@ void CMesh3D::SetMatrixProjection( const D3DXMATRIX& Matrix )
 
 void CMesh3D::RenderMesh( CameraDevice const& Camera, const D3DXMATRIX&  MatrixWorld, CShader const& Shader )
 {
-	D3DXMATRIX wvp;
-
-	
+	D3DXMATRIX wvp;	
 	
 	if ( m_pMesh )
 	{

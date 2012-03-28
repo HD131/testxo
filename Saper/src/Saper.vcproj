@@ -183,7 +183,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\GoogleCode\xo\src\CameraDevice.h"
+				RelativePath=".\CameraDevice.h"
 				>
 			</File>
 			<File
@@ -219,107 +219,15 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Particle.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Particle.h"
+				>
+			</File>
+			<File
 				RelativePath=".\Saper.cpp"
-				>
-			</File>
-		</Filter>
-		<Filter
-			Name="item"
-			>
-			<File
-				RelativePath=".\items\item_base.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\items\item_base.h"
-				>
-			</File>
-			<File
-				RelativePath=".\items\item_eight.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\items\item_eight.h"
-				>
-			</File>
-			<File
-				RelativePath=".\items\item_empty.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\items\item_empty.h"
-				>
-			</File>
-			<File
-				RelativePath=".\items\item_five.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\items\item_five.h"
-				>
-			</File>
-			<File
-				RelativePath=".\items\item_flag.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\items\item_flag.h"
-				>
-			</File>
-			<File
-				RelativePath=".\items\item_four.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\items\item_four.h"
-				>
-			</File>
-			<File
-				RelativePath=".\items\item_mine.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\items\item_mine.h"
-				>
-			</File>
-			<File
-				RelativePath=".\items\item_one.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\items\item_one.h"
-				>
-			</File>
-			<File
-				RelativePath=".\items\item_seven.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\items\item_seven.h"
-				>
-			</File>
-			<File
-				RelativePath=".\items\item_six.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\items\item_six.h"
-				>
-			</File>
-			<File
-				RelativePath=".\items\item_three.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\items\item_three.h"
-				>
-			</File>
-			<File
-				RelativePath=".\items\item_two.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\items\item_two.h"
 				>
 			</File>
 		</Filter>

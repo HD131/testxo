@@ -1,10 +1,13 @@
 #include "InputDevice.h"
 #include "D3DDevice.h"
+#include "Particle.h"
 
 Game_State GameOverCheck( CCell* Cell, int* Field );
 POINT PickObject( CCell *Cell );
 void  ClearField( CCell* Cell, int* Field, int x, int y );
 bool Pressed = false;
+class CException;
+extern CException   g_Exception;
 
 HRESULT CInputDevice::InitialInput( HWND hwnd, FILE *FileLog )
 {	
@@ -87,6 +90,7 @@ bool CInputDevice::ScanInput( CameraDevice *m_Camera, CCell *Cell, int* Field )
 			if ( Cell[Point.x*MaxField+Point.y].m_Value == Mine )
 			{
 				Field[Point.x*MaxField+Point.y] = OpenCell;
+				g_Exception.SetTime( timeGetTime() ); 
 				return true;
 			}
 			 

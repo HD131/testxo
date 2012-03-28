@@ -99,4 +99,19 @@ void CD3DDevice::Release()
 		m_pDirect3D -> Release();	
 };
 
+void DrawMyText( IDirect3DDevice9* g_pD3DDevice, char* StrokaTexta, int x, int y, int x1, int y1, D3DCOLOR MyColor )
+{
+	RECT  Rec;
+	HFONT hFont;
+	ID3DXFont* pFont = 0; 
+	hFont = CreateFont(30, 10, 0, 0, FW_NORMAL, FALSE, FALSE, 0, 1, 0, 0, 0, DEFAULT_PITCH | FF_MODERN, "Arial");
+	Rec.left   = x;
+	Rec.top    = y;
+	Rec.right  = x1;
+	Rec.bottom = y1;
+	D3DXCreateFont( g_pD3DDevice, 30, 10, FW_NORMAL, 0, FALSE, 0, 0, 0, DEFAULT_PITCH | FF_MODERN, "Arial", &pFont );
+	pFont->DrawText(0, StrokaTexta, -1, &Rec, DT_WORDBREAK, MyColor);
+	if (pFont)
+		pFont->Release();
+}
 
