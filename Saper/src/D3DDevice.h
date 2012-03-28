@@ -86,5 +86,6 @@ struct CVertexFVF
 	FLOAT tu, tv;
 };
 
+void DrawMyText( IDirect3DDevice9* g_pD3DDevice, char* StrokaTexta, int x, int y, int x1, int y1, D3DCOLOR MyColor );
 
 

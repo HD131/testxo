@@ -3,10 +3,10 @@
 #include "InputDevice.h"
 #include "Field.h"
 #include "Mesh.h"
+#include "Particle.h"
 #include <vector>
 
 extern IDirect3DDevice9* g_pD3DDevice;
-
 
 struct CSky
 {
@@ -17,7 +17,6 @@ struct CSky
 	void                    RenderSky( IDirect3DDevice9* D3DDevice, CameraDevice const& Camera, CShader const& Shader );
 	void                    Release();
 };
-
 
 CD3DDevice   g_Direct3D;
 CInputDevice g_DeviceInput;
@@ -33,23 +32,9 @@ CameraDevice g_Camera;
 CField       g_Field( MaxField );
 bool         g_Exit      = false;
 bool		 g_Wireframe = false;
+CException   g_Exception;
 
 
-void DrawMyText( IDirect3DDevice9* g_pD3DDevice, char* StrokaTexta, int x, int y, int x1, int y1, D3DCOLOR MyColor )
-{
-	RECT  Rec;
-	HFONT hFont;
-	ID3DXFont* pFont = 0; 
-	hFont = CreateFont(30, 10, 0, 0, FW_NORMAL, FALSE, FALSE, 0, 1, 0, 0, 0, DEFAULT_PITCH | FF_MODERN, "Arial");
-	Rec.left   = x;
-	Rec.top    = y;
-	Rec.right  = x1;
-	Rec.bottom = y1;
-	D3DXCreateFont( g_pD3DDevice, 30, 10, FW_NORMAL, 0, FALSE, 0, 0, 0, DEFAULT_PITCH | FF_MODERN, "Arial", &pFont );
-	pFont->DrawText(0, StrokaTexta, -1, &Rec, DT_WORDBREAK, MyColor);
-	if (pFont)
-		pFont->Release();
-}
 
 POINT PickObject( CCell* Cell )
 {
@@ -294,6 +279,8 @@ void RenderingDirect3D( CCell* Cell, int* Field )
 			g_Mesh[ Tens ].RenderMesh( g_Camera, MatWorld( t, 0, 1 - t, -D3DX_PI / 2), g_Diffuse );
 			
 		}
+		//-----------------Particle--------------------
+		g_Exception.RenderParticle( g_Camera, g_Diffuse );
 
 		g_pD3DDevice -> EndScene();
 		g_pD3DDevice -> Present( 0, 0, 0, 0 ); // вывод содержимого заднего буфера в окно
@@ -371,7 +358,7 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance,
 		g_Mesh[Angle].InitialMesh(   "model//Angle.x", FileLog );
 		g_MeshWin.InitialMesh( "model//Win.x", FileLog );	
 		g_MeshLost.InitialMesh( "model//Lost.x", FileLog );
-		
+		g_Exception.Init( g_pD3DDevice, FileLog );
 		g_Sky.InitialSky( FileLog );
 		g_DeviceInput.InitialInput( hwnd, FileLog );					
 		g_Diffuse.LoadShader( "shader//Diffuse", g_pD3DDevice, FileLog );
@@ -386,8 +373,7 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance,
 				TranslateMessage( &Msg );
 				DispatchMessage(  &Msg );
 			}
-		}						
-		
+		}		
 	}
 	g_ShaderSky.Release();
 	g_Diffuse.Release();
