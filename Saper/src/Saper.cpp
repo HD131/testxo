@@ -405,14 +405,14 @@ HRESULT CSky::InitialSky( FILE* FileLog )
 	m_pVerBufSky   = 0; // указатель на буфер вершин
 	m_pBufIndexSky = 0; // указатель на буфер вершин
 
-	CVertexFVF SkyVershin[] =
-	{			
-		{ 1.0f, -1.0f, 0.0f, 0.0f,  0.0f, -1.0f, 1.0f, 1.0f}, // 0
-		{-1.0f, -1.0f, 0.0f, 0.0f,  0.0f, -1.0f, 0.0f, 1.0f}, // 1	
-		{-1.0f,  1.0f, 0.0f, 0.0f,  0.0f, -1.0f, 0.0f, 0.0f}, // 2		
-		{ 1.0f,  1.0f, 0.0f, 0.0f,  0.0f, -1.0f, 1.0f, 0.0f}, // 3
-		// X        Y     Z    nx    ny    nz     tu    tv
-	};
+	CVertexFVF SkyVershin[4];
+				
+	SkyVershin[0] = CVertexFVF(  1.0f, -1.0f, 0.0f, 0.0f,  0.0f, -1.0f, 1.0f, 1.0f ); // 0
+	SkyVershin[1] = CVertexFVF( -1.0f, -1.0f, 0.0f, 0.0f,  0.0f, -1.0f, 0.0f, 1.0f ); // 1	
+	SkyVershin[2] = CVertexFVF( -1.0f,  1.0f, 0.0f, 0.0f,  0.0f, -1.0f, 0.0f, 0.0f ); // 2		
+	SkyVershin[3] = CVertexFVF(  1.0f,  1.0f, 0.0f, 0.0f,  0.0f, -1.0f, 1.0f, 0.0f ); // 3
+		                       // X        Y     Z    nx    ny    nz     tu    tv
+	
 	const unsigned short SkyIndex[] =
 	{
 		0,1,2,    2,3,0,		

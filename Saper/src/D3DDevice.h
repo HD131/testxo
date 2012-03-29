@@ -81,9 +81,13 @@ struct CCell
 
 struct CVertexFVF
 {
-	FLOAT X,   Y,  Z;
+	FLOAT x,   y,  z;
 	FLOAT nx, ny, nz;
-	FLOAT tu, tv;
+	FLOAT u, v;
+	CVertexFVF()
+	{	}
+	CVertexFVF( float X, float Y, float Z, float NX, float NY, float NZ, float U, float V ) : x(X), y(Y), z(Z), nx(NX), ny(NY), nz(NZ), u(U), v(V)
+	{	}
 };
 
 void DrawMyText( IDirect3DDevice9* g_pD3DDevice, char* StrokaTexta, int x, int y, int x1, int y1, D3DCOLOR MyColor );

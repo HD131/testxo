@@ -6,7 +6,6 @@ CameraDevice::CameraDevice()
 	CameraUp		= D3DXVECTOR3( -1, 0, 0 );
 	TargetDir		= D3DXVECTOR3( 0, -1, 0 );
 	DirX		    = D3DXVECTOR3( 1, 0, 0 );
-	DirY		    = D3DXVECTOR3( 0, 1, 0 );
 	Point		    = D3DXVECTOR3( 0, 0, 0 );
 	D3DXMatrixLookAtLH( &m_View, &PositionCamera, &Point, &CameraUp );
 	D3DXMatrixPerspectiveFovLH(&m_Proj, D3DX_PI / 4, (FLOAT)Width / Height, 1.0f, 3000.0f);
