@@ -16,6 +16,7 @@ public:
 
 class CException
 {
+private:
 	IDirect3DVertexBuffer9* 	m_VertexBuffer;
 	IDirect3DIndexBuffer9*  	m_IndexBuffer;
 	IDirect3DTexture9*      	m_TextureExp;
