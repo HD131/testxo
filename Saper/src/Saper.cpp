@@ -461,7 +461,7 @@ void CSky::RenderSky( IDirect3DDevice9* D3DDevice, CameraDevice const& Camera, C
 		Shader.m_pConstTableVS->SetMatrix( g_pD3DDevice, "mat_view",  &Camera.m_View );
 	}
 	// здесь перерисовка сцены	
-	D3DDevice -> SetStreamSource(0, g_Sky.m_pVerBufSky, 0, sizeof( CVertexFVF ) ); // связь буфера вершин с потоком данных
+	D3DDevice -> SetStreamSource(0, m_pVerBufSky, 0, sizeof( CVertexFVF ) ); // связь буфера вершин с потоком данных
 	D3DDevice -> SetFVF( D3DFVF_CUSTOMVERTEX ); // устанавливается формат вершин
 	D3DDevice -> SetIndices( m_pBufIndexSky );
 	D3DDevice -> SetTexture( 0, m_CubeTexture );
