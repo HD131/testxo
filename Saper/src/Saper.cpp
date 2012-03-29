@@ -375,6 +375,7 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance,
 			}
 		}		
 	}
+	g_Exception.Release();
 	g_ShaderSky.Release();
 	g_Diffuse.Release();
 	g_MeshLost.Release();

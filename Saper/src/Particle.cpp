@@ -5,7 +5,7 @@ CParticle::CParticle()
 {
 	m_Position = D3DXVECTOR3( 0, 0, 0 );
 	m_Direct   = D3DXVECTOR3( 0, 0, 0 );
-	m_Speed	   = 0.1f;
+	m_Speed	   = 0.05f;
 	m_Kill     = false;
 }
 CException::CException()
@@ -14,7 +14,7 @@ CException::CException()
 	m_VertexBuffer = 0; // указатель на буфер вершин
 	m_IndexBuffer  = 0; // указатель на буфер индексов	
 	m_TextureExp   = 0; // указатель на текстуру	
-	m_LifeTime     = 5000.0f;	
+	m_LifeTime     = 1000.0f;	
 	m_StartTime    = 0;
 	m_Kill         = false;
 	m_FileLog      = 0;
@@ -63,67 +63,86 @@ void CException::Update( CameraDevice const& Camera )
 {
 	void *pBV;
 	void *pBI;
-	D3DXVECTOR3 Vec, Ver, Norm;	
+	D3DXVECTOR3 Vec, Ver, Norm;
 
-	for ( int i = 0; i < m_Particles.size(); ++i )
+	if ( m_Kill )
+		for ( int i = 0; i < m_Particles.size(); ++i )		
+			m_Particles.erase( m_Particles.begin() + i );
+	if ( !m_Particles.empty() )
 	{
-		//-----перемещаем-------------------
-		m_Particles[i].m_Position += m_Particles[i].m_Direct * m_Particles[i].m_Speed;
+		for ( int i = 0; i < m_Particles.size(); ++i )
+		{
+			//-----перемещаем-------------------
+			m_Particles[i].m_Position += m_Particles[i].m_Direct * m_Particles[i].m_Speed;
 
-		//-----заполняем данными о вершине-----		
-		D3DXVec3Cross( &Norm, &Camera.CameraUp, &Camera.DirX );
-		//Norm = D3DXVECTOR3( 0, 1, 0 );
-		D3DXVec3Normalize( &Norm, &Norm );
-		
-		Vec = Camera.DirX - Camera.CameraUp;
-		D3DXVec3Normalize( &Vec, &Vec );		
-		Ver = m_Particles[i].m_Position + Vec * sqrtf(2);		
-		m_Vershin[i*4+0] = CVertexFVF( Ver.x, Ver.y, Ver.z, Norm.x,  Norm.y, Norm.z, 1.0f, 1.0f ); // 0
-		
-		Vec = -Camera.DirX - Camera.CameraUp;
-		D3DXVec3Normalize( &Vec, &Vec );
-		Ver = m_Particles[i].m_Position + Vec * sqrtf(2);
-		m_Vershin[i*4+1] = CVertexFVF( Ver.x, Ver.y, Ver.z, Norm.x,  Norm.y, Norm.z, 0.0f, 1.0f ); //1
-		
-		Vec = -Camera.DirX + Camera.CameraUp;
-		D3DXVec3Normalize( &Vec, &Vec );
-		Ver = m_Particles[i].m_Position + Vec * sqrtf(2);
-		m_Vershin[i*4+2] = CVertexFVF( Ver.x, Ver.y, Ver.z, Norm.x,  Norm.y, Norm.z, 0.0f, 0.0f ); //2
-		
-		Vec = Camera.DirX + Camera.CameraUp;
-		D3DXVec3Normalize( &Vec, &Vec );
-		Ver = m_Particles[i].m_Position + Vec * sqrtf(2);
-		m_Vershin[i*4+3] = CVertexFVF( Ver.x, Ver.y, Ver.z, Norm.x,  Norm.y, Norm.z, 1.0f, 0.0f ); //3	
-		
-		// заполнение буфера индексов		
-		m_Index[i*6+0] = i * 4;
-		m_Index[i*6+1] = i * 4 + 1;
-		m_Index[i*6+2] = i * 4 + 2;
-		m_Index[i*6+3] = i * 4 + 2;
-		m_Index[i*6+4] = i * 4 + 3;
-		m_Index[i*6+5] = i * 4;		
+			//-----заполняем данными о вершине-----		
+			D3DXVec3Cross( &Norm, &Camera.CameraUp, &Camera.DirX );
+			//Norm = D3DXVECTOR3( 0, 1, 0 );
+			D3DXVec3Normalize( &Norm, &Norm );
+			
+			Vec = Camera.DirX - Camera.CameraUp;
+			D3DXVec3Normalize( &Vec, &Vec );		
+			Ver = m_Particles[i].m_Position + Vec * sqrtf(2);		
+			m_Vershin[i*4+0] = CVertexFVF( Ver.x, Ver.y, Ver.z, Norm.x,  Norm.y, Norm.z, 1.0f, 1.0f ); // 0
+			
+			Vec = -Camera.DirX - Camera.CameraUp;
+			D3DXVec3Normalize( &Vec, &Vec );
+			Ver = m_Particles[i].m_Position + Vec * sqrtf(2);
+			m_Vershin[i*4+1] = CVertexFVF( Ver.x, Ver.y, Ver.z, Norm.x,  Norm.y, Norm.z, 0.0f, 1.0f ); //1
+			
+			Vec = -Camera.DirX + Camera.CameraUp;
+			D3DXVec3Normalize( &Vec, &Vec );
+			Ver = m_Particles[i].m_Position + Vec * sqrtf(2);
+			m_Vershin[i*4+2] = CVertexFVF( Ver.x, Ver.y, Ver.z, Norm.x,  Norm.y, Norm.z, 0.0f, 0.0f ); //2
+			
+			Vec = Camera.DirX + Camera.CameraUp;
+			D3DXVec3Normalize( &Vec, &Vec );
+			Ver = m_Particles[i].m_Position + Vec * sqrtf(2);
+			m_Vershin[i*4+3] = CVertexFVF( Ver.x, Ver.y, Ver.z, Norm.x,  Norm.y, Norm.z, 1.0f, 0.0f ); //3	
+			
+			// заполнение буфера индексов		
+			m_Index[i*6+0] = i * 4;
+			m_Index[i*6+1] = i * 4 + 1;
+			m_Index[i*6+2] = i * 4 + 2;
+			m_Index[i*6+3] = i * 4 + 2;
+			m_Index[i*6+4] = i * 4 + 3;
+			m_Index[i*6+5] = i * 4;		
+		}
+		//-----Блокирование буфера вершин------------
+		if ( FAILED( m_VertexBuffer->Lock( 0, 0, ( void** )&pBV, 0 ) ) ) 
+			fprintf( m_FileLog, "error lock vertex buffer Explosion\n" );
+		memcpy( pBV, &m_Vershin[0], sizeof( CVertexFVF ) *  m_Vershin.size() ); // копирование данных о вершинах в буфер вершин
+		m_VertexBuffer->Unlock(); // разблокирование	
+
+		// Блокирование буфера индексов
+		if ( FAILED( m_IndexBuffer -> Lock( 0, 0, ( void** )&pBI, 0 ) ) ) 
+			fprintf( m_FileLog, "error lock index buffer Explosion\n" );
+		memcpy( pBI, &m_Index[0], sizeof( short ) *  m_Index.size() ); // копирование данных о вершинах в буфер вершин
+		m_IndexBuffer->Unlock();  // разблокирование	
 	}
-	//-----Блокирование буфера вершин------------
-if ( FAILED( m_VertexBuffer->Lock( 0, 0, ( void** )&pBV, 0 ) ) ) 
-		fprintf( m_FileLog, "error lock vertex buffer Explosion\n" );
-	memcpy( pBV, &m_Vershin[0], sizeof( CVertexFVF ) *  m_Vershin.size() ); // копирование данных о вершинах в буфер вершин
-	m_VertexBuffer->Unlock(); // разблокирование	
-
-	// Блокирование буфера индексов
-	if ( FAILED( m_IndexBuffer -> Lock( 0, 0, ( void** )&pBI, 0 ) ) ) 
-		fprintf( m_FileLog, "error lock index buffer Explosion\n" );
-	memcpy( pBI, &m_Index[0], sizeof( short ) *  m_Index.size() ); // копирование данных о вершинах в буфер вершин
-	m_IndexBuffer->Unlock();  // разблокирование	
 }
 
-bool CException::RenderParticle(  CameraDevice const& Camera, CShader const& Shader )
+void CException::SetTime( POINT Point, DWORD Time )
+{ 
+	m_StartTime = Time; 
+	m_Pos = D3DXVECTOR3( Point.y - int( MaxField / 2 ), 0, Point.x - int( MaxField / 2 ) );
+	for ( int i = 0; i < m_Particles.size(); ++i )
+		m_Particles[i].m_Position = m_Pos;
+	Beep(100,100);
+}
+
+void CException::RenderParticle(  CameraDevice const& Camera, CShader const& Shader )
 {
-	Update( Camera );
-	if ( true )
+	char        str[50];
+	sprintf(str, "x=%f  y=%f   z=%f", m_Pos.x, m_Pos.y, m_Pos.z );		
+	DrawMyText( m_D3DDevice, str, 10, 10, 500, 700, D3DCOLOR_ARGB(250, 250, 250,50));
+
+	if ( m_StartTime && !m_Kill )
 	{		
-		D3DXMATRIX MatrixWorld,MatZ;	
+		D3DXMATRIX MatrixWorld;	
+
 		float      m_Alpha = 1.0f;
-		
+		Update( Camera );
 		D3DXMatrixTranslation( &MatrixWorld, 1.0f, 1.0f, 1.0f );		
 		D3DXMATRIX wvp = MatrixWorld * Camera.m_View * Camera.m_Proj;
 		if ( Shader.m_pConstTableVS )
@@ -141,18 +160,13 @@ bool CException::RenderParticle(  CameraDevice const& Camera, CShader const& Sha
 		m_D3DDevice -> SetTexture( 0, m_TextureExp );
 		// устанавливаем шейдеры
 		m_D3DDevice -> SetVertexShader( Shader.m_pVertexShader );
-		m_D3DDevice -> SetPixelShader(  Shader.m_pPixelShader  );
-
-		char        str[50];
-		sprintf(str, "Start=%d   End=%d   Time=%d", m_StartTime, m_StartTime + m_LifeTime, timeGetTime());		
-		DrawMyText( m_D3DDevice, str, 10, 10, 500, 700, D3DCOLOR_ARGB(250, 250, 250,50));
+		m_D3DDevice -> SetPixelShader(  Shader.m_pPixelShader  );		
 		// вывод примитивов
 		m_D3DDevice -> DrawIndexedPrimitive( D3DPT_TRIANGLELIST, 0, 0, 6 * m_Size, 0, 2 * m_Size );
 
 		if ( timeGetTime() > m_StartTime + m_LifeTime ) 
 			m_Kill = true;		
 	}
-return false;
 }
 
 void CException::Release()
@@ -165,33 +179,3 @@ void CException::Release()
 		m_TextureExp->Release();
 }
 
-
-/*/----------------------------------------------
-
-void CException::Init( IDirect3DDevice9* pD3DDevice, FILE* FileLog )
-{
-	D3DDevice = pD3DDevice;
-	m_Particles.resize( m_Size );	
-
-	for( int i = 0; i < m_Particles.size(); ++i )	
-		m_Particles[i].Initial( D3DDevice, FileLog );	
-}
-
-void CException::RenderParticle( CameraDevice const& Camera, CShader const& Shader )
-{
-  	char        str[50];
-  	sprintf(str, "%d", m_Particles.size() );		
- 	DrawMyText( D3DDevice, str, 10, 10, 500, 700, D3DCOLOR_ARGB(250, 250, 250,50));	
-	if ( m_Particles.empty() )
-		return;
-	for( int i = 0; i < m_Particles.size(); ++i )
-	{
-		
-			m_Particles[i].m_StartTime = m_Time;
-			if ( m_Particles[i].Render( Camera, Shader ) )
-			{
-				m_Particles[i].Release();
-				m_Particles.erase( m_Particles.begin() + i );
-		    }		
-	}
-};*/
