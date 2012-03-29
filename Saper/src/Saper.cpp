@@ -344,28 +344,28 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	
 	if ( SUCCEEDED( g_Direct3D.IntialDirect3D( hwnd ) ) )
 	{
-		g_Mesh[Zero].InitialMesh( "model//0.x" );
-		g_Mesh[One].InitialMesh( "model//1.x" );
-		g_Mesh[Two].InitialMesh( "model//2.x" );
-		g_Mesh[Three].InitialMesh( "model//3.x" );
-		g_Mesh[Four].InitialMesh( "model//4.x" );
-		g_Mesh[Five].InitialMesh( "model//5.x" );
-		g_Mesh[Six].InitialMesh( "model//6.x" );
-		g_Mesh[Seven].InitialMesh( "model//7.x" );
-		g_Mesh[Eight].InitialMesh( "model//8.x" );
-		g_Mesh[Nine].InitialMesh( "model//9.x" );
-		g_Mesh[Empty].InitialMesh( "model//Empty.x" );
-		g_Mesh[Flag].InitialMesh( "model//Flag.x" );
-		g_Mesh[Mine].InitialMesh( "model//Mine.x" );
-		g_Mesh[Stena].InitialMesh(   "model//Stena.x" );
-		g_Mesh[Angle].InitialMesh(   "model//Angle.x" );
-		g_MeshWin.InitialMesh( "model//Win.x" );	
-		g_MeshLost.InitialMesh( "model//Lost.x" );
+		g_Mesh[Zero].InitialMesh( "model\\0.x" );
+		g_Mesh[One].InitialMesh( "model\\1.x" );
+		g_Mesh[Two].InitialMesh( "model\\2.x" );
+		g_Mesh[Three].InitialMesh( "model\\3.x" );
+		g_Mesh[Four].InitialMesh( "model\\4.x" );
+		g_Mesh[Five].InitialMesh( "model\\5.x" );
+		g_Mesh[Six].InitialMesh( "model\\6.x" );
+		g_Mesh[Seven].InitialMesh( "model\\7.x" );
+		g_Mesh[Eight].InitialMesh( "model\\8.x" );
+		g_Mesh[Nine].InitialMesh( "model\\9.x" );
+		g_Mesh[Empty].InitialMesh( "model\\Empty.x" );
+		g_Mesh[Flag].InitialMesh( "model\\Flag.x" );
+		g_Mesh[Mine].InitialMesh( "model\\Mine.x" );
+		g_Mesh[Stena].InitialMesh(   "model\\Stena.x" );
+		g_Mesh[Angle].InitialMesh(   "model\\Angle.x" );
+		g_MeshWin.InitialMesh( "model\\Win.x" );	
+		g_MeshLost.InitialMesh( "model\\Lost.x" );
 		g_Exception.Init( g_pD3DDevice );
 		g_Sky.InitialSky( g_pD3DDevice );
 		g_DeviceInput.InitialInput( hwnd );					
-		g_Diffuse.LoadShader( "shader//Diffuse", g_pD3DDevice );
-		g_ShaderSky.LoadShader( "shader//Sky", g_pD3DDevice );
+		g_Diffuse.LoadShader( "shader\\Diffuse", g_pD3DDevice );
+		g_ShaderSky.LoadShader( "shader\\Sky", g_pD3DDevice );
 		
 		while( !g_Exit )
 		{
@@ -442,7 +442,7 @@ HRESULT CSky:: InitialSky( IDirect3DDevice9* D3DDevice )
 	m_pBufIndexSky -> Unlock(); // разблокирование	
 
 	m_CubeTexture = 0;
-	if ( FAILED( D3DXCreateCubeTextureFromFileEx( m_pD3DDevice, "model//sky_cube_mipmap.dds", D3DX_DEFAULT, D3DX_FROM_FILE, 0, 
+	if ( FAILED( D3DXCreateCubeTextureFromFileEx( m_pD3DDevice, "model\\sky_cube_mipmap.dds", D3DX_DEFAULT, D3DX_FROM_FILE, 0, 
 		D3DFMT_UNKNOWN, D3DPOOL_DEFAULT, D3DX_FILTER_NONE, D3DX_FILTER_NONE, 0, 0, 0, &m_CubeTexture )))
 		Log( "error load sky texture" );
 
