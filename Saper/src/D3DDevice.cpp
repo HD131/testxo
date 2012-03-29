@@ -4,7 +4,7 @@
 IDirect3DDevice9* g_pD3DDevice  = 0; //Наше устройство
 
 
-HRESULT CShader::LoadShader( std::string FileName, IDirect3DDevice9* pD3DDevice, FILE* FileLog )
+HRESULT CShader::LoadShader( std::string FileName, IDirect3DDevice9* pD3DDevice )
 {
 	LPD3DXBUFFER pErrors        = 0;
 	LPD3DXBUFFER pShaderBuff    = 0;
@@ -18,8 +18,8 @@ HRESULT CShader::LoadShader( std::string FileName, IDirect3DDevice9* pD3DDevice,
 	// вертексный шейдер
 	std::string FileNameVS = FileName + std::string( ".vsh" );
 	hr = D3DXCompileShaderFromFile( FileNameVS.c_str(), 0, 0, "main", "vs_2_0", D3DXSHADER_OPTIMIZATION_LEVEL3, &pShaderBuff, &pErrors, &m_pConstTableVS );
-	if ( ( hr != S_OK ) && ( FileLog ) )
-		fprintf( FileLog, "error load shader '%s'\n", FileNameVS.c_str() );
+	if ( hr != S_OK )
+		Log( "error load vertex shader" );
 	if ( pShaderBuff )
 	{
 		pD3DDevice->CreateVertexShader(( DWORD* )pShaderBuff->GetBufferPointer(), &m_pVertexShader );
@@ -28,15 +28,14 @@ HRESULT CShader::LoadShader( std::string FileName, IDirect3DDevice9* pD3DDevice,
 	// пиксельный шейдер
 	std::string FileNamePS = FileName + std::string( ".psh" );
 	hr = D3DXCompileShaderFromFile( FileNamePS.c_str(), 0, 0, "main", "ps_2_0", D3DXSHADER_OPTIMIZATION_LEVEL3, &pShaderBuff, &pErrors, &m_pConstTablePS );
-	if ( ( hr != S_OK ) && ( FileLog ) )
-		fprintf( FileLog, "error load shader '%s'\n", FileNamePS.c_str() );
+	if ( hr != S_OK )
+		Log( "error load pixel shader" );
 	if ( pShaderBuff )
 	{
 		pD3DDevice->CreatePixelShader(( DWORD* )pShaderBuff->GetBufferPointer(), &m_pPixelShader );
 		pShaderBuff -> Release();
 	}
-	if  ( FileLog ) 
-		fprintf( FileLog, "Load shader '%s'\n", FileName.c_str() );
+	Log( "Load shader " );
 	return S_OK;
 }
 
@@ -52,7 +51,7 @@ void CShader::Release()
 		m_pConstTablePS->Release();
 	}
 
-HRESULT CD3DDevice::IntialDirect3D( HWND hwnd , FILE* FileLog)
+HRESULT CD3DDevice::IntialDirect3D( HWND hwnd )
 {
 	m_pDirect3D  = 0;
 	g_pD3DDevice = 0;
@@ -61,8 +60,7 @@ HRESULT CD3DDevice::IntialDirect3D( HWND hwnd , FILE* FileLog)
 
 	if ( ( m_pDirect3D = Direct3DCreate9( D3D_SDK_VERSION ) ) == 0 ) // создаётся главный интерфейс
 		return E_FAIL;	
-	if ( FileLog ) 
-		fprintf( FileLog, "Initial Direct3D\n" );
+	Log( "Initial Direct3D" );
 	if ( FAILED( m_pDirect3D -> GetAdapterDisplayMode( D3DADAPTER_DEFAULT, &Display ) ) ) // получаем текущий формат дисплея
 		return E_FAIL;
 
@@ -77,8 +75,7 @@ HRESULT CD3DDevice::IntialDirect3D( HWND hwnd , FILE* FileLog)
 	if ( FAILED( m_pDirect3D -> CreateDevice( D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, hwnd, D3DCREATE_HARDWARE_VERTEXPROCESSING,
 											  &Direct3DParametr, &g_pD3DDevice ) ) ) // создаётся интерфейс устройства
 		return E_FAIL;
-	if ( FileLog ) 
-		fprintf( FileLog, "Initial CreateDevice Direct3D\n" );
+	Log( "Initial CreateDevice Direct3D" );
 	g_pD3DDevice -> SetRenderState( D3DRS_CULLMODE, D3DCULL_CCW );				//  режим отсечения включено и происходит по часовой стрелке
 	g_pD3DDevice -> SetRenderState( D3DRS_LIGHTING, FALSE );					// запрещается работа со светом
 	g_pD3DDevice -> SetRenderState( D3DRS_ZENABLE, D3DZB_TRUE );				// разрешает использовать Z-буфер
@@ -141,4 +138,14 @@ void Blending( BLEND Blend, IDirect3DDevice9* D3DDevice )
 		D3DDevice->SetRenderState( D3DRS_DESTBLEND, D3DBLEND_ONE );
 		break;
 	}
+}
+
+void Log( char* Str )
+{
+	FILE *FileLog = fopen( "log.txt", "a" );
+	SYSTEMTIME st;
+	GetLocalTime(&st);
+	fprintf( FileLog, "|%d:%d:%d| ", st.wHour, st.wMinute, st.wSecond );
+	fprintf( FileLog, Str );
+	fprintf( FileLog, "\n" );
 }

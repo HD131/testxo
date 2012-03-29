@@ -7,7 +7,7 @@ class CMesh3D
 {
 public:
 	ID3DXMesh*  GetMesh()   { return m_pMesh; }
-	HRESULT		InitialMesh( LPCSTR Name, FILE* FileLog );
+	HRESULT		InitialMesh( LPCSTR Name );
 	void		Release();
 	void		SetMatrixWorld( const D3DXMATRIX& Matrix );
 	void		SetMatrixView( const D3DXMATRIX& Matrix );
