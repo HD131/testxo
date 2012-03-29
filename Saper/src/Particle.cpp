@@ -10,7 +10,7 @@ CParticle::CParticle()
 }
 CException::CException()
 {
-	m_Size = 1;
+	m_Size = 150;
 	m_VertexBuffer = 0; // указатель на буфер вершин
 	m_IndexBuffer  = 0; // указатель на буфер индексов	
 	m_TextureExp   = 0; // указатель на текстуру	
@@ -65,7 +65,7 @@ void CException::Update( CameraDevice const& Camera )
 	void *pBI;
 	D3DXVECTOR3 Vec, Ver, Norm;	
 
-	for ( int i = 0; i < m_Size; ++i )
+	for ( int i = 0; i < m_Particles.size(); ++i )
 	{
 		//-----перемещаем-------------------
 		m_Particles[i].m_Position += m_Particles[i].m_Direct * m_Particles[i].m_Speed;
@@ -106,13 +106,13 @@ void CException::Update( CameraDevice const& Camera )
 	//-----Блокирование буфера вершин------------
 if ( FAILED( m_VertexBuffer->Lock( 0, 0, ( void** )&pBV, 0 ) ) ) 
 		fprintf( m_FileLog, "error lock vertex buffer Explosion\n" );
-	memcpy( pBV, &m_Vershin[0], sizeof( CVertexFVF ) *  m_Vershin.size() * 4 ); // копирование данных о вершинах в буфер вершин
+	memcpy( pBV, &m_Vershin[0], sizeof( CVertexFVF ) *  m_Vershin.size() ); // копирование данных о вершинах в буфер вершин
 	m_VertexBuffer->Unlock(); // разблокирование	
 
 	// Блокирование буфера индексов
 	if ( FAILED( m_IndexBuffer -> Lock( 0, 0, ( void** )&pBI, 0 ) ) ) 
 		fprintf( m_FileLog, "error lock index buffer Explosion\n" );
-	memcpy( pBI, &m_Index[0], sizeof( short ) *  m_Index.size() * 6 ); // копирование данных о вершинах в буфер вершин
+	memcpy( pBI, &m_Index[0], sizeof( short ) *  m_Index.size() ); // копирование данных о вершинах в буфер вершин
 	m_IndexBuffer->Unlock();  // разблокирование	
 }
 
