@@ -4,38 +4,39 @@
 #include "CameraDevice.h"
 #include <vector>
 
-class CParticle
+struct CParticle
 {
-	IDirect3DVertexBuffer9* m_VertexBuffer;
-	IDirect3DIndexBuffer9*  m_IndexBuffer;
-	IDirect3DTexture9*      m_TextureExp;
-	D3DXVECTOR3             m_Position;
-	D3DXVECTOR3             m_Direct;
-	float                   m_Speed;
-	DWORD                   m_LifeTime;	
-	bool					m_Kill;
-	IDirect3DDevice9*       m_D3DDevice;
+	D3DXVECTOR3     m_Position;
+	D3DXVECTOR3     m_Direct;
+	float           m_Speed;
+	bool            m_Kill;
 public:
-	DWORD                   m_StartTime;
-	void  Initial( IDirect3DDevice9* D3DDevice, FILE* FileLog );
-	bool  Render( CameraDevice const& Camera, CShader const& Shader );
-	bool  Kill();
-	void  Release();
+	CParticle();
 };
 
 class CException
 {
-	std::vector<CParticle> m_Part;
-	int					   m_Size;
-	DWORD                  m_Time;
-	IDirect3DDevice9*      D3DDevice;
-
+	IDirect3DVertexBuffer9* 	m_VertexBuffer;
+	IDirect3DIndexBuffer9*  	m_IndexBuffer;
+	IDirect3DTexture9*      	m_TextureExp;
+	std::vector<CParticle>  	m_Particles;
+	int					    	m_Size;
+	DWORD                   	m_LifeTime;
+	DWORD                   	m_StartTime;	
+	IDirect3DDevice9*       	m_D3DDevice;
+	std::vector<CVertexFVF> 	m_Vershin;
+	std::vector<unsigned short> m_Index;
+	FILE*                       m_FileLog;
+	bool                        m_Kill;
 public:
+	CException();
 	void Init( IDirect3DDevice9* D3DDevice, FILE* FileLog );
-	void RenderParticle( CameraDevice const& Camera, CShader const& Shader );
+	void Update( CameraDevice const& Camera );
+	bool RenderParticle( CameraDevice const& Camera, CShader const& Shader );
 	void SetTime( DWORD Time )
 	{ 
-		m_Time = Time; 
+		Time = m_StartTime; 
 		Beep(100,100);
 	}
+	void Release();
 };
