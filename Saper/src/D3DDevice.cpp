@@ -115,3 +115,30 @@ void DrawMyText( IDirect3DDevice9* g_pD3DDevice, char* StrokaTexta, int x, int y
 		pFont->Release();
 }
 
+void Blending( BLEND Blend, IDirect3DDevice9* D3DDevice )
+{
+	switch ( Blend )
+	{
+	case BLEND_DEFAULT:
+		D3DDevice->SetRenderState( D3DRS_ALPHABLENDENABLE, false );
+		break;
+
+	case BLEND_ALPHA:
+		D3DDevice->SetRenderState( D3DRS_ALPHABLENDENABLE, true );
+		D3DDevice->SetRenderState( D3DRS_SRCBLEND,  D3DBLEND_SRCALPHA );
+		D3DDevice->SetRenderState( D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA );
+		break;
+
+	case BLEND_MUL:
+		D3DDevice->SetRenderState( D3DRS_ALPHABLENDENABLE, true );
+		D3DDevice->SetRenderState( D3DRS_SRCBLEND,  D3DBLEND_DESTCOLOR );
+		D3DDevice->SetRenderState( D3DRS_DESTBLEND, D3DBLEND_ZERO );
+		break;
+
+	case BLEND_ADD:
+		D3DDevice->SetRenderState( D3DRS_ALPHABLENDENABLE, true );
+		D3DDevice->SetRenderState( D3DRS_SRCBLEND,  D3DBLEND_ONE );
+		D3DDevice->SetRenderState( D3DRS_DESTBLEND, D3DBLEND_ONE );
+		break;
+	}
+}
