@@ -5,16 +5,16 @@ CParticle::CParticle()
 {
 	m_Position = D3DXVECTOR3( 0, 0, 0 );
 	m_Direct   = D3DXVECTOR3( 0, 0, 0 );
-	m_Speed	   = 0.05f;
+	m_Speed	   = 0.01f;
 	m_Kill     = false;
 }
 CException::CException()
 {
-	m_Size = 150;
+	m_Size = 30;
 	m_VertexBuffer = 0; // указатель на буфер вершин
 	m_IndexBuffer  = 0; // указатель на буфер индексов	
 	m_TextureExp   = 0; // указатель на текстуру	
-	m_LifeTime     = 1000.0f;	
+	m_LifeTime     = 2000.0f;	
 	m_StartTime    = 0;
 	m_Kill         = false;
 	m_FileLog      = 0;
@@ -132,7 +132,7 @@ void CException::SetTime( POINT Point, DWORD Time )
 }
 
 void CException::RenderParticle(  CameraDevice const& Camera, CShader const& Shader )
-{
+{	
 	char        str[50];
 	sprintf(str, "x=%f  y=%f   z=%f", m_Pos.x, m_Pos.y, m_Pos.z );		
 	DrawMyText( m_D3DDevice, str, 10, 10, 500, 700, D3DCOLOR_ARGB(250, 250, 250,50));
@@ -153,6 +153,7 @@ void CException::RenderParticle(  CameraDevice const& Camera, CShader const& Sha
 			Shader.m_pConstTablePS->SetFloat(  m_D3DDevice, "diffuse_intensity", g_Diffuse_intensity );	
 			Shader.m_pConstTablePS->SetFloat(  m_D3DDevice, "Alpha", m_Alpha );	
 		}
+		Blending( BLEND_ADD, m_D3DDevice);
 		// здесь перерисовка сцены	
 		m_D3DDevice -> SetStreamSource(0, m_VertexBuffer, 0, sizeof( CVertexFVF ) ); // связь буфера вершин с потоком данных
 		m_D3DDevice -> SetFVF( D3DFVF_CUSTOMVERTEX ); // устанавливается формат вершин
@@ -167,6 +168,7 @@ void CException::RenderParticle(  CameraDevice const& Camera, CShader const& Sha
 		if ( timeGetTime() > m_StartTime + m_LifeTime ) 
 			m_Kill = true;		
 	}
+	Blending( BLEND_ALPHA, m_D3DDevice);
 }
 
 void CException::Release()

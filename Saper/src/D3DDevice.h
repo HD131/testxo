@@ -27,6 +27,7 @@ const float	g_Diffuse_intensity = 1.0f;
 enum  NameShader { Sky , Diffuse, MaxShader };
 enum  Values { Zero, One, Two, Three, Four, Five, Six, Seven, Eight, Nine, Empty, Flag, Mine, Stena, Angle, MaxMesh, OpenCell };
 enum  Game_State { STATE_PLAY, STATE_WIN, STATE_LOST };
+enum  BLEND { BLEND_DEFAULT, BLEND_ALPHA, BLEND_MUL, BLEND_ADD };
 
 
 #define LEFT_BUTTON   0
@@ -91,5 +92,6 @@ struct CVertexFVF
 };
 
 void DrawMyText( IDirect3DDevice9* g_pD3DDevice, char* StrokaTexta, int x, int y, int x1, int y1, D3DCOLOR MyColor );
+void Blending( BLEND Blend, IDirect3DDevice9* D3DDevice );
 
 
