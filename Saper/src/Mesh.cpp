@@ -6,7 +6,7 @@ extern IDirect3DDevice9* g_pD3DDevice;
 extern CD3DDevice        g_Direct3D;
 extern CShader           g_Diffuse;
 
-HRESULT CMesh3D::InitialMesh(LPCSTR Name, FILE *FileLog )
+HRESULT CMesh3D::InitialMesh( LPCSTR Name )
 {
 	m_pMesh         = 0;
 	m_pMeshMaterial = 0;
@@ -18,8 +18,7 @@ HRESULT CMesh3D::InitialMesh(LPCSTR Name, FILE *FileLog )
 	{
 		if ( m_pMesh == 0 )
 		{		
-			if ( FileLog ) 
-				fprintf( FileLog, "error load x-file '%s'\n", Name );
+			Log( "error load x-file" );
 			return E_FAIL;
 		}
 	}
@@ -50,7 +49,7 @@ HRESULT CMesh3D::InitialMesh(LPCSTR Name, FILE *FileLog )
 			std::string FileName = std::string( "model//" ) + std::string( MaterialMesh[i].pTextureFilename );
 			if ( FAILED( D3DXCreateTextureFromFile( g_pD3DDevice, FileName.c_str(), &Tex )))
 			{
-				fprintf( FileLog, "error load texture '%s'\n", MaterialMesh[i].pTextureFilename );
+				Log( "error load texture Mesh" );
 				m_pMeshTextura.push_back(0);
 			}
 			// Сохраняем загруженную текстуру
@@ -123,17 +122,7 @@ void CMesh3D::Release()
 
 	if ( m_pMeshMaterial )
 		delete[] m_pMeshMaterial;
-	/*
-	if ( m_pMeshTextura )
-	{
-	for ( int i = 1; i < m_TexturCount; ++i )
-	{
-	if ( m_pMeshTextura[i] )
-	m_pMeshTextura[i] -> Release();
-	}
-	delete []m_pMeshTextura;
-	}
-	*/
+	
 	if ( m_pMesh )
 		m_pMesh -> Release();
 }

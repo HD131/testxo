@@ -9,6 +9,6 @@ float4 main(float3 uv     : TEXCOORD0,
 {
     float4 Diffuse = tex2D( SampDif, uv );  
     Diffuse = Diffuse * dot(normal,light) * diffuse_intensity ;
-    Diffuse.a = Alpha;
+    if ( Alpha >= 0 ) Diffuse.a = Alpha;
     return Diffuse;
 }

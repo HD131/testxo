@@ -26,13 +26,12 @@ private:
 	DWORD                   	m_StartTime;	
 	IDirect3DDevice9*       	m_D3DDevice;
 	std::vector<CVertexFVF> 	m_Vershin;
-	std::vector<unsigned short> m_Index;
-	FILE*                       m_FileLog;
+	std::vector<unsigned short> m_Index;	
 	bool                        m_Kill;
 	D3DXVECTOR3                 m_Pos;
 public:
 	CException();
-	void Init( IDirect3DDevice9* D3DDevice, FILE* FileLog );
+	void Init( IDirect3DDevice9* D3DDevice );
 	void Update( CameraDevice const& Camera );
 	void RenderParticle( CameraDevice const& Camera, CShader const& Shader );
 	void SetTime( POINT Point, DWORD Time );

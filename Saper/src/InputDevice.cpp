@@ -9,7 +9,7 @@ bool Pressed = false;
 class CException;
 extern CException   g_Exception;
 
-HRESULT CInputDevice::InitialInput( HWND hwnd, FILE *FileLog )
+HRESULT CInputDevice::InitialInput( HWND hwnd )
 {	
 	m_pInput    = 0;
 	m_pKeyboard = 0;
@@ -24,8 +24,7 @@ HRESULT CInputDevice::InitialInput( HWND hwnd, FILE *FileLog )
 
 	if (FAILED(DirectInput8Create(GetModuleHandle(0), DIRECTINPUT_VERSION, IID_IDirectInput8, (void**)&m_pInput, 0 )))
 		return E_FAIL;
-	if ( FileLog ) 
-		fprintf( FileLog, "Initial DirectInput8\n" );
+	Log( "Initial DirectInput8" );
 
 	if FAILED(m_pInput -> CreateDevice(GUID_SysKeyboard, &m_pKeyboard, 0 )) //создание устройства клавиатура
 		return E_FAIL;

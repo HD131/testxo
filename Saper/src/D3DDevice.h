@@ -36,6 +36,8 @@ enum  BLEND { BLEND_DEFAULT, BLEND_ALPHA, BLEND_MUL, BLEND_ADD };
 #define D3DFVF_CUSTOMVERTEX (D3DFVF_XYZ | D3DFVF_NORMAL | D3DFVF_TEX1)
 #define KEYDOWN(name, key) (name[key]&0x80)
 
+void Log( char* Str );
+
 class CD3DDevice
 {
 public:
@@ -44,7 +46,7 @@ public:
 	IDirect3DVertexShader9* m_pVertexShader[MaxShader];
 	ID3DXConstantTable*     m_pConstTableVS[MaxShader];
 	ID3DXConstantTable*     m_pConstTablePS[MaxShader];	
-	HRESULT                 IntialDirect3D( HWND hwnd, FILE *FileLog );
+	HRESULT                 IntialDirect3D( HWND hwnd );
 	void				    Release();
 };
 
@@ -56,7 +58,7 @@ public:
 	ID3DXConstantTable*     m_pConstTableVS;
 	ID3DXConstantTable*     m_pConstTablePS;
 
-	HRESULT LoadShader( std::string FileName, IDirect3DDevice9* pD3DDevice, FILE* FileLog );
+	HRESULT LoadShader( std::string FileName, IDirect3DDevice9* pD3DDevice );
 	void	Release();
 };
 
