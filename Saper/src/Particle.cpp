@@ -109,7 +109,7 @@ void CException::RenderParticle(  CameraDevice const& Camera, CShader const& Sha
 {	
 	char        str[50];
 	sprintf(str, "x=%f  y=%f   z=%f", Camera.TargetDir.x, Camera.TargetDir.y, Camera.TargetDir.z );		
-	DrawMyText( m_D3DDevice, str, 10, 10, 500, 700, D3DCOLOR_ARGB(250, 250, 250,50));
+	//DrawMyText( m_D3DDevice, str, 10, 10, 500, 700, D3DCOLOR_ARGB(250, 250, 250,50));
 
 	if ( m_StartTime && !m_Kill )
 	{		
