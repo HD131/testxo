@@ -90,7 +90,7 @@ bool CInputDevice::ScanInput( CameraDevice *m_Camera, CCell *Cell, int* Field )
 			if ( Cell[Point.x*MaxField+Point.y].m_Value == Mine )
 			{
 				Field[Point.x*MaxField+Point.y] = OpenCell;
-				g_Exception.SetTime( timeGetTime() ); 
+				g_Exception.SetTime( Point, timeGetTime() ); 
 				return true;
 			}
 			 

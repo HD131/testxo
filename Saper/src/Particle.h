@@ -29,15 +29,12 @@ private:
 	std::vector<unsigned short> m_Index;
 	FILE*                       m_FileLog;
 	bool                        m_Kill;
+	D3DXVECTOR3                 m_Pos;
 public:
 	CException();
 	void Init( IDirect3DDevice9* D3DDevice, FILE* FileLog );
 	void Update( CameraDevice const& Camera );
-	bool RenderParticle( CameraDevice const& Camera, CShader const& Shader );
-	void SetTime( DWORD Time )
-	{ 
-		Time = m_StartTime; 
-		Beep(100,100);
-	}
+	void RenderParticle( CameraDevice const& Camera, CShader const& Shader );
+	void SetTime( POINT Point, DWORD Time );
 	void Release();
 };
