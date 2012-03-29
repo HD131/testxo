@@ -46,7 +46,7 @@ void CException::Init( IDirect3DDevice9* D3DDevice )
 		m_Particles[i].m_Direct = D3DXVECTOR3( rand()/float(RAND_MAX)*2-1, 0, rand()/float(RAND_MAX)*2-1 );		
 		D3DXVec3Normalize( &m_Particles[i].m_Direct, &m_Particles[i].m_Direct );		
 	}
-	std::string FileName = "model//Explosion.tga";
+	std::string FileName = "model\\Explosion.tga";
 	//------загружаем текстуру-----
 	if ( FAILED( D3DXCreateTextureFromFile( m_D3DDevice, FileName.c_str(), &m_TextureExp )))	
 		Log( "error load texture Exception" );	

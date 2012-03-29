@@ -46,7 +46,7 @@ HRESULT CMesh3D::InitialMesh( LPCSTR Name )
 		if( MaterialMesh[i].pTextureFilename != 0 )
 		{		
 			IDirect3DTexture9* Tex = 0;
-			std::string FileName = std::string( "model//" ) + std::string( MaterialMesh[i].pTextureFilename );
+			std::string FileName = std::string( "model\\" ) + std::string( MaterialMesh[i].pTextureFilename );
 			if ( FAILED( D3DXCreateTextureFromFile( g_pD3DDevice, FileName.c_str(), &Tex )))
 			{
 				Log( "error load texture Mesh" );
