@@ -8,7 +8,7 @@ CField::CField( int Size )
 	for ( y = 0; y < Size; ++y )
 		for ( x = 0; x < Size; ++x )
 		{
-			m_Cell[x*Size+y].SetCenter(  y - int((Size-1)/2) , 0 ,x - int((Size-1)/2));	
+			m_Cell[x*Size+y].SetCenter(  x - int((Size-1)/2) , 0 ,y - int((Size-1)/2));	
 			m_Cell[x*Size+y].m_Value = Empty;
 			m_Field[x*Size+y]        = Empty;
 		}

@@ -70,7 +70,8 @@ void CException::Update( CameraDevice const& Camera )
 			//-----заполняем данными о вершине-----		
 			D3DXVec3Cross( &Norm, &Camera.CameraUp, &Camera.DirX );			
 			D3DXVec3Normalize( &Norm, &Norm );
-			
+			Norm = -Camera.TargetDir;
+
 			Ver = m_Particles[i].m_Position - Camera.CameraUp + Camera.DirX;		
 			m_Vershin[i*4+0] = CVertexFVF( Ver.x, Ver.y, Ver.z, Norm.x,  Norm.y, Norm.z, 1.0f, 1.0f ); // 0
 
@@ -108,8 +109,8 @@ void CException::Update( CameraDevice const& Camera )
 void CException::RenderParticle(  CameraDevice const& Camera, CShader const& Shader )
 {	
 	char        str[50];
-	sprintf(str, "x=%f  y=%f   z=%f", Camera.TargetDir.x, Camera.TargetDir.y, Camera.TargetDir.z );		
-	//DrawMyText( m_D3DDevice, str, 10, 10, 500, 700, D3DCOLOR_ARGB(250, 250, 250,50));
+	sprintf(str, "x=%f  y=%f   z=%f", Camera.DirX.x, Camera.DirX.y, Camera.DirX.z );		
+	DrawMyText( m_D3DDevice, str, 10, 10, 500, 700, D3DCOLOR_ARGB(250, 250, 250,50));
 
 	if ( m_StartTime && !m_Kill )
 	{		
@@ -146,7 +147,7 @@ void CException::RenderParticle(  CameraDevice const& Camera, CShader const& Sha
 void CException::SetTime( POINT Point, DWORD Time )
 { 
 	m_StartTime = Time; 
-	m_Pos = D3DXVECTOR3( Point.y - int( MaxField / 2 ), 0, Point.x - int( MaxField / 2 ) );
+	m_Pos = D3DXVECTOR3( Point.x - int( MaxField / 2 ), 0, Point.y - int( MaxField / 2 ) );
 	for ( int i = 0; i < m_Particles.size(); ++i )
 		m_Particles[i].m_Position = m_Pos;
 	Beep(100,100);
