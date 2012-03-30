@@ -239,21 +239,19 @@ void RenderingDirect3D( CCell* Cell, int* Field, IDirect3DDevice9* D3DDevice )
 		switch ( GameOverCheck( Cell, Field ) )
 		{
 		case STATE_WIN:
-			D3DXMatrixRotationY( &MatrixWorldY, -D3DX_PI / 2 );
-			D3DXMatrixRotationZ( &MatrixWorld, D3DX_PI / 2 );
+			D3DXMatrixRotationX( &MatrixWorldY, D3DX_PI / 2 );
 			D3DXMatrixScaling( &MatrixWorldX, 0.2f, 0.2f, 0.2f );
-			MatrixWorld = MatrixWorldY * MatrixWorld * MatrixWorldX;
-			D3DXMatrixTranslation( &MatrixWorldY, MaxField - 2, 0, 1 );
-			MatrixWorld = MatrixWorld * MatrixWorldY;		
+			MatrixWorld = MatrixWorldY * MatrixWorldX;
+			D3DXMatrixTranslation( &MatrixWorldY, 1.0f, 0.0f, -MaxField + 3 );
+			MatrixWorld = MatrixWorld * MatrixWorldY;	
 			g_MeshWin.RenderMesh( g_Camera, MatrixWorld, g_Diffuse );
 			break;
 		case STATE_LOST:
-			D3DXMatrixRotationY( &MatrixWorldY, -D3DX_PI / 2 );
-			D3DXMatrixRotationZ( &MatrixWorld, D3DX_PI / 2 );
+			D3DXMatrixRotationX( &MatrixWorldY, D3DX_PI / 2 );
 			D3DXMatrixScaling( &MatrixWorldX, 0.2f, 0.2f, 0.2f );
-			MatrixWorld = MatrixWorldY * MatrixWorld * MatrixWorldX;
-			D3DXMatrixTranslation( &MatrixWorldY, MaxField - 2, 0, 0.5f );
-			MatrixWorld = MatrixWorld * MatrixWorldY;
+  			MatrixWorld = MatrixWorldY * MatrixWorldX;
+  			D3DXMatrixTranslation( &MatrixWorldY, 0.5f, 0.0f, -MaxField + 3 );
+  			MatrixWorld = MatrixWorld * MatrixWorldY;
 			g_MeshLost.RenderMesh( g_Camera, MatrixWorld, g_Diffuse );
 			break;
 		}
@@ -274,8 +272,8 @@ void RenderingDirect3D( CCell* Cell, int* Field, IDirect3DDevice9* D3DDevice )
 				Tens = 0;
 			if ( Units < 0 )
 				Tens = 0;
-			g_Mesh[ Units ].RenderMesh( g_Camera, MatWorld( t + 0.5f, 0, 1 - t, 0 ), g_Diffuse );
-			g_Mesh[ Tens ].RenderMesh( g_Camera, MatWorld( t, 0, 1 - t, 0 ), g_Diffuse );
+			g_Mesh[ Units ].RenderMesh( g_Camera, MatWorld(  t + 0.8f, 0.0f, MaxField + 2, 0 ), g_Diffuse );
+			g_Mesh[ Tens ].RenderMesh( g_Camera,  MatWorld(  t + 0.2f, 0.0f, MaxField + 2, 0 ), g_Diffuse );
 			
 		}
 		//-----------------Particle--------------------
