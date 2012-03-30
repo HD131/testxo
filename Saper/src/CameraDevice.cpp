@@ -3,9 +3,9 @@
 CameraDevice::CameraDevice()
 {
 	PositionCamera	= D3DXVECTOR3( 0, 25, 0 );
-	CameraUp		= D3DXVECTOR3( -1, 0, 0 );
+	CameraUp		= D3DXVECTOR3( 0, 0, 1 );
 	TargetDir		= D3DXVECTOR3( 0, -1, 0 );
-	DirX		    = D3DXVECTOR3( 0, 0, 1 );
+	DirX		    = D3DXVECTOR3( 1, 0, 0 );
 	Point		    = D3DXVECTOR3( 0, 0, 0 );
 	D3DXMatrixLookAtLH( &m_View, &PositionCamera, &Point, &CameraUp );
 	D3DXMatrixPerspectiveFovLH(&m_Proj, D3DX_PI / 4, (FLOAT)Width / Height, 1.0f, 3000.0f);
@@ -18,9 +18,11 @@ void CameraDevice::Refresh()
 {
 	TargetDir = Point - PositionCamera;
 	D3DXVec3Normalize( &TargetDir, &TargetDir );
-	D3DXVec3Cross(&DirX, &TargetDir, &CameraUp);
+
+	D3DXVec3Cross(&DirX, &CameraUp, &TargetDir);
 	D3DXVec3Normalize( &DirX, &DirX );
-	D3DXVec3Cross(&CameraUp, &DirX, &TargetDir);
+
+	D3DXVec3Cross(&CameraUp, &TargetDir, &DirX);
 	D3DXVec3Normalize( &CameraUp, &CameraUp );
 }
 
@@ -41,14 +43,14 @@ void CameraDevice::MoveBack()
 void CameraDevice::MoveRight()
 {
 	Refresh();
-	PositionCamera -= DirX * StepCamera;
+	PositionCamera += DirX * StepCamera;
 	D3DXMatrixLookAtLH( &m_View, &PositionCamera, &Point, &CameraUp );
 }
 
 void CameraDevice::MoveLeft()
 {
 	Refresh();
-	PositionCamera += DirX * StepCamera;
+	PositionCamera += DirX * -StepCamera;
 	D3DXMatrixLookAtLH( &m_View, &PositionCamera, &Point, &CameraUp );
 }
 
