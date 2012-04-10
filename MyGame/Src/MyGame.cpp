@@ -2,6 +2,7 @@
 #include "CameraDevice.h"
 #include "InputDevice.h"
 #include "Mesh.h"
+#include "Weapon.h"
 #include <vector>
 
 extern IDirect3DDevice9* g_pD3DDevice;
@@ -43,18 +44,24 @@ CD3DDevice   g_Direct3D;
 CInputDevice g_DeviceInput;
 CSky         g_Sky;
 CText        g_Text;
-CMesh3D      g_MeshA;
 CMesh3D      g_Mesh[MaxMesh];
-CMesh3D      g_MeshS;
-CMesh3D		 g_MeshWin;
-CMesh3D		 g_MeshLost;
 CShader      g_Shader[MaxShader];
 CameraDevice g_Camera;
 bool         g_Exit      = false;
 bool		 g_Wireframe = false;
+CWeapon*     g_Weapon[MaxWeapon];
 
+void InitWeapon( IDirect3DDevice9* pD3DDevice )
+{
+	g_Weapon[M16]  = new CAutomatic_M16(  "model\\M16.x", pD3DDevice );
+	g_Weapon[AK47] = new CAutomatic_AK47( "model\\M16.x", pD3DDevice );
+}
 
-
+void DeleteWeapon()
+{
+	for ( int i = 0; i < MaxWeapon; ++i )
+		delete g_Weapon[i];
+}
 
 POINT PickObject( CCell* Cell )
 {
@@ -126,10 +133,8 @@ POINT PickObject( CCell* Cell )
 				}
 			}
 		}	
-		return NumObject[0];
+return NumObject[0];
 }
-
-
 
 void RenderingDirect3D( IDirect3DDevice9* D3DDevice )
 {
@@ -155,7 +160,9 @@ void RenderingDirect3D( IDirect3DDevice9* D3DDevice )
 	//-------------------------------------- 
 	float sc = 0.01f;
 	D3DXMatrixScaling( &MatrixWorld, sc, sc, sc );
-	g_Mesh[Pers].RenderMesh( g_Camera, MatrixWorld, g_Shader[Diffuse] );
+	//g_Mesh[Pers].RenderMesh( g_Camera, MatrixWorld, g_Shader[Diffuse] );
+	g_Weapon[M16]->RenderWeapon( g_Camera, MatrixWorld, g_Shader[Diffuse] );
+
 	//------------------------------------------Render Text----------------------------------------
 	int a = timeGetTime() % 100000;
 	g_Text.RenderInt( a, g_Shader[Text] );
@@ -221,13 +228,14 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance,
 		250, 150, Width, Height, 0, 0, hInstance, 0 );	
 	ShowWindow( hwnd, nCmdShow );
 	ZeroMemory( &Msg, sizeof( MSG ) );
-
+	
 	if ( SUCCEEDED( g_Direct3D.IntialDirect3D( hwnd ) ) )
 	{		
 		g_Sky.InitialSky( g_pD3DDevice );
 		g_Text.Init( g_pD3DDevice );
-		g_DeviceInput.InitialInput( hwnd );	
-		g_Mesh[Pers].InitialMesh( "model\\M16.x" );
+		g_DeviceInput.InitialInput( hwnd );
+		InitWeapon( g_pD3DDevice );
+		//g_Mesh[Pers].InitialMesh( "model\\M16.x", g_pD3DDevice );
 		
 		g_Shader[  Sky  ].LoadShader( "shader\\Sky", g_pD3DDevice );
 		g_Shader[Diffuse].LoadShader( "shader\\Diffuse", g_pD3DDevice );
@@ -244,6 +252,7 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance,
 			}
 		}		
 	}
+	DeleteWeapon();
 	for (int i = 0; i < MaxShader; ++i)
 		g_Shader[i].Release();
 
