@@ -1,0 +1,11 @@
+|17:15:13| Begin
+|17:15:13| Initial Direct3D
+|17:15:13| Initial CreateDevice Direct3D
+|17:15:13| Init Sky 
+|17:15:13| Init Text 
+|17:15:13| Initial DirectInput8
+|17:15:13| Load x-file
+|17:15:13| Load shader 
+|17:15:13| Load shader 
+|17:15:14| Load shader 
+|17:15:30| End
