@@ -24,7 +24,7 @@ const int  MaxMine				= 13;
 const D3DXVECTOR4 g_Light       = D3DXVECTOR4( 0.0f, 1.0f, -1.0f, 1.0f );
 const float	g_Diffuse_intensity = 1.0f;
 
-enum  NameShader { Sky , Diffuse, Text, MaxShader };
+enum  NameShader { Sky , Diffuse, Text, FlatImage, MaxShader };
 enum  Mesh { Pers, MaxMesh };
 enum  Game_State { STATE_PLAY, STATE_WIN, STATE_LOST };
 enum  BLEND { BLEND_DEFAULT, BLEND_ALPHA, BLEND_MUL, BLEND_ADD };

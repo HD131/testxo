@@ -54,7 +54,7 @@ CWeapon*     g_Weapon[MaxWeapon];
 void InitWeapon( IDirect3DDevice9* pD3DDevice )
 {
 	g_Weapon[M16]  = new CAutomatic_M16(  "model\\M16.x", pD3DDevice );
-	g_Weapon[AK47] = new CAutomatic_AK47( "model\\M16.x", pD3DDevice );
+	g_Weapon[AK47] = new CAutomatic_AK47( "model\\AK47.x", pD3DDevice );
 }
 
 void DeleteWeapon()
@@ -158,14 +158,15 @@ void RenderingDirect3D( IDirect3DDevice9* D3DDevice )
 	//------------------------------------------Render Sky----------------------------------------
 	g_Sky.RenderSky( g_Camera, g_Shader[Sky] );
 	//-------------------------------------- 
-	float sc = 0.01f;
-	D3DXMatrixScaling( &MatrixWorld, sc, sc, sc );
+	
 	//g_Mesh[Pers].RenderMesh( g_Camera, MatrixWorld, g_Shader[Diffuse] );
-	g_Weapon[M16]->RenderWeapon( g_Camera, MatrixWorld, g_Shader[Diffuse] );
+	int Avto = M16;
+	g_Weapon[Avto]->RenderWeapon( g_Camera, g_Shader[Diffuse] );
+	g_Weapon[AK47]->RenderWeapon( g_Camera, g_Shader[Diffuse] );
 
 	//------------------------------------------Render Text----------------------------------------
-	int a = timeGetTime() % 100000;
-	g_Text.RenderInt( a, g_Shader[Text] );
+	//int a = timeGetTime() % 100000;
+	g_Text.RenderInt( g_Weapon[Avto]->GetChargerBullet(), g_Shader[Text] );
 	
 
 	char        str[50];
@@ -191,20 +192,7 @@ LONG WINAPI WndProc( HWND hwnd, UINT Message, WPARAM wparam, LPARAM lparam )
 		break;
 	}
 	return DefWindowProc( hwnd, Message, wparam, lparam );
-}  
-
-void Init( int& F, int& M )
-{
-	FILE *File = fopen( "Init.txt", "r" );
-
-	while ( !feof( File ) )
-	{
-		fscanf( File,"%d",&F);
-		fscanf( File,"%d",&M);
-	}
-
-	fclose(  File );
-}
+} 
 
 int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance,
 				   LPSTR     lpCmdLine, int       nCmdShow)
@@ -240,7 +228,7 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance,
 		g_Shader[  Sky  ].LoadShader( "shader\\Sky", g_pD3DDevice );
 		g_Shader[Diffuse].LoadShader( "shader\\Diffuse", g_pD3DDevice );
 		g_Shader[  Text ].LoadShader( "shader\\Text", g_pD3DDevice );
-
+		g_Shader[FlatImage].LoadShader( "shader\\FlatImage", g_pD3DDevice );
 		while( !g_Exit )
 		{
 			g_DeviceInput.ScanInput( &g_Camera );				

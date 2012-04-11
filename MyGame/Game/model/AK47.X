@@ -130,7 +130,7 @@ Material PDX08_-_Default {
  0.000000;0.000000;0.000000;;
 
  TextureFilename {
-  "TexturaUV.jpg";
+  "Win.jpg";
  }
 }
 
