@@ -1,6 +1,6 @@
 #pragma once
 #include "Mesh.h"
-#include "CameraDevice.h"
+#include "Init.h"
 
 enum Weapon { M16, AK47, MaxWeapon };
 

@@ -2,9 +2,9 @@
 #include "Mesh.h"
 #include "CameraDevice.h"
 
-//extern IDirect3DDevice9* g_pD3DDevice;
+
 extern CD3DDevice        g_Direct3D;
-extern CShader           g_Diffuse;
+
 
 HRESULT CMesh3D::InitialMesh( LPCSTR Name, IDirect3DDevice9* pD3DDevice )
 {

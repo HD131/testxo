@@ -1,6 +1,5 @@
 sampler SampDif :register( s0 );
 float  diffuse_intensity;
-float num;
 
 float4 main( float2 uv : TEXCOORD0 ):COLOR0
 {

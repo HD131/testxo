@@ -2,43 +2,14 @@
 #include "CameraDevice.h"
 #include "InputDevice.h"
 #include "Mesh.h"
+#include "Sky.h"
 #include "Weapon.h"
+#include "Text.h"
 #include <vector>
 
 extern IDirect3DDevice9* g_pD3DDevice;
 
-struct CSky
-{
-	IDirect3DVertexBuffer9* m_pVerBufSky;
-	IDirect3DIndexBuffer9*  m_pBufIndexSky;
-	IDirect3DCubeTexture9*  m_CubeTexture;	
-	IDirect3DDevice9*       m_pD3DDevice;
-	HRESULT                 InitialSky( IDirect3DDevice9* D3DDevice );
-	void                    RenderSky( CameraDevice const& Camera, CShader const& Shader );
-	void                    Release();
-};
 
-struct CText
-{
-	struct CVertexPT
-	{
-		FLOAT x,   y,  z;
-		FLOAT u, v;
-		CVertexPT()
-		{	}
-		CVertexPT( float X, float Y, float Z, float U, float V ) : x(X), y(Y), z(Z), u(U), v(V)
-		{	}
-	};
-	IDirect3DVertexBuffer9* m_pVerBuf;
-	IDirect3DIndexBuffer9*  m_pIndexBuf;
-	IDirect3DDevice9*       m_pD3DDevice;
-	IDirect3DTexture9*      m_Texture;	
-	HRESULT                 Init( IDirect3DDevice9* D3DDevice );
-	void                    Render( CShader const& Shader, const D3DXMATRIX&  MatrixWorldTrans, int Num );
-	void                    RenderInt( int Number, CShader const& Shader );
-	void                    Release();
-   ~CText();
-};
 
 CD3DDevice   g_Direct3D;
 CInputDevice g_DeviceInput;
@@ -50,6 +21,7 @@ CameraDevice g_Camera;
 bool         g_Exit      = false;
 bool		 g_Wireframe = false;
 CWeapon*     g_Weapon[MaxWeapon];
+byte         Avtomat = M16;
 
 void InitWeapon( IDirect3DDevice9* pD3DDevice )
 {
@@ -157,21 +129,20 @@ void RenderingDirect3D( IDirect3DDevice9* D3DDevice )
 	D3DDevice->BeginScene(); 
 	//------------------------------------------Render Sky----------------------------------------
 	g_Sky.RenderSky( g_Camera, g_Shader[Sky] );
-	//-------------------------------------- 
-	
-	//g_Mesh[Pers].RenderMesh( g_Camera, MatrixWorld, g_Shader[Diffuse] );
-	int Avto = M16;
-	g_Weapon[Avto]->RenderWeapon( g_Camera, g_Shader[Diffuse] );
-	g_Weapon[AK47]->RenderWeapon( g_Camera, g_Shader[Diffuse] );
-
+	//------------------------------------------Render Weapon----------------------------------------	
+	//g_Mesh[Pers].RenderMesh( g_Camera, MatrixWorld, g_Shader[Diffuse] );	
+	g_Weapon[Avtomat]->RenderWeapon( g_Camera, g_Shader[Diffuse] );
 	//------------------------------------------Render Text----------------------------------------
 	//int a = timeGetTime() % 100000;
-	g_Text.RenderInt( g_Weapon[Avto]->GetChargerBullet(), g_Shader[Text] );
+	g_Text.RenderInt( g_Weapon[Avtomat]->GetChargerBullet(), g_Shader[Text] );
+	//------------------------------------------Render Target----------------------------------------
+	D3DXMatrixTranslation( &MatrixWorld, 0, 0, 0 );
+	g_Text.RenderImage( g_Shader[FlatImage], 0.02f, MatrixWorld );
 	
 
-	char        str[50];
-	sprintf(str, "x=%f  y=%f   z=%f", g_Camera.DirX.x, g_Camera.DirX.y, g_Camera.DirX.z );		
-	//DrawMyText( D3DDevice, str, 10, 10, 500, 700, D3DCOLOR_ARGB(250, 250, 250,50));
+// 	char        str[50];
+// 	sprintf(str, "x=%f  y=%f   z=%f", g_Camera.DirX.x, g_Camera.DirX.y, g_Camera.DirX.z );		
+// 	DrawMyText( D3DDevice, str, 10, 10, 500, 700, D3DCOLOR_ARGB(250, 250, 250,50));
 
 	D3DDevice -> EndScene();
 	D3DDevice -> Present( 0, 0, 0, 0 ); // вывод содержимого заднего буфера в окно
@@ -189,6 +160,10 @@ LONG WINAPI WndProc( HWND hwnd, UINT Message, WPARAM wparam, LPARAM lparam )
 			g_Exit = true;		
 		if ( wparam == VK_F4 )
 			g_Wireframe = !g_Wireframe;
+		if ( wparam == VK_F6 )
+			Avtomat = M16;
+		if ( wparam == VK_F5 )
+			Avtomat = AK47;
 		break;
 	}
 	return DefWindowProc( hwnd, Message, wparam, lparam );
@@ -256,210 +231,3 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance,
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------
-
-HRESULT CSky::InitialSky( IDirect3DDevice9* D3DDevice )
-{
-	void *pBV;
-	void *pBI;
-	if ( !D3DDevice )
-	{
-		Log( "error init sky " );
-		return E_FAIL;
-	}
-	m_pD3DDevice = D3DDevice;
-	m_pVerBufSky   = 0; // указатель на буфер вершин
-	m_pBufIndexSky = 0; // указатель на буфер вершин
-
-	CVertexFVF SkyVershin[4];
-
-	SkyVershin[0] = CVertexFVF(  1.0f, -1.0f, 0.0f, 0.0f,  0.0f, -1.0f, 1.0f, 1.0f ); // 0
-	SkyVershin[1] = CVertexFVF( -1.0f, -1.0f, 0.0f, 0.0f,  0.0f, -1.0f, 0.0f, 1.0f ); // 1	
-	SkyVershin[2] = CVertexFVF( -1.0f,  1.0f, 0.0f, 0.0f,  0.0f, -1.0f, 0.0f, 0.0f ); // 2		
-	SkyVershin[3] = CVertexFVF(  1.0f,  1.0f, 0.0f, 0.0f,  0.0f, -1.0f, 1.0f, 0.0f ); // 3
-	// X        Y     Z    nx    ny    nz     tu    tv
-
-	const unsigned short SkyIndex[] =
-	{
-		0,1,2,    2,3,0,		
-	};
-	if ( FAILED( m_pD3DDevice -> CreateVertexBuffer( 4 * sizeof( CVertexFVF ), 0, D3DFVF_CUSTOMVERTEX, D3DPOOL_DEFAULT, &m_pVerBufSky, 0 ) ) ) // создаём буфер вершин		
-		return E_FAIL;
-	if ( FAILED( m_pVerBufSky -> Lock( 0, sizeof( SkyVershin ), ( void** )&pBV, 0 ) ) ) // Блокирование
-		return E_FAIL; 
-	memcpy( pBV, SkyVershin, sizeof( SkyVershin ) ); // копирование данных о вершинах в буфер вершин
-	m_pVerBufSky -> Unlock(); // разблокирование
-
-	if ( FAILED( m_pD3DDevice -> CreateIndexBuffer( 6 * sizeof( short ), 0, D3DFMT_INDEX16,         // создаём буфер вершин
-		D3DPOOL_DEFAULT, &m_pBufIndexSky, 0 ) ) )
-		return E_FAIL;
-	if ( FAILED( m_pBufIndexSky -> Lock( 0, sizeof( SkyIndex ), ( void** )&pBI, 0 ) ) ) // Блокирование
-		return E_FAIL; 
-	memcpy( pBI, SkyIndex, sizeof( SkyIndex ) ); // копирование данных о вершинах в буфер вершин
-	m_pBufIndexSky -> Unlock(); // разблокирование	
-
-	m_CubeTexture = 0;
-	if ( FAILED( D3DXCreateCubeTextureFromFileEx( m_pD3DDevice, "model\\sky_cube_mipmap.dds", D3DX_DEFAULT, D3DX_FROM_FILE, 0, 
-		D3DFMT_UNKNOWN, D3DPOOL_DEFAULT, D3DX_FILTER_NONE, D3DX_FILTER_NONE, 0, 0, 0, &m_CubeTexture )))
-		Log( "error load sky texture" );
-	Log( "Init Sky " );
-return S_OK;
-}
-
-void CSky::RenderSky( CameraDevice const& Camera, CShader const& Shader )
-{
-	const D3DXVECTOR4 Scale( tan( D3DX_PI / 8 * (FLOAT)Height / Width), tan( D3DX_PI / 8 * (FLOAT)Height / Width  ), 1.0f, 1.0f );
-
-	m_pD3DDevice -> SetRenderState(  D3DRS_ZENABLE, false );
-	m_pD3DDevice -> SetSamplerState( 0, D3DSAMP_ADDRESSU, D3DTADDRESS_CLAMP ); 
-	m_pD3DDevice -> SetSamplerState( 0, D3DSAMP_ADDRESSV, D3DTADDRESS_CLAMP ); 
-	m_pD3DDevice -> SetSamplerState( 0, D3DSAMP_ADDRESSW, D3DTADDRESS_CLAMP ); 
-	D3DXMATRIX MatrixWorld;
-	D3DXMatrixTranslation( &MatrixWorld, 1.0f, 1.0f, 1.0f );
-	D3DXMATRIX tmp = MatrixWorld * Camera.m_View * Camera.m_Proj;
-	if ( Shader.m_pConstTableVS )
-	{
-		Shader.m_pConstTableVS->SetMatrix( m_pD3DDevice, "mat_mvp",   &tmp );
-		Shader.m_pConstTableVS->SetVector( m_pD3DDevice, "vec_light", &g_Light );
-		Shader.m_pConstTableVS->SetVector( m_pD3DDevice, "scale",     &Scale );
-		Shader.m_pConstTableVS->SetMatrix( m_pD3DDevice, "mat_view",  &Camera.m_View );
-	}
-	// здесь перерисовка сцены	
-	m_pD3DDevice -> SetStreamSource(0, m_pVerBufSky, 0, sizeof( CVertexFVF ) ); // связь буфера вершин с потоком данных
-	m_pD3DDevice -> SetFVF( D3DFVF_CUSTOMVERTEX ); // устанавливается формат вершин
-	m_pD3DDevice -> SetIndices( m_pBufIndexSky );
-	m_pD3DDevice -> SetTexture( 0, m_CubeTexture );
-	// устанавливаем шейдеры
-	m_pD3DDevice -> SetVertexShader( Shader.m_pVertexShader );
-	m_pD3DDevice -> SetPixelShader(  Shader.m_pPixelShader  );
-	// вывод примитивов
-	m_pD3DDevice -> DrawIndexedPrimitive( D3DPT_TRIANGLELIST, 0, 0, 6, 0, 2 );
-
-	m_pD3DDevice -> SetSamplerState( 0, D3DSAMP_ADDRESSU, D3DTADDRESS_WRAP );
-	m_pD3DDevice -> SetSamplerState( 0, D3DSAMP_ADDRESSV, D3DTADDRESS_WRAP );
-	m_pD3DDevice -> SetSamplerState( 0, D3DSAMP_ADDRESSW, D3DTADDRESS_WRAP );
-	m_pD3DDevice -> SetRenderState(  D3DRS_ZENABLE, true );
-}
-
-void CSky::Release()
-{
-	if ( m_pBufIndexSky )
-		m_pBufIndexSky -> Release();
-	if ( m_pVerBufSky )
-		m_pVerBufSky -> Release();
-	if ( m_CubeTexture )
-		m_CubeTexture -> Release();
-}
-
-
-HRESULT CText::Init( IDirect3DDevice9* D3DDevice )
-{
-	
-	void *pp;
-	if ( !D3DDevice )
-	{
-		Log( "error init Text " );
-		return E_FAIL;
-	}
-	m_pD3DDevice = D3DDevice;
-	m_pVerBuf   = 0; // указатель на буфер вершин
-	m_pIndexBuf = 0; // указатель на буфер вершин
-
-	CVertexPT Vershin[4];
-
-	Vershin[0] = CVertexPT(  1.0f, -1.0f, 0.0f, 1.0f, 1.0f ); // 0
-	Vershin[1] = CVertexPT( -1.0f, -1.0f, 0.0f, 0.0f, 1.0f ); // 1	
-	Vershin[2] = CVertexPT( -1.0f,  1.0f, 0.0f, 0.0f, 0.0f ); // 2		
-	Vershin[3] = CVertexPT(  1.0f,  1.0f, 0.0f, 1.0f, 0.0f ); // 3
-	                       // X      Y     Z     tu    tv
-
-	const unsigned short Index[] =
-	{
-		0,1,2,    2,3,0,		
-	};
-	
-	if ( FAILED( m_pD3DDevice -> CreateVertexBuffer( 4 * sizeof( CVertexPT ), 0, D3DFVF_CUSTOMVERTEX, D3DPOOL_DEFAULT, &m_pVerBuf, 0 ) ) ) // создаём буфер вершин		
-		return E_FAIL;
-	if ( FAILED( m_pVerBuf->Lock( 0, 0, ( void** )&pp, 0 ) ) ) 
-		Log( "error lock vertex buffer Text" );
-	memcpy( pp, Vershin, sizeof( Vershin )  ); // копирование данных о вершинах в буфер вершин
-	m_pVerBuf->Unlock(); // разблокирование	
-	
-	if ( FAILED( m_pD3DDevice -> CreateIndexBuffer( 6 * sizeof( short ), 0, D3DFMT_INDEX16,	D3DPOOL_DEFAULT, &m_pIndexBuf, 0 ) ) )
-		return E_FAIL;
-	if ( FAILED( m_pIndexBuf -> Lock( 0, sizeof( Index ), ( void** )&pp, 0 ) ) ) // Блокирование
-		return E_FAIL; 
-	memcpy( pp, Index, sizeof( Index ) ); // копирование данных о вершинах в буфер вершин
-	m_pIndexBuf -> Unlock(); // разблокирование
-
-	if ( FAILED( D3DXCreateTextureFromFile( m_pD3DDevice, "model\\Number.png", &m_Texture ) ) )
-		Log( "error load target texture" );
-
-	Log( "Init Text " );
-return S_OK;
-}
-
-void CText::RenderInt( int Number, CShader const& Shader )
-{
-	D3DXMATRIX MatrixWorldTrans; 
-	char str[20];
-	itoa( Number, str, 10);
-	for ( int i = 0; i < strlen(str); ++i )
-	{
-		D3DXMatrixTranslation( &MatrixWorldTrans, -0.95f + i * 0.07f, -0.9f, 0 );		
-		Render( Shader, MatrixWorldTrans, int(str[i]) - 48 );
-	}
-
-}
-
-void CText::Render( CShader const& Shader, const D3DXMATRIX&  MatrixWorldTrans, int Num )
-{
-	D3DXMATRIX   MatrixWorld, 
-		         MatrixWorldScal;
-	D3DVIEWPORT9 ViewPort;
-
-	m_pD3DDevice->SetRenderState(  D3DRS_ZENABLE, false );
-	m_pD3DDevice->SetSamplerState( 0, D3DSAMP_ADDRESSU, D3DTADDRESS_CLAMP ); 
-	m_pD3DDevice->SetSamplerState( 0, D3DSAMP_ADDRESSV, D3DTADDRESS_CLAMP ); 
-	m_pD3DDevice->SetSamplerState( 0, D3DSAMP_ADDRESSW, D3DTADDRESS_CLAMP );
-
-	m_pD3DDevice->GetViewport( &ViewPort );
-
-	float Scale = 0.05f;
-	D3DXMatrixScaling( &MatrixWorldScal, Scale, Scale * float(ViewPort.Width) / float(ViewPort.Height), Scale );	
-	MatrixWorld = MatrixWorldScal * MatrixWorldTrans;	
-	if ( Shader.m_pConstTableVS )
-	{		
-		Shader.m_pConstTableVS->SetMatrix( m_pD3DDevice, "mat_world", &MatrixWorld );		
-		Shader.m_pConstTablePS->SetFloat(  m_pD3DDevice, "diffuse_intensity", g_Diffuse_intensity );
-		Shader.m_pConstTableVS->SetInt(  m_pD3DDevice, "number", Num );
-	}
-	// устанавливаем шейдеры
-	m_pD3DDevice->SetVertexShader( Shader.m_pVertexShader );
-	m_pD3DDevice->SetPixelShader(  Shader.m_pPixelShader );
-	// здесь перерисовка сцены	
-	m_pD3DDevice -> SetStreamSource(0, m_pVerBuf, 0, sizeof( CVertexPT ) ); // связь буфера вершин с потоком данных
-	m_pD3DDevice -> SetFVF( D3DFVF_XYZ | D3DFVF_TEX1 ); // устанавливается формат вершин
-	m_pD3DDevice -> SetIndices( m_pIndexBuf );	
-	m_pD3DDevice -> SetTexture( 0, m_Texture );	
-	m_pD3DDevice -> DrawIndexedPrimitive( D3DPT_TRIANGLELIST, 0, 0, 4, 0, 2 );
-
-	m_pD3DDevice -> SetSamplerState( 0, D3DSAMP_ADDRESSU, D3DTADDRESS_WRAP );
-	m_pD3DDevice -> SetSamplerState( 0, D3DSAMP_ADDRESSV, D3DTADDRESS_WRAP );
-	m_pD3DDevice -> SetSamplerState( 0, D3DSAMP_ADDRESSW, D3DTADDRESS_WRAP );
-	m_pD3DDevice -> SetRenderState(  D3DRS_ZENABLE, true );
-}
-
-void CText::Release()
-{
-	if ( m_Texture )
-		m_Texture->Release();
-	if ( m_pIndexBuf )
-		m_pIndexBuf->Release();
-	if ( m_pVerBuf )
-		m_pVerBuf->Release();	
-}
-
-CText::~CText()
-{
-	Release();
-}
