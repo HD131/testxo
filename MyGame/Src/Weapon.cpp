@@ -49,14 +49,14 @@ CAutomatic_AK47::CAutomatic_AK47( LPCSTR Name, IDirect3DDevice9* pD3DDevice )
 
 void CAutomatic_AK47::RenderWeapon( CameraDevice const& Camera, CShader const& Shader )
 {
-	float sc = 0.01f;
-	D3DXMatrixScaling( &m_MatrixWorld, sc, sc, sc );
-	D3DXMATRIX  MatrixWorldTr;
-	//D3DXMatrixTranslation( &MatrixWorldTr, Camera.PositionCamera.x+0.3f, Camera.PositionCamera.y-0.5f, Camera.PositionCamera.z+1.5f );
-	D3DXMatrixTranslation( &MatrixWorldTr, 0, 0, 0 );
-	m_MatrixWorld = m_MatrixWorld * MatrixWorldTr;
-	m_Mesh.RenderMesh( Camera, m_MatrixWorld, Shader );
+	float sc = 0.008f;
+	D3DXMATRIX MatV, MatrixWorldTr, MatrixWorldSc;
+	D3DXMatrixInverse( &MatV, 0, &Camera.m_View ); 
+	D3DXMatrixScaling( &MatrixWorldSc, sc, sc, sc );
+	D3DXMatrixTranslation( &MatrixWorldTr, 0.3f, -0.3f, 1.2f );
+	m_MatrixWorld =  MatrixWorldSc * MatrixWorldTr * MatV ;
 
+	m_Mesh.RenderMesh( Camera, m_MatrixWorld, Shader );	
 }
 
 short  CAutomatic_AK47::GetChargerBullet()

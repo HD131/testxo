@@ -4,7 +4,6 @@ float  diffuse_intensity;
 
 float4 main( float2 uv : TEXCOORD0 ):COLOR0
 {
-	//uv.x = uv.x * 0.01;
     float4 Diffuse = tex2D( SampDif, uv );  
     Diffuse = Diffuse * diffuse_intensity ;
 return Diffuse;

@@ -215,6 +215,22 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Sky.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Sky.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Text.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Text.h"
+				>
+			</File>
+			<File
 				RelativePath=".\Weapon.cpp"
 				>
 			</File>
