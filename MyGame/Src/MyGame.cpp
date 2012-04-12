@@ -7,9 +7,6 @@
 #include "Text.h"
 #include <vector>
 
-extern IDirect3DDevice9* g_pD3DDevice;
-
-
 
 CD3DDevice   g_Direct3D;
 CInputDevice g_DeviceInput;
@@ -21,7 +18,7 @@ CameraDevice g_Camera;
 bool         g_Exit      = false;
 bool		 g_Wireframe = false;
 CWeapon*     g_Weapon[MaxWeapon];
-byte         Avtomat = M16;
+byte         ActiveWeapon = M16;
 
 void InitWeapon( IDirect3DDevice9* pD3DDevice )
 {
@@ -46,7 +43,7 @@ POINT PickObject( CCell* Cell )
 	GetCursorPos( &Point );
 	int x = Point.x - ClientRec.left;
 	int y = Point.y - ClientRec.top;
-	g_pD3DDevice->GetViewport( &ViewPort );
+	g_Direct3D.GetD3DDevice()->GetViewport( &ViewPort );
 
 	float px = (  2.0f * x / ViewPort.Width  - 1.0f) / g_Camera.m_Proj._11;
 	float py = ( -2.0f * y / ViewPort.Height + 1.0f) / g_Camera.m_Proj._22;	
@@ -129,12 +126,15 @@ void RenderingDirect3D( IDirect3DDevice9* D3DDevice )
 	D3DDevice->BeginScene(); 
 	//------------------------------------------Render Sky----------------------------------------
 	g_Sky.RenderSky( g_Camera, g_Shader[Sky] );
-	//------------------------------------------Render Weapon----------------------------------------	
-	//g_Mesh[Pers].RenderMesh( g_Camera, MatrixWorld, g_Shader[Diffuse] );	
-	g_Weapon[Avtomat]->RenderWeapon( g_Camera, g_Shader[Diffuse] );
+	//------------------------------------------Render Zona----------------------------------------	
+	D3DXMatrixTranslation( &MatrixWorld, 0, 0, 0 );
+	g_Mesh[Zona_1].RenderMesh( g_Camera, MatrixWorld, g_Shader[Diffuse] );
+	//------------------------------------------Render Weapon----------------------------------------
+	g_Weapon[ActiveWeapon]->RenderWeapon( g_Camera, g_Shader[Diffuse] );
 	//------------------------------------------Render Text----------------------------------------
 	//int a = timeGetTime() % 100000;
-	g_Text.RenderInt( g_Weapon[Avtomat]->GetChargerBullet(), g_Shader[Text] );
+	g_Text.RenderInt( -0.95f, -0.9f,  0.07f, g_Weapon[ActiveWeapon]->GetChargerBullet(), g_Shader[Text] ); // вывод количества патронов в магазине
+	g_Text.RenderInt(  0.80f, -0.9f,  0.07f, g_Weapon[ActiveWeapon]->GetAmountBullet(),  g_Shader[Text] ); // вывод остатка общего количества патронов
 	//------------------------------------------Render Target----------------------------------------
 	D3DXMatrixTranslation( &MatrixWorld, 0, 0, 0 );
 	g_Text.RenderImage( g_Shader[FlatImage], 0.02f, MatrixWorld );
@@ -161,9 +161,9 @@ LONG WINAPI WndProc( HWND hwnd, UINT Message, WPARAM wparam, LPARAM lparam )
 		if ( wparam == VK_F4 )
 			g_Wireframe = !g_Wireframe;
 		if ( wparam == VK_F6 )
-			Avtomat = M16;
+			ActiveWeapon = M16;
 		if ( wparam == VK_F5 )
-			Avtomat = AK47;
+			ActiveWeapon = AK47;
 		break;
 	}
 	return DefWindowProc( hwnd, Message, wparam, lparam );
@@ -173,7 +173,7 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance,
 				   LPSTR     lpCmdLine, int       nCmdShow)
 {	
 	MSG			 Msg;
-	WNDCLASS	 w;	
+	WNDCLASS	 w; 
 
 	remove( "log.txt" );
 	Log("Begin");	
@@ -194,20 +194,20 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	
 	if ( SUCCEEDED( g_Direct3D.IntialDirect3D( hwnd ) ) )
 	{		
-		g_Sky.InitialSky( g_pD3DDevice );
-		g_Text.Init( g_pD3DDevice );
+		g_Sky.InitialSky( g_Direct3D.GetD3DDevice() );
+		g_Text.Init( g_Direct3D.GetD3DDevice() );
 		g_DeviceInput.InitialInput( hwnd );
-		InitWeapon( g_pD3DDevice );
-		//g_Mesh[Pers].InitialMesh( "model\\M16.x", g_pD3DDevice );
+		InitWeapon( g_Direct3D.GetD3DDevice() );
+		g_Mesh[Zona_1].InitialMesh( "model\\Zona_1.x", g_Direct3D.GetD3DDevice() );
 		
-		g_Shader[  Sky  ].LoadShader( "shader\\Sky", g_pD3DDevice );
-		g_Shader[Diffuse].LoadShader( "shader\\Diffuse", g_pD3DDevice );
-		g_Shader[  Text ].LoadShader( "shader\\Text", g_pD3DDevice );
-		g_Shader[FlatImage].LoadShader( "shader\\FlatImage", g_pD3DDevice );
+		g_Shader[  Sky  ].LoadShader( "shader\\Sky", g_Direct3D.GetD3DDevice() );
+		g_Shader[Diffuse].LoadShader( "shader\\Diffuse", g_Direct3D.GetD3DDevice() );
+		g_Shader[  Text ].LoadShader( "shader\\Text", g_Direct3D.GetD3DDevice() );
+		g_Shader[FlatImage].LoadShader( "shader\\FlatImage", g_Direct3D.GetD3DDevice() );
 		while( !g_Exit )
 		{
-			g_DeviceInput.ScanInput( &g_Camera );				
-			RenderingDirect3D( g_pD3DDevice );				
+			g_DeviceInput.ScanInput( &g_Camera, g_Weapon[ActiveWeapon] );				
+			RenderingDirect3D( g_Direct3D.GetD3DDevice() );				
 			if ( PeekMessage( &Msg, 0, 0, 0, PM_REMOVE ) )
 			{
 				TranslateMessage( &Msg );
@@ -231,3 +231,4 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance,
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------
+

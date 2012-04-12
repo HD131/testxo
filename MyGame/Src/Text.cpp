@@ -12,6 +12,7 @@ HRESULT CText::Init( IDirect3DDevice9* D3DDevice )
 	m_pD3DDevice = D3DDevice;
 	m_pVerBuf   = 0; // указатель на буфер вершин
 	m_pIndexBuf = 0; // указатель на буфер вершин
+	m_ZBuffer   = true;
 
 	CVertexPT Vershin[4];
 
@@ -46,10 +47,10 @@ HRESULT CText::Init( IDirect3DDevice9* D3DDevice )
 		Log( "error load target texture" );
 
 	Log( "Init Text " );
-	return S_OK;
+return S_OK;
 }
 
-void CText::RenderInt( int Number, CShader const& Shader )
+void CText::RenderInt( float x, float y, float dist, int Number, CShader const& Shader )
 {
 	D3DXMATRIX   MatrixWorldTrans, MatrixWorldScal; 
 	D3DVIEWPORT9 ViewPort;
@@ -57,10 +58,10 @@ void CText::RenderInt( int Number, CShader const& Shader )
 	itoa( Number, str, 10);
 	m_pD3DDevice->GetViewport( &ViewPort );
 	float Scale = 0.05f;
-	D3DXMatrixScaling( &MatrixWorldScal, Scale, Scale *float(ViewPort.Width) / float(ViewPort.Height), Scale );	
+	D3DXMatrixScaling( &MatrixWorldScal, Scale, Scale * float(ViewPort.Width) / float(ViewPort.Height), Scale );	
 	for ( int i = 0; i < strlen(str); ++i )
 	{
-		D3DXMatrixTranslation( &MatrixWorldTrans, -0.95f + i * 0.07f, -0.9f, 0 );	
+		D3DXMatrixTranslation( &MatrixWorldTrans, x + i * dist, y, 0 );	
 		Render( Shader, m_Texture, MatrixWorldScal * MatrixWorldTrans, int(str[i]) - 48 );
 	}
 }
@@ -78,11 +79,13 @@ void CText::RenderImage( CShader const& Shader, float Scale, const D3DXMATRIX&  
 
 void CText::Render( CShader const& Shader, IDirect3DTexture9* Texture, const D3DXMATRIX&  MatrixWorld, int Num )
 {
-	m_pD3DDevice->SetRenderState(  D3DRS_ZENABLE, false );
-	m_pD3DDevice->SetSamplerState( 0, D3DSAMP_ADDRESSU, D3DTADDRESS_CLAMP ); 
-	m_pD3DDevice->SetSamplerState( 0, D3DSAMP_ADDRESSV, D3DTADDRESS_CLAMP ); 
-	m_pD3DDevice->SetSamplerState( 0, D3DSAMP_ADDRESSW, D3DTADDRESS_CLAMP );
-
+	if ( m_ZBuffer )
+	{
+		m_pD3DDevice->SetRenderState(  D3DRS_ZENABLE, false );
+		m_pD3DDevice->SetSamplerState( 0, D3DSAMP_ADDRESSU, D3DTADDRESS_CLAMP ); 
+		m_pD3DDevice->SetSamplerState( 0, D3DSAMP_ADDRESSV, D3DTADDRESS_CLAMP ); 
+		m_pD3DDevice->SetSamplerState( 0, D3DSAMP_ADDRESSW, D3DTADDRESS_CLAMP );
+	}
 	if ( Shader.m_pConstTableVS )
 	{		
 		Shader.m_pConstTableVS->SetMatrix( m_pD3DDevice, "mat_world", &MatrixWorld );		
@@ -98,17 +101,21 @@ void CText::Render( CShader const& Shader, IDirect3DTexture9* Texture, const D3D
 	m_pD3DDevice -> SetIndices( m_pIndexBuf );	
 	m_pD3DDevice -> SetTexture( 0, Texture );	
 	m_pD3DDevice -> DrawIndexedPrimitive( D3DPT_TRIANGLELIST, 0, 0, 4, 0, 2 );
-
-	m_pD3DDevice -> SetSamplerState( 0, D3DSAMP_ADDRESSU, D3DTADDRESS_WRAP );
-	m_pD3DDevice -> SetSamplerState( 0, D3DSAMP_ADDRESSV, D3DTADDRESS_WRAP );
-	m_pD3DDevice -> SetSamplerState( 0, D3DSAMP_ADDRESSW, D3DTADDRESS_WRAP );
-	m_pD3DDevice -> SetRenderState(  D3DRS_ZENABLE, true );
+	if ( m_ZBuffer )
+	{
+		m_pD3DDevice -> SetSamplerState( 0, D3DSAMP_ADDRESSU, D3DTADDRESS_WRAP );
+		m_pD3DDevice -> SetSamplerState( 0, D3DSAMP_ADDRESSV, D3DTADDRESS_WRAP );
+		m_pD3DDevice -> SetSamplerState( 0, D3DSAMP_ADDRESSW, D3DTADDRESS_WRAP );
+		m_pD3DDevice -> SetRenderState(  D3DRS_ZENABLE, true );
+	}
 }
 
 void CText::Release()
 {
 	if ( m_Texture )
 		m_Texture->Release();
+	if ( m_TextureTarget )
+		m_TextureTarget->Release();
 	if ( m_pIndexBuf )
 		m_pIndexBuf->Release();
 	if ( m_pVerBuf )

@@ -1,11 +1,13 @@
 #include "Init.h"
 
 
-IDirect3DDevice9* g_pD3DDevice  = 0; //Наше устройство
+//IDirect3DDevice9* g_pD3DDevice  = 0; //Наше устройство
 
 
 HRESULT CShader::LoadShader( std::string FileName, IDirect3DDevice9* pD3DDevice )
 {
+	if ( pD3DDevice )
+	{
 	LPD3DXBUFFER pErrors        = 0;
 	LPD3DXBUFFER pShaderBuff    = 0;
 
@@ -37,6 +39,12 @@ HRESULT CShader::LoadShader( std::string FileName, IDirect3DDevice9* pD3DDevice 
 	}
 	Log( "Load shader " );
 	return S_OK;
+	}
+	else
+	{
+		Log( "Error pD3DDevice Load shader " );
+		return E_FAIL;
+	}
 }
 
 void CShader::Release()
@@ -54,7 +62,7 @@ void CShader::Release()
 HRESULT CD3DDevice::IntialDirect3D( HWND hwnd )
 {
 	m_pDirect3D  = 0;
-	g_pD3DDevice = 0;
+	m_pD3DDevice = 0;
 	D3DPRESENT_PARAMETERS Direct3DParametr; // структура задающая парметры рендеринга 
 	D3DDISPLAYMODE        Display; // возвращает параметры дисплея
 
@@ -72,31 +80,30 @@ HRESULT CD3DDevice::IntialDirect3D( HWND hwnd )
 	Direct3DParametr.AutoDepthStencilFormat = D3DFMT_D16;
 	Direct3DParametr.PresentationInterval	= D3DPRESENT_INTERVAL_DEFAULT; 
 
-	if ( FAILED( m_pDirect3D -> CreateDevice( D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, hwnd, D3DCREATE_HARDWARE_VERTEXPROCESSING,
-		&Direct3DParametr, &g_pD3DDevice ) ) ) // создаётся интерфейс устройства
+	if ( FAILED( m_pDirect3D -> CreateDevice( D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, hwnd, D3DCREATE_HARDWARE_VERTEXPROCESSING, &Direct3DParametr, &m_pD3DDevice ) ) ) // создаётся интерфейс устройства
 		return E_FAIL;
 	Log( "Initial CreateDevice Direct3D" );
-	g_pD3DDevice -> SetRenderState( D3DRS_CULLMODE, D3DCULL_CCW );				//  режим отсечения включено и происходит по часовой стрелке
-	g_pD3DDevice -> SetRenderState( D3DRS_LIGHTING, FALSE );					// запрещается работа со светом
-	g_pD3DDevice -> SetRenderState( D3DRS_ZENABLE, D3DZB_TRUE );				// разрешает использовать Z-буфер
-	g_pD3DDevice -> SetRenderState( D3DRS_ALPHABLENDENABLE, TRUE );            // включает альфа-канал
-	g_pD3DDevice -> SetRenderState( D3DRS_SRCBLEND,  D3DBLEND_SRCALPHA );
-	g_pD3DDevice -> SetRenderState( D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA );
-	g_pD3DDevice -> SetRenderState( D3DRS_AMBIENT, 0xffffffff );
-	g_pD3DDevice -> SetSamplerState( 0, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR ); // фильтрация текстуры для плавности перехода
+	m_pD3DDevice -> SetRenderState( D3DRS_CULLMODE, D3DCULL_CCW );				//  режим отсечения включено и происходит по часовой стрелке
+	m_pD3DDevice -> SetRenderState( D3DRS_LIGHTING, FALSE );					// запрещается работа со светом
+	m_pD3DDevice -> SetRenderState( D3DRS_ZENABLE, D3DZB_TRUE );				// разрешает использовать Z-буфер
+	m_pD3DDevice -> SetRenderState( D3DRS_ALPHABLENDENABLE, TRUE );            // включает альфа-канал
+	m_pD3DDevice -> SetRenderState( D3DRS_SRCBLEND,  D3DBLEND_SRCALPHA );
+	m_pD3DDevice -> SetRenderState( D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA );
+	m_pD3DDevice -> SetRenderState( D3DRS_AMBIENT, 0xffffffff );
+	m_pD3DDevice -> SetSamplerState( 0, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR ); // фильтрация текстуры для плавности перехода
 
 	return S_OK;
 }
 
 void CD3DDevice::Release()
 {	
-	if ( g_pD3DDevice )
-		g_pD3DDevice -> Release();
+	if ( m_pD3DDevice )
+		m_pD3DDevice -> Release();
 	if ( m_pDirect3D )
 		m_pDirect3D -> Release();	
 };
 
-void DrawMyText( IDirect3DDevice9* g_pD3DDevice, char* StrokaTexta, int x, int y, int x1, int y1, D3DCOLOR MyColor )
+void DrawMyText( IDirect3DDevice9* pD3DDevice, char* StrokaTexta, int x, int y, int x1, int y1, D3DCOLOR MyColor )
 {
 	RECT  Rec;
 	HFONT hFont;
@@ -106,7 +113,7 @@ void DrawMyText( IDirect3DDevice9* g_pD3DDevice, char* StrokaTexta, int x, int y
 	Rec.top    = y;
 	Rec.right  = x1;
 	Rec.bottom = y1;
-	D3DXCreateFont( g_pD3DDevice, 30, 10, FW_NORMAL, 0, FALSE, 0, 0, 0, DEFAULT_PITCH | FF_MODERN, "Arial", &pFont );
+	D3DXCreateFont( pD3DDevice, 30, 10, FW_NORMAL, 0, FALSE, 0, 0, 0, DEFAULT_PITCH | FF_MODERN, "Arial", &pFont );
 	pFont->DrawText(0, StrokaTexta, -1, &Rec, DT_WORDBREAK, MyColor);
 	if (pFont)
 		pFont->Release();

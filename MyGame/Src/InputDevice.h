@@ -1,7 +1,6 @@
 #pragma once
 #include "CameraDevice.h"
-
-
+#include "Weapon.h"
 
 struct CMouseState
 {
@@ -21,6 +20,6 @@ public:
 	LPDIRECTINPUTDEVICE8    m_pMouse;
 	CMouseState             m_Mouse;	
 	HRESULT                 InitialInput( HWND hwnd );
-	bool                    ScanInput( CameraDevice* m_Camera );
+	bool                    ScanInput( CameraDevice *m_Camera, CWeapon* pWeapon );
 	void					Release();
 };

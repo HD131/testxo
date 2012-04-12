@@ -60,7 +60,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="d3d9.lib d3dx9.lib winmm.lib dinput8.lib dxguid.lib"
+				AdditionalDependencies="d3d9.lib d3dx9.lib winmm.lib dinput8.lib dxguid.lib dsound.lib"
 				OutputFile="../Game/Mygame.exe"
 				LinkIncremental="2"
 				GenerateDebugInformation="true"
@@ -135,7 +135,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="d3d9.lib d3dx9.lib winmm.lib dinput8.lib dxguid.lib"
+				AdditionalDependencies="d3d9.lib d3dx9.lib winmm.lib dinput8.lib dxguid.lib dsound.lib"
 				OutputFile="../Game/Mygame.exe"
 				LinkIncremental="1"
 				GenerateDebugInformation="true"
@@ -220,6 +220,14 @@
 			</File>
 			<File
 				RelativePath=".\Sky.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Sound.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Sound.h"
 				>
 			</File>
 			<File

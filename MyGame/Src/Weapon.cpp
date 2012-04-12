@@ -1,75 +1,108 @@
 #include "Weapon.h"
 #include "Init.h"
 
+void CWeapon::Recharge()
+{
+	if ( m_AmountBullet )
+	{
+		int i = m_MaxChargerBullet - m_ChargerBullet;
+		if ( i > m_AmountBullet)
+			i = m_AmountBullet;
+		m_ChargerBullet += i;
+		m_AmountBullet  -= i;
+	}
+}
+
+void CWeapon::Fire() 
+{	
+	if ( m_ChargerBullet )
+	{
+		--m_ChargerBullet;
+		Beep(50,30);
+	}
+}
+
+CWeapon::~CWeapon()
+{
+	if ( m_Mesh.GetMesh() )
+		m_Mesh.Release();
+}
+
 CAutomatic_M16::CAutomatic_M16( LPCSTR Name, IDirect3DDevice9* pD3DDevice )
 {	
-	m_AmountBullet   = 100;  
-	m_ChargerBullet  = 20; 
-	m_Damage         = 10;		    
-	m_NameWeapon     = M16;	
-	m_pD3DDevice     = pD3DDevice;
+	m_AmountBullet     = 100; 
+	m_MaxChargerBullet = 20;
+	m_ChargerBullet    = m_MaxChargerBullet; 
+	m_Damage           = 10;
+	m_RateOfFire       = 500;
+	m_NameWeapon       = M16;	
+	m_Fire             = false;
+	m_pD3DDevice       = pD3DDevice;
 	m_Mesh.InitialMesh( Name, pD3DDevice );
 }
 void CAutomatic_M16::RenderWeapon( CameraDevice const& Camera, CShader const& Shader )
 {
-	float sc = 0.008f;
+	float sc = 0.003f;
 	D3DXMATRIX MatV, MatrixWorldTr, MatrixWorldSc;
 	D3DXMatrixInverse( &MatV, 0, &Camera.m_View ); 
 	D3DXMatrixScaling( &MatrixWorldSc, sc, sc, sc );
-	D3DXMatrixTranslation( &MatrixWorldTr, 0.3f, -0.3f, 1.2f );
+	D3DXMatrixTranslation( &MatrixWorldTr, 0.1f, -0.15f, 0.55f );
 	m_MatrixWorld =  MatrixWorldSc * MatrixWorldTr * MatV ;
 	 
 	m_Mesh.RenderMesh( Camera, m_MatrixWorld, Shader );	
 }
 
-short  CAutomatic_M16::GetChargerBullet()
-{
-	return m_ChargerBullet;
+void CAutomatic_M16::Fire()
+{	
+	CWeapon::Fire();
 }
 
 void CAutomatic_M16::Recharge()
 {
-
+	CWeapon::Recharge();
 }
 
 CAutomatic_M16::~CAutomatic_M16()
 {
-	m_Mesh.Release();
+	CWeapon::~CWeapon();
 }
 //-------------------------------------------------------------------------------------------------------
 
 CAutomatic_AK47::CAutomatic_AK47( LPCSTR Name, IDirect3DDevice9* pD3DDevice )
 {
-	m_AmountBullet   = 200;  
-	m_ChargerBullet  = 30; 
-	m_Damage         = 15;		    
-	m_NameWeapon     = AK47;
+	m_AmountBullet     = 200;
+	m_MaxChargerBullet = 30;
+	m_ChargerBullet    = m_MaxChargerBullet;
+	m_Damage           = 15;
+	m_RateOfFire       = 200;
+	m_NameWeapon       = AK47;
+	m_Fire             = false;
 	m_Mesh.InitialMesh( Name, pD3DDevice );
 }
 
 void CAutomatic_AK47::RenderWeapon( CameraDevice const& Camera, CShader const& Shader )
 {
-	float sc = 0.008f;
+	float sc = 0.003f;
 	D3DXMATRIX MatV, MatrixWorldTr, MatrixWorldSc;
 	D3DXMatrixInverse( &MatV, 0, &Camera.m_View ); 
 	D3DXMatrixScaling( &MatrixWorldSc, sc, sc, sc );
-	D3DXMatrixTranslation( &MatrixWorldTr, 0.3f, -0.3f, 1.2f );
+	D3DXMatrixTranslation( &MatrixWorldTr, 0.1f, -0.15f, 0.55f );
 	m_MatrixWorld =  MatrixWorldSc * MatrixWorldTr * MatV ;
 
 	m_Mesh.RenderMesh( Camera, m_MatrixWorld, Shader );	
 }
 
-short  CAutomatic_AK47::GetChargerBullet()
+void CAutomatic_AK47::Fire()
 {
-	return m_ChargerBullet;
+	CWeapon::Fire();
 }
 
 void CAutomatic_AK47::Recharge()
 {
-
+	CWeapon::Recharge();
 }
 
 CAutomatic_AK47::~CAutomatic_AK47()
 {
-	m_Mesh.Release();
+	CWeapon::~CWeapon();
 }
