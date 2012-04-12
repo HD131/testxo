@@ -1,9 +1,7 @@
 #include "InputDevice.h"
 #include "Init.h"
 
-
-bool Pressed = false;
-
+bool				Pressed = false;
 
 HRESULT CInputDevice::InitialInput( HWND hwnd )
 {	
@@ -45,7 +43,7 @@ HRESULT CInputDevice::InitialInput( HWND hwnd )
 return S_OK;
 }
 
-bool CInputDevice::ScanInput( CameraDevice *m_Camera )
+bool CInputDevice::ScanInput( CameraDevice *m_Camera, CWeapon* pWeapon )
 {	
 	char     keyboard[256];     
 	LONG     dx, dy, dz;
@@ -64,6 +62,8 @@ bool CInputDevice::ScanInput( CameraDevice *m_Camera )
 		m_Camera->MoveForv();
 	if ( KEYDOWN(keyboard, DIK_DOWN) || KEYDOWN(keyboard, DIK_S))
 		m_Camera->MoveBack();
+	if ( KEYDOWN(keyboard, DIK_R ) )
+		pWeapon->Recharge();
 
 	if FAILED( m_pMouse -> GetDeviceState( sizeof( CMouseState ), (LPVOID)&m_Mouse ) )
 		m_pMouse -> Acquire();
@@ -73,25 +73,24 @@ bool CInputDevice::ScanInput( CameraDevice *m_Camera )
 	dz = m_Mouse.m_lZ;
 	
 	if ( (dx < 0) )  
-		m_Camera->MouseRotateLeft();
+		m_Camera->MouseRotateLeft( dx );
 	if ( (dx > 0) )  
-		m_Camera->MouseRotateRight();
+		m_Camera->MouseRotateRight( dx );
 	if ( (dy > 0) )  
-		m_Camera->MouseRotateUp();
+		m_Camera->MouseRotateUp( dy );
 	if ( (dy < 0) )  
-		m_Camera->MouseRotateDown();
-
+		m_Camera->MouseRotateDown( dy );
 	
-	if ( m_Mouse.m_rgbButtons[RIGHT_BUTTON]&0x80 )
+	if ( m_Mouse.m_rgbButtons[LEFT_BUTTON]&0x80 )
 	{
 		 if ( !Pressed )		 
-			 Pressed = true;		 
+			 Pressed = true;
+		 pWeapon->Fire();
 	}
 	 else		 
 		 if ( Pressed )
 		 {
 			 Pressed = false;
-			 
 		 }
 	
 return TRUE;

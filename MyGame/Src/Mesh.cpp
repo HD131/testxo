@@ -115,5 +115,8 @@ void CMesh3D::Release()
 		delete[] m_pMeshMaterial;
 	
 	if ( m_pMesh )
+	{
 		m_pMesh -> Release();
+		m_pMesh = 0;
+	}
 }

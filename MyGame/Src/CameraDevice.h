@@ -21,10 +21,10 @@ public:
 	void  MoveBack();
 	void  MoveRight();
 	void  MoveLeft();
-	void  MouseRotateLeft();
-	void  MouseRotateRight();
-	void  MouseRotateUp();
-	void  MouseRotateDown();
+	void  MouseRotateLeft( long Ang );
+	void  MouseRotateRight( long Ang );
+	void  MouseRotateUp( long Ang );
+	void  MouseRotateDown( long Ang );
 	void  Refresh();
 	void  RefreshMirror();
 };

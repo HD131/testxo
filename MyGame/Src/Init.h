@@ -6,6 +6,8 @@
 #include <mmsystem.h>
 #include <stdio.h>
 #include <winuser.h>
+#include <mmreg.h>
+#include <dsound.h>
 #include "../../sdk/dx9/Include/d3d9.h"
 #include "../../sdk/dx9/Include/d3dx9.h"
 #include "../../sdk/dx9/Include/d3dx9core.h"
@@ -25,7 +27,7 @@ const D3DXVECTOR4 g_Light       = D3DXVECTOR4( 0.0f, 1.0f, -1.0f, 1.0f );
 const float	g_Diffuse_intensity = 1.0f;
 
 enum  NameShader { Sky , Diffuse, Text, FlatImage, MaxShader };
-enum  Mesh { Pers, MaxMesh };
+enum  Mesh { Zona_1, MaxMesh };
 enum  Game_State { STATE_PLAY, STATE_WIN, STATE_LOST };
 enum  BLEND { BLEND_DEFAULT, BLEND_ALPHA, BLEND_MUL, BLEND_ADD };
 
@@ -37,19 +39,18 @@ enum  BLEND { BLEND_DEFAULT, BLEND_ALPHA, BLEND_MUL, BLEND_ADD };
 #define KEYDOWN(name, key) (name[key]&0x80)
 
 void Log( char* Str );
-
+//---------------------------------------------------------
 class CD3DDevice
 {
-public:
-	IDirect3D9*			    m_pDirect3D; // указатель на Главный интерфейс отвечающий за Direct3D	
-	IDirect3DPixelShader9*  m_pPixelShader [MaxShader];
-	IDirect3DVertexShader9* m_pVertexShader[MaxShader];
-	ID3DXConstantTable*     m_pConstTableVS[MaxShader];
-	ID3DXConstantTable*     m_pConstTablePS[MaxShader];	
+private:
+	IDirect3DDevice9*       m_pD3DDevice;	
+	IDirect3D9*			    m_pDirect3D; // указатель на Главный интерфейс отвечающий за Direct3D
+public:		
 	HRESULT                 IntialDirect3D( HWND hwnd );
+	IDirect3DDevice9*       GetD3DDevice()	{	return m_pD3DDevice;	}
 	void				    Release();
 };
-
+//---------------------------------------------------------
 class CShader
 {
 public:
@@ -60,7 +61,7 @@ public:
 	HRESULT LoadShader( std::string FileName, IDirect3DDevice9* pD3DDevice );
 	void	Release();
 };
-
+//---------------------------------------------------------
 struct CCell
 {
 	float       m_Radius;
@@ -80,7 +81,7 @@ struct CCell
 		D3DXVec3TransformNormal( &m_Centr, &m_Centr, &MatrixWorld );
 	}
 };
-
+//---------------------------------------------------------
 struct CVertexFVF
 {
 	FLOAT x,   y,  z;
@@ -91,8 +92,8 @@ struct CVertexFVF
 	CVertexFVF( float X, float Y, float Z, float NX, float NY, float NZ, float U, float V ) : x(X), y(Y), z(Z), nx(NX), ny(NY), nz(NZ), u(U), v(V)
 	{	}
 };
-
-void DrawMyText( IDirect3DDevice9* g_pD3DDevice, char* StrokaTexta, int x, int y, int x1, int y1, D3DCOLOR MyColor );
+//---------------------------------------------------------
+void DrawMyText( IDirect3DDevice9* pD3DDevice, char* StrokaTexta, int x, int y, int x1, int y1, D3DCOLOR MyColor );
 void Blending( BLEND Blend, IDirect3DDevice9* D3DDevice );
 
 

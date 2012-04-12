@@ -3,7 +3,7 @@
 
 CameraDevice::CameraDevice()
 {
-	PositionCamera	= D3DXVECTOR3( 0, 1, -10 );
+	PositionCamera	= D3DXVECTOR3( 0, 1.75f, -10.0f );
 	CameraUp		= D3DXVECTOR3( 0, 1, 0 );
 	TargetDir		= D3DXVECTOR3( 0, 0, 1 );
 	DirX		    = D3DXVECTOR3( 1, 0, 0 );
@@ -12,7 +12,7 @@ CameraDevice::CameraDevice()
 	D3DXMatrixPerspectiveFovLH(&m_Proj, D3DX_PI / 4, (FLOAT)Width / Height, 0.1f, 3000.0f);
 	StepCamera  = 0.05f;
 	AngleCamera = 1.0f * D3DX_PI / 180;
-	Sensivity   = 0.8f;
+	Sensivity   = 300.0f;
 }
 
 void CameraDevice::Refresh()
@@ -54,11 +54,11 @@ void CameraDevice::MoveLeft()
 	D3DXMatrixLookAtLH( &m_View, &PositionCamera, &(PositionCamera + TargetDir), &CameraUp );
 }
 
-void  CameraDevice::MouseRotateLeft()
+void  CameraDevice::MouseRotateLeft( long Ang )
 {
 	Refresh();
 	D3DXMATRIX Rotate;
-	D3DXMatrixRotationY( &Rotate, -AngleCamera / Sensivity );
+	D3DXMatrixRotationY( &Rotate, (float)Ang / Sensivity );
 	D3DXVECTOR4 T;
 	D3DXVec3Transform( &T, &TargetDir, &Rotate );
 	TargetDir = D3DXVECTOR3( T.x, T.y, T.z );
@@ -70,11 +70,11 @@ void  CameraDevice::MouseRotateLeft()
 	D3DXMatrixLookAtLH( &m_View, &PositionCamera, &(PositionCamera + TargetDir), &CameraUp );
 }
 
-void  CameraDevice::MouseRotateRight()
+void  CameraDevice::MouseRotateRight( long Ang )
 {
 	Refresh();
 	D3DXMATRIX Rotate;
-	D3DXMatrixRotationY( &Rotate, AngleCamera / Sensivity );
+	D3DXMatrixRotationY( &Rotate, (float)Ang / Sensivity );
 	D3DXVECTOR4 T;
 	D3DXVec3Transform( &T, &TargetDir, &Rotate );
 	TargetDir = D3DXVECTOR3( T.x, T.y, T.z );
@@ -85,11 +85,11 @@ void  CameraDevice::MouseRotateRight()
 	Refresh();
 	D3DXMatrixLookAtLH( &m_View, &PositionCamera, &(PositionCamera + TargetDir), &CameraUp );
 }
-void  CameraDevice::MouseRotateUp()
+void  CameraDevice::MouseRotateUp( long Ang )
 {
 	Refresh();
 	D3DXMATRIX Rotate;
-	D3DXMatrixRotationAxis( &Rotate, &DirX, AngleCamera / Sensivity );
+	D3DXMatrixRotationAxis( &Rotate, &DirX, (float)Ang / Sensivity );
 	D3DXVECTOR4 T;
 	D3DXVec3Transform( &T, &TargetDir, &Rotate );
 	TargetDir = D3DXVECTOR3( T.x, T.y, T.z );
@@ -97,11 +97,11 @@ void  CameraDevice::MouseRotateUp()
 	D3DXMatrixLookAtLH( &m_View, &PositionCamera, &(PositionCamera + TargetDir), &CameraUp );
 }
 
-void  CameraDevice::MouseRotateDown()
+void  CameraDevice::MouseRotateDown( long Ang )
 {
 	Refresh();
 	D3DXMATRIX Rotate;
-	D3DXMatrixRotationAxis( &Rotate, &DirX, -AngleCamera / Sensivity );
+	D3DXMatrixRotationAxis( &Rotate, &DirX, (float)Ang / Sensivity );
 	D3DXVECTOR4 T;
 	D3DXVec3Transform( &T, &TargetDir, &Rotate );
 	TargetDir = D3DXVECTOR3( T.x, T.y, T.z );
