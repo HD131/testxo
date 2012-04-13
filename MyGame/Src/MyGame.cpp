@@ -126,22 +126,28 @@ void RenderingDirect3D( IDirect3DDevice9* D3DDevice )
 	D3DDevice->BeginScene(); 
 	//------------------------------------------Render Sky----------------------------------------
 	g_Sky.RenderSky( g_Camera, g_Shader[Sky] );
+
+	D3DXMatrixTranslation( &MatrixWorld, 0, 0, 0 );
+	//g_Text.RenderImage( g_Shader[FlatImage], 0.02f, MatrixWorld );
 	//------------------------------------------Render Zona----------------------------------------	
 	D3DXMatrixTranslation( &MatrixWorld, 0, 0, 0 );
 	g_Mesh[Zona_1].RenderMesh( g_Camera, MatrixWorld, g_Shader[Diffuse] );
 	//------------------------------------------Render Weapon----------------------------------------
+	if ( g_Weapon[ActiveWeapon]->GetFire() )
+	{
+		//g_Text.RenderInt( -0.0f, -0.0f,  0.07f, g_Weapon[ActiveWeapon]->GetChargerBullet(), g_Shader[Text] ); // вывод количества патронов в магазине
+	}
 	g_Weapon[ActiveWeapon]->RenderWeapon( g_Camera, g_Shader[Diffuse] );
-	//------------------------------------------Render Text----------------------------------------
-	//int a = timeGetTime() % 100000;
-	g_Text.RenderInt( -0.95f, -0.9f,  0.07f, g_Weapon[ActiveWeapon]->GetChargerBullet(), g_Shader[Text] ); // вывод количества патронов в магазине
-	g_Text.RenderInt(  0.80f, -0.9f,  0.07f, g_Weapon[ActiveWeapon]->GetAmountBullet(),  g_Shader[Text] ); // вывод остатка общего количества патронов
+	
+	//------------------------------------------Render Text----------------------------------------	
+	g_Text.RenderInt( -0.95f, -0.9f,  0.07f, g_Weapon[ActiveWeapon]->GetChargerBullet(), 2, g_Shader[Text] ); // вывод количества патронов в магазине
+	g_Text.RenderInt(  0.80f, -0.9f,  0.07f, g_Weapon[ActiveWeapon]->GetAmountBullet(),  3, g_Shader[Text] ); // вывод остатка общего количества патронов
 	//------------------------------------------Render Target----------------------------------------
-	D3DXMatrixTranslation( &MatrixWorld, 0, 0, 0 );
-	g_Text.RenderImage( g_Shader[FlatImage], 0.02f, MatrixWorld );
+	
 	
 
 // 	char        str[50];
-// 	sprintf(str, "x=%f  y=%f   z=%f", g_Camera.DirX.x, g_Camera.DirX.y, g_Camera.DirX.z );		
+// 	sprintf(str, "x=%d  y=%f   z=%f", timeGetTime(), g_Camera.DirX.y, g_Camera.DirX.z );		
 // 	DrawMyText( D3DDevice, str, 10, 10, 500, 700, D3DCOLOR_ARGB(250, 250, 250,50));
 
 	D3DDevice -> EndScene();

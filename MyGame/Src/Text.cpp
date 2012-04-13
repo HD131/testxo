@@ -12,7 +12,6 @@ HRESULT CText::Init( IDirect3DDevice9* D3DDevice )
 	m_pD3DDevice = D3DDevice;
 	m_pVerBuf   = 0; // указатель на буфер вершин
 	m_pIndexBuf = 0; // указатель на буфер вершин
-	m_ZBuffer   = true;
 
 	CVertexPT Vershin[4];
 
@@ -20,7 +19,7 @@ HRESULT CText::Init( IDirect3DDevice9* D3DDevice )
 	Vershin[1] = CVertexPT( -1.0f, -1.0f, 0.0f, 0.0f, 1.0f ); // 1	
 	Vershin[2] = CVertexPT( -1.0f,  1.0f, 0.0f, 0.0f, 0.0f ); // 2		
 	Vershin[3] = CVertexPT(  1.0f,  1.0f, 0.0f, 1.0f, 0.0f ); // 3
-	// X      Y     Z     tu    tv
+	//						  X      Y     Z     tu    tv
 
 	const unsigned short Index[] =
 	{
@@ -50,12 +49,21 @@ HRESULT CText::Init( IDirect3DDevice9* D3DDevice )
 return S_OK;
 }
 
-void CText::RenderInt( float x, float y, float dist, int Number, CShader const& Shader )
+void CText::RenderInt( float x, float y, float dist, int Number, int Value, CShader const& Shader )
 {
 	D3DXMATRIX   MatrixWorldTrans, MatrixWorldScal; 
 	D3DVIEWPORT9 ViewPort;
 	char str[20];
 	itoa( Number, str, 10);
+	int d = strlen(str);
+	if ( ( Value != 0 ) && ( Value > d ) )
+	{
+		int t = Value;
+		for ( int i = d; i > -1; --i )
+			str[t--] = str[i];
+		for ( int i = 0; i < Value - d; ++i )
+			str[i] = '0';
+	}
 	m_pD3DDevice->GetViewport( &ViewPort );
 	float Scale = 0.05f;
 	D3DXMatrixScaling( &MatrixWorldScal, Scale, Scale * float(ViewPort.Width) / float(ViewPort.Height), Scale );	
@@ -79,35 +87,21 @@ void CText::RenderImage( CShader const& Shader, float Scale, const D3DXMATRIX&  
 
 void CText::Render( CShader const& Shader, IDirect3DTexture9* Texture, const D3DXMATRIX&  MatrixWorld, int Num )
 {
-	if ( m_ZBuffer )
-	{
-		m_pD3DDevice->SetRenderState(  D3DRS_ZENABLE, false );
-		m_pD3DDevice->SetSamplerState( 0, D3DSAMP_ADDRESSU, D3DTADDRESS_CLAMP ); 
-		m_pD3DDevice->SetSamplerState( 0, D3DSAMP_ADDRESSV, D3DTADDRESS_CLAMP ); 
-		m_pD3DDevice->SetSamplerState( 0, D3DSAMP_ADDRESSW, D3DTADDRESS_CLAMP );
-	}
 	if ( Shader.m_pConstTableVS )
 	{		
 		Shader.m_pConstTableVS->SetMatrix( m_pD3DDevice, "mat_world", &MatrixWorld );		
 		Shader.m_pConstTablePS->SetFloat(  m_pD3DDevice, "diffuse_intensity", g_Diffuse_intensity );
-		Shader.m_pConstTableVS->SetInt(  m_pD3DDevice, "number", Num );
+		Shader.m_pConstTableVS->SetInt(    m_pD3DDevice, "number", Num );
 	}
 	// устанавливаем шейдеры
 	m_pD3DDevice->SetVertexShader( Shader.m_pVertexShader );
 	m_pD3DDevice->SetPixelShader(  Shader.m_pPixelShader );
 	// здесь перерисовка сцены	
-	m_pD3DDevice -> SetStreamSource(0, m_pVerBuf, 0, sizeof( CVertexPT ) ); // связь буфера вершин с потоком данных
+	m_pD3DDevice -> SetStreamSource( 0, m_pVerBuf, 0, sizeof( CVertexPT ) ); // связь буфера вершин с потоком данных
 	m_pD3DDevice -> SetFVF( D3DFVF_XYZ | D3DFVF_TEX1 ); // устанавливается формат вершин
 	m_pD3DDevice -> SetIndices( m_pIndexBuf );	
 	m_pD3DDevice -> SetTexture( 0, Texture );	
 	m_pD3DDevice -> DrawIndexedPrimitive( D3DPT_TRIANGLELIST, 0, 0, 4, 0, 2 );
-	if ( m_ZBuffer )
-	{
-		m_pD3DDevice -> SetSamplerState( 0, D3DSAMP_ADDRESSU, D3DTADDRESS_WRAP );
-		m_pD3DDevice -> SetSamplerState( 0, D3DSAMP_ADDRESSV, D3DTADDRESS_WRAP );
-		m_pD3DDevice -> SetSamplerState( 0, D3DSAMP_ADDRESSW, D3DTADDRESS_WRAP );
-		m_pD3DDevice -> SetRenderState(  D3DRS_ZENABLE, true );
-	}
 }
 
 void CText::Release()

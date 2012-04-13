@@ -79,7 +79,12 @@ HRESULT CD3DDevice::IntialDirect3D( HWND hwnd )
 	Direct3DParametr.EnableAutoDepthStencil = TRUE;					 // включаем Z-буфер
 	Direct3DParametr.AutoDepthStencilFormat = D3DFMT_D16;
 	Direct3DParametr.PresentationInterval	= D3DPRESENT_INTERVAL_DEFAULT; 
-
+	/*/---------------------------полноэкранный режим--------------------
+	Direct3DParametr.BackBufferWidth  = GetSystemMetrics(SM_CXSCREEN);
+	Direct3DParametr.BackBufferHeight = GetSystemMetrics(SM_CYSCREEN);
+	Direct3DParametr.BackBufferCount  = 3;
+	Direct3DParametr.FullScreen_RefreshRateInHz = Display.RefreshRate;
+	//------------------------------------------------------------------*/
 	if ( FAILED( m_pDirect3D -> CreateDevice( D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, hwnd, D3DCREATE_HARDWARE_VERTEXPROCESSING, &Direct3DParametr, &m_pD3DDevice ) ) ) // создаётся интерфейс устройства
 		return E_FAIL;
 	Log( "Initial CreateDevice Direct3D" );

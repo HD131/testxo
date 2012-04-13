@@ -14,12 +14,26 @@ void CWeapon::Recharge()
 }
 
 void CWeapon::Fire() 
-{	
-	if ( m_ChargerBullet )
-	{
-		--m_ChargerBullet;
-		Beep(50,30);
-	}
+{
+	if ( ( m_LastTimeFire == 0 ) || ( m_LastTimeFire + m_RateOfFire < timeGetTime() ) )
+		if ( m_ChargerBullet )
+		{
+			--m_ChargerBullet;
+			m_Fire = true;
+			Beep(150,40);
+			m_LastTimeFire = timeGetTime();
+		}
+}
+
+bool CWeapon::GetFire()
+{
+	return m_Fire;
+}
+
+void CWeapon::SetEndFire()
+{
+	m_LastTimeFire = 0;
+	m_Fire         = false;
 }
 
 CWeapon::~CWeapon()
@@ -34,10 +48,11 @@ CAutomatic_M16::CAutomatic_M16( LPCSTR Name, IDirect3DDevice9* pD3DDevice )
 	m_MaxChargerBullet = 20;
 	m_ChargerBullet    = m_MaxChargerBullet; 
 	m_Damage           = 10;
-	m_RateOfFire       = 500;
-	m_NameWeapon       = M16;	
-	m_Fire             = false;
+	m_RateOfFire       = 70;
+	m_LastTimeFire     = 0;
+	m_NameWeapon       = M16;
 	m_pD3DDevice       = pD3DDevice;
+	m_Fire             = false;
 	m_Mesh.InitialMesh( Name, pD3DDevice );
 }
 void CAutomatic_M16::RenderWeapon( CameraDevice const& Camera, CShader const& Shader )
@@ -74,8 +89,10 @@ CAutomatic_AK47::CAutomatic_AK47( LPCSTR Name, IDirect3DDevice9* pD3DDevice )
 	m_MaxChargerBullet = 30;
 	m_ChargerBullet    = m_MaxChargerBullet;
 	m_Damage           = 15;
-	m_RateOfFire       = 200;
+	m_RateOfFire       = 100;
+	m_LastTimeFire     = 0;
 	m_NameWeapon       = AK47;
+	m_pD3DDevice       = pD3DDevice;
 	m_Fire             = false;
 	m_Mesh.InitialMesh( Name, pD3DDevice );
 }

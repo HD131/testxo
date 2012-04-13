@@ -91,6 +91,7 @@ bool CInputDevice::ScanInput( CameraDevice *m_Camera, CWeapon* pWeapon )
 		 if ( Pressed )
 		 {
 			 Pressed = false;
+			 pWeapon->SetEndFire();
 		 }
 	
 return TRUE;
