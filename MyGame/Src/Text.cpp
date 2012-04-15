@@ -54,6 +54,7 @@ void CText::RenderInt( float x, float y, float dist, int Number, int Value, CSha
 	D3DXMATRIX   MatrixWorldTrans, MatrixWorldScal; 
 	D3DVIEWPORT9 ViewPort;
 	char str[20];
+	// перевод числа в строку и добавление нулей перед числом
 	itoa( Number, str, 10);
 	int d = strlen(str);
 	if ( ( Value != 0 ) && ( Value > d ) )
@@ -64,6 +65,7 @@ void CText::RenderInt( float x, float y, float dist, int Number, int Value, CSha
 		for ( int i = 0; i < Value - d; ++i )
 			str[i] = '0';
 	}
+
 	m_pD3DDevice->GetViewport( &ViewPort );
 	float Scale = 0.05f;
 	D3DXMatrixScaling( &MatrixWorldScal, Scale, Scale * float(ViewPort.Width) / float(ViewPort.Height), Scale );	
