@@ -128,7 +128,7 @@ void RenderingDirect3D( IDirect3DDevice9* D3DDevice )
 	g_Sky.RenderSky( g_Camera, g_Shader[Sky] );
 
 	D3DXMatrixTranslation( &MatrixWorld, 0, 0, 0 );
-	g_Text.RenderImage( g_Shader[FlatImage], 0.02f, MatrixWorld );
+	//g_Text.RenderImage( g_Shader[FlatImage], 0.02f, MatrixWorld );
 
 	//------------------------------------------Render Zona----------------------------------------	
 	D3DXMatrixTranslation( &MatrixWorld, 0, 0, 0 );
@@ -145,7 +145,8 @@ void RenderingDirect3D( IDirect3DDevice9* D3DDevice )
 	g_Text.RenderInt( -0.95f, -0.9f,  0.07f, g_Weapon[ActiveWeapon]->GetChargerBullet(), 2, g_Shader[Text] ); // вывод количества патронов в магазине
 	g_Text.RenderInt(  0.80f, -0.9f,  0.07f, g_Weapon[ActiveWeapon]->GetAmountBullet(),  3, g_Shader[Text] ); // вывод остатка общего количества патронов
 	//------------------------------------------Render Target----------------------------------------
-	//g_Text.RenderImage( g_Shader[FlatImage], 0.02f, MatrixWorld );
+	D3DXMatrixTranslation( &MatrixWorld, 0, 0, 0 );
+	g_Text.RenderImage( g_Shader[FlatImage], 0.02f, MatrixWorld );
 	
 
 // 	char        str[50];
