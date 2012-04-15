@@ -128,7 +128,7 @@ void RenderingDirect3D( IDirect3DDevice9* D3DDevice )
 	g_Sky.RenderSky( g_Camera, g_Shader[Sky] );
 
 	D3DXMatrixTranslation( &MatrixWorld, 0, 0, 0 );
-	//g_Text.RenderImage( g_Shader[FlatImage], 0.02f, MatrixWorld );
+	g_Text.RenderImage( g_Shader[FlatImage], 0.02f, MatrixWorld );
 
 	//------------------------------------------Render Zona----------------------------------------	
 	D3DXMatrixTranslation( &MatrixWorld, 0, 0, 0 );
