@@ -2,11 +2,11 @@
 #include "Mesh.h"
 #include "Init.h"
 
-enum Weapon { M16, AK47, MaxWeapon };
-
+enum                 Weapon          {  M16,   AK47,   MaxWeapon };
+std::string  const   WeaponNames[] = { "M16", "AK47" };
 class CWeapon
 {
-protected:
+private:
 	unsigned int  		 m_AmountBullet;       // количество пуль
 	unsigned int  		 m_ChargerBullet;      // сколько в обойме
 	unsigned int         m_MaxChargerBullet;   // максимально сколько в обойме
@@ -19,44 +19,16 @@ protected:
 	D3DXMATRIX     		 m_MatrixWorld;
 	IDirect3DDevice9*    m_pD3DDevice;
 public:
- 	virtual Weapon GetWeaponType() = 0;	
-	virtual void   SetEndFire()    = 0;
-	virtual void   Fire()          = 0;
-	virtual bool   GetFire()       = 0;
-	virtual void   Recharge()      = 0;  // перезарядка
-	virtual void   RenderWeapon( CameraDevice const& Camera, CShader const& Shader ) = 0;
-	virtual int    GetChargerBullet() = 0;
-	virtual int    GetAmountBullet()  = 0;
-	virtual       ~CWeapon();
-
-};
-
-class CAutomatic_M16 : public CWeapon
-{
-public:
-	CAutomatic_M16( LPCSTR Name, IDirect3DDevice9* pD3DDevice );
-   ~CAutomatic_M16();
-    void   RenderWeapon( CameraDevice const& Camera, CShader const& Shader );
-	void   Recharge();	
-	void   SetEndFire()			{	CWeapon::SetEndFire();	}
+	CWeapon( std::string NameWeapon, IDirect3DDevice9* pD3DDevice );
+	char*  ReadIniFile( const char *filename, const char *section, const char *key );
+ 	Weapon GetWeaponType()	    {	return m_NameWeapon; 	};
+	void   SetEndFire();
 	void   Fire();
 	bool   GetFire()			{	return m_Fire;			};
+	void   Recharge();
+	void   RenderWeapon( CameraDevice const& Camera, CShader const& Shader );
 	int    GetChargerBullet()	{	return m_ChargerBullet;	};
 	int    GetAmountBullet()	{	return m_AmountBullet;	};
-	Weapon GetWeaponType()	    {	return m_NameWeapon; 	};
-};
+   ~CWeapon();
 
-class CAutomatic_AK47 : public CWeapon
-{
-public:
-	CAutomatic_AK47( LPCSTR Name, IDirect3DDevice9* pD3DDevice );
-   ~CAutomatic_AK47();
-    void   RenderWeapon( CameraDevice const& Camera, CShader const& Shader );
-	void   Recharge();	
-	void   SetEndFire()			{	CWeapon::SetEndFire();	}
-	void   Fire();
-	bool   GetFire()			{	return m_Fire;			};
-	int    GetChargerBullet()	{	return m_ChargerBullet;	};
-	int    GetAmountBullet()	{	return m_AmountBullet;	};
-	Weapon GetWeaponType()	    {	return m_NameWeapon; 	};
 };

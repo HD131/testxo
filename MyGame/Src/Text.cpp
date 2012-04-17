@@ -13,12 +13,12 @@ HRESULT CText::Init( IDirect3DDevice9* D3DDevice )
 	m_pVerBuf   = 0; // указатель на буфер вершин
 	m_pIndexBuf = 0; // указатель на буфер вершин
 
-	CVertexPT Vershin[4];
+	CVertexFVF Vershin[4];
 
-	Vershin[0] = CVertexPT(  1.0f, -1.0f, 0.0f, 1.0f, 1.0f ); // 0
-	Vershin[1] = CVertexPT( -1.0f, -1.0f, 0.0f, 0.0f, 1.0f ); // 1	
-	Vershin[2] = CVertexPT( -1.0f,  1.0f, 0.0f, 0.0f, 0.0f ); // 2		
-	Vershin[3] = CVertexPT(  1.0f,  1.0f, 0.0f, 1.0f, 0.0f ); // 3
+	Vershin[0] = CVertexFVF(  1.0f, -1.0f, 0.0f, 0.0f,  0.0f, -1.0f, 1.0f, 1.0f ); // 0
+	Vershin[1] = CVertexFVF( -1.0f, -1.0f, 0.0f, 0.0f,  0.0f, -1.0f, 0.0f, 1.0f ); // 1	
+	Vershin[2] = CVertexFVF( -1.0f,  1.0f, 0.0f, 0.0f,  0.0f, -1.0f, 0.0f, 0.0f ); // 2		
+	Vershin[3] = CVertexFVF(  1.0f,  1.0f, 0.0f, 0.0f,  0.0f, -1.0f, 1.0f, 0.0f ); // 3
 	//						  X      Y     Z     tu    tv
 
 	const unsigned short Index[] =
@@ -26,7 +26,7 @@ HRESULT CText::Init( IDirect3DDevice9* D3DDevice )
 		0,1,2,    2,3,0,		
 	};
 
-	if ( FAILED( m_pD3DDevice -> CreateVertexBuffer( 4 * sizeof( CVertexPT ), 0, D3DFVF_CUSTOMVERTEX, D3DPOOL_DEFAULT, &m_pVerBuf, 0 ) ) ) // создаём буфер вершин		
+	if ( FAILED( m_pD3DDevice -> CreateVertexBuffer( 4 * sizeof( CVertexFVF ), 0, D3DFVF_CUSTOMVERTEX, D3DPOOL_DEFAULT, &m_pVerBuf, 0 ) ) ) // создаём буфер вершин		
 		return E_FAIL;
 	if ( FAILED( m_pVerBuf->Lock( 0, 0, ( void** )&pp, 0 ) ) ) 
 		Log( "error lock vertex buffer Text" );
@@ -99,8 +99,8 @@ void CText::Render( CShader const& Shader, IDirect3DTexture9* Texture, const D3D
 	m_pD3DDevice->SetVertexShader( Shader.m_pVertexShader );
 	m_pD3DDevice->SetPixelShader(  Shader.m_pPixelShader );
 	// здесь перерисовка сцены	
-	m_pD3DDevice -> SetStreamSource( 0, m_pVerBuf, 0, sizeof( CVertexPT ) ); // связь буфера вершин с потоком данных
-	m_pD3DDevice -> SetFVF( D3DFVF_XYZ | D3DFVF_TEX1 ); // устанавливается формат вершин
+	m_pD3DDevice -> SetStreamSource( 0, m_pVerBuf, 0, sizeof( CVertexFVF ) ); // связь буфера вершин с потоком данных
+	m_pD3DDevice -> SetFVF( D3DFVF_CUSTOMVERTEX ); // устанавливается формат вершин
 	m_pD3DDevice -> SetIndices( m_pIndexBuf );	
 	m_pD3DDevice -> SetTexture( 0, Texture );	
 	m_pD3DDevice -> DrawIndexedPrimitive( D3DPT_TRIANGLELIST, 0, 0, 4, 0, 2 );
