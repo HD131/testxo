@@ -1,6 +1,34 @@
 #include "Weapon.h"
 #include "Init.h"
 
+
+
+CWeapon::CWeapon( std::string NameWeapon, IDirect3DDevice9* pD3DDevice )
+{	
+	std::string FileIni = "model\\" + NameWeapon + ".ini";
+
+	m_AmountBullet     = atoi( ReadIniFile( FileIni.c_str(), NameWeapon.c_str(), "AmountBullet") ); 
+	m_MaxChargerBullet = atoi( ReadIniFile( FileIni.c_str(), NameWeapon.c_str(), "MaxChargerBullet") ); 
+	m_ChargerBullet    = atoi( ReadIniFile( FileIni.c_str(), NameWeapon.c_str(), "ChargerBullet") ); 
+	m_Damage           = atoi( ReadIniFile( FileIni.c_str(), NameWeapon.c_str(), "Damage") ); 
+	m_RateOfFire       = atoi( ReadIniFile( FileIni.c_str(), NameWeapon.c_str(), "RateOfFire") ); 
+	m_LastTimeFire     = 0;
+	m_NameWeapon       = (Weapon) atoi( ReadIniFile( FileIni.c_str(), NameWeapon.c_str(), "NameWeapon") );
+	m_pD3DDevice       = pD3DDevice;
+	m_Fire             = false;
+
+	std::string Name = "model\\" + NameWeapon + ".x";
+	m_Mesh.InitialMesh( Name.c_str(), pD3DDevice );
+}
+
+char* CWeapon::ReadIniFile( const char* filename, const char* section, const char* key )
+{
+	char *out = new char[512];
+	GetPrivateProfileString( (LPCSTR)section, (LPCSTR)key, 0, out, 200, (LPCSTR)filename );
+
+return out;
+} 
+
 void CWeapon::Recharge()
 {
 	if ( m_AmountBullet )
@@ -25,11 +53,6 @@ void CWeapon::Fire()
 		}
 }
 
-bool CWeapon::GetFire()
-{
-	return m_Fire;
-}
-
 void CWeapon::SetEndFire()
 {
 	m_LastTimeFire = 0;
@@ -42,20 +65,9 @@ CWeapon::~CWeapon()
 		m_Mesh.Release();
 }
 
-CAutomatic_M16::CAutomatic_M16( LPCSTR Name, IDirect3DDevice9* pD3DDevice )
-{	
-	m_AmountBullet     = 100; 
-	m_MaxChargerBullet = 20;
-	m_ChargerBullet    = m_MaxChargerBullet; 
-	m_Damage           = 10;
-	m_RateOfFire       = 70;
-	m_LastTimeFire     = 0;
-	m_NameWeapon       = M16;
-	m_pD3DDevice       = pD3DDevice;
-	m_Fire             = false;
-	m_Mesh.InitialMesh( Name, pD3DDevice );
-}
-void CAutomatic_M16::RenderWeapon( CameraDevice const& Camera, CShader const& Shader )
+
+
+void CWeapon::RenderWeapon( CameraDevice const& Camera, CShader const& Shader )
 {
 	float sc = 0.003f;
 	D3DXMATRIX MatV, MatrixWorldTr, MatrixWorldSc;
@@ -65,61 +77,4 @@ void CAutomatic_M16::RenderWeapon( CameraDevice const& Camera, CShader const& Sh
 	m_MatrixWorld =  MatrixWorldSc * MatrixWorldTr * MatV ;
 	 
 	m_Mesh.RenderMesh( Camera, m_MatrixWorld, Shader );	
-}
-
-void CAutomatic_M16::Fire()
-{	
-	CWeapon::Fire();
-}
-
-void CAutomatic_M16::Recharge()
-{
-	CWeapon::Recharge();
-}
-
-CAutomatic_M16::~CAutomatic_M16()
-{
-	CWeapon::~CWeapon();
-}
-//-------------------------------------------------------------------------------------------------------
-
-CAutomatic_AK47::CAutomatic_AK47( LPCSTR Name, IDirect3DDevice9* pD3DDevice )
-{
-	m_AmountBullet     = 200;
-	m_MaxChargerBullet = 30;
-	m_ChargerBullet    = m_MaxChargerBullet;
-	m_Damage           = 15;
-	m_RateOfFire       = 100;
-	m_LastTimeFire     = 0;
-	m_NameWeapon       = AK47;
-	m_pD3DDevice       = pD3DDevice;
-	m_Fire             = false;
-	m_Mesh.InitialMesh( Name, pD3DDevice );
-}
-
-void CAutomatic_AK47::RenderWeapon( CameraDevice const& Camera, CShader const& Shader )
-{
-	float sc = 0.003f;
-	D3DXMATRIX MatV, MatrixWorldTr, MatrixWorldSc;
-	D3DXMatrixInverse( &MatV, 0, &Camera.m_View ); 
-	D3DXMatrixScaling( &MatrixWorldSc, sc, sc, sc );
-	D3DXMatrixTranslation( &MatrixWorldTr, 0.1f, -0.15f, 0.55f );
-	m_MatrixWorld =  MatrixWorldSc * MatrixWorldTr * MatV ;
-
-	m_Mesh.RenderMesh( Camera, m_MatrixWorld, Shader );	
-}
-
-void CAutomatic_AK47::Fire()
-{
-	CWeapon::Fire();
-}
-
-void CAutomatic_AK47::Recharge()
-{
-	CWeapon::Recharge();
-}
-
-CAutomatic_AK47::~CAutomatic_AK47()
-{
-	CWeapon::~CWeapon();
 }

@@ -19,11 +19,13 @@ bool         g_Exit      = false;
 bool		 g_Wireframe = false;
 CWeapon*     g_Weapon[MaxWeapon];
 byte         ActiveWeapon = M16;
+IDirect3DTexture9* TexTarget = 0;
 
 void InitWeapon( IDirect3DDevice9* pD3DDevice )
 {
-	g_Weapon[M16]  = new CAutomatic_M16(  "model\\M16.x", pD3DDevice );
-	g_Weapon[AK47] = new CAutomatic_AK47( "model\\AK47.x", pD3DDevice );
+	for ( int i = 0; i < MaxWeapon; ++i )
+		g_Weapon[i]  = new CWeapon( WeaponNames[i], pD3DDevice );
+	//g_Weapon[AK47] = new CWeapon( "model\\M16.ini", "model\\AK47.x", AK47, pD3DDevice );
 }
 
 void DeleteWeapon()
@@ -105,6 +107,28 @@ POINT PickObject( CCell* Cell )
 return NumObject[0];
 }
 
+void RenderImg( IDirect3DDevice9* m_pD3DDevice, CShader const& Shader, IDirect3DTexture9* Texture, CText& Img, const D3DXMATRIX&  MatrixWorld, int num )
+{
+	if ( !TexTarget )
+		if ( FAILED( D3DXCreateTextureFromFile( m_pD3DDevice, "model\\Shot.png", &TexTarget ) ) )
+			Log( "error load target texture" );
+	if ( Shader.m_pConstTableVS )
+	{		
+		Shader.m_pConstTableVS->SetMatrix( m_pD3DDevice, "mat_world", &MatrixWorld );		
+		Shader.m_pConstTablePS->SetFloat(  m_pD3DDevice, "diffuse_intensity", g_Diffuse_intensity );
+		Shader.m_pConstTableVS->SetInt(    m_pD3DDevice, "number", num );
+	}
+	// устанавливаем шейдеры
+	m_pD3DDevice->SetVertexShader( Shader.m_pVertexShader );
+	m_pD3DDevice->SetPixelShader(  Shader.m_pPixelShader );
+	// здесь перерисовка сцены	
+	m_pD3DDevice -> SetStreamSource( 0, Img.GetVertexBuffer(), 0, sizeof( CVertexFVF ) ); // связь буфера вершин с потоком данных
+	m_pD3DDevice -> SetFVF( D3DFVF_CUSTOMVERTEX ); // устанавливается формат вершин
+	m_pD3DDevice -> SetIndices( Img.GetIndexBuffer() );	
+	m_pD3DDevice -> SetTexture( 0, TexTarget );	
+	m_pD3DDevice -> DrawIndexedPrimitive( D3DPT_TRIANGLELIST, 0, 0, 4, 0, 2 );
+}
+
 void RenderingDirect3D( IDirect3DDevice9* D3DDevice )
 {
 	D3DXMATRIX MatrixWorld, MatrixWorldX, MatrixWorldY, MatrixWorldZ;
@@ -117,7 +141,7 @@ void RenderingDirect3D( IDirect3DDevice9* D3DDevice )
 	else
 		D3DDevice -> SetRenderState( D3DRS_FILLMODE, D3DFILL_SOLID);
 	//------------------------------------------------------------------------------------------	
-	float  Ang = timeGetTime() / 2000.0f;
+	float  Ang = timeGetTime() / 200.0f;
 	D3DXMATRIX  MatrixView       = g_Camera.m_View;
 	D3DXMATRIX  MatrixProjection = g_Camera.m_Proj;	
 	// очистка заднего буфера
@@ -127,20 +151,28 @@ void RenderingDirect3D( IDirect3DDevice9* D3DDevice )
 	//------------------------------------------Render Sky----------------------------------------
 	g_Sky.RenderSky( g_Camera, g_Shader[Sky] );
 
-	D3DXMatrixTranslation( &MatrixWorld, 0, 0, 0 );
-	//g_Text.RenderImage( g_Shader[FlatImage], 0.02f, MatrixWorld );
-
 	//------------------------------------------Render Zona----------------------------------------	
 	D3DXMatrixTranslation( &MatrixWorld, 0, 0, 0 );
 	g_Mesh[Zona_1].RenderMesh( g_Camera, MatrixWorld, g_Shader[Diffuse] );
 
+	
 	//------------------------------------------Render Weapon----------------------------------------
 	if ( g_Weapon[ActiveWeapon]->GetFire() )
 	{
-		//g_Text.RenderInt( -0.0f, -0.0f,  0.07f, g_Weapon[ActiveWeapon]->GetChargerBullet(), g_Shader[Text] ); // вывод количества патронов в магазине
+		D3DXMATRIX MatV, MatrixWorldTr, MatrixWorldSc;
+		D3DXMatrixInverse( &MatV, 0, &g_Camera.m_View ); 
+		D3DXMatrixScaling( &MatrixWorldSc, 0.1f, 0.1f, 0.1f );
+		//D3DXMatrixRotationY( &MatrixWorld, 0 );
+		D3DXMatrixTranslation( &MatrixWorldTr, 0.1f, -0.1f, 0.93f );
+		MatrixWorld = MatrixWorldSc * MatrixWorldTr * g_Camera.MatInverseViewProject();
+		int i = timeGetTime() %10;
+		RenderImg( D3DDevice, g_Shader[Text], 0, g_Text, MatrixWorld, i );
 	}
 	g_Weapon[ActiveWeapon]->RenderWeapon( g_Camera, g_Shader[Diffuse] );
+
 	
+
+
 	//------------------------------------------Render Text----------------------------------------	
 	g_Text.RenderInt( -0.95f, -0.9f,  0.07f, g_Weapon[ActiveWeapon]->GetChargerBullet(), 2, g_Shader[Text] ); // вывод количества патронов в магазине
 	g_Text.RenderInt(  0.80f, -0.9f,  0.07f, g_Weapon[ActiveWeapon]->GetAmountBullet(),  3, g_Shader[Text] ); // вывод остатка общего количества патронов
@@ -169,9 +201,9 @@ LONG WINAPI WndProc( HWND hwnd, UINT Message, WPARAM wparam, LPARAM lparam )
 			g_Exit = true;		
 		if ( wparam == VK_F4 )
 			g_Wireframe = !g_Wireframe;
-		if ( wparam == VK_F6 )
+		if ( wparam == '1' )
 			ActiveWeapon = M16;
-		if ( wparam == VK_F5 )
+		if ( wparam == '2' )
 			ActiveWeapon = AK47;
 		break;
 	}
