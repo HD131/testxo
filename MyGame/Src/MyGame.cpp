@@ -25,7 +25,6 @@ void InitWeapon( IDirect3DDevice9* pD3DDevice )
 {
 	for ( int i = 0; i < MaxWeapon; ++i )
 		g_Weapon[i]  = new CWeapon( WeaponNames[i], pD3DDevice );
-	//g_Weapon[AK47] = new CWeapon( "model\\M16.ini", "model\\AK47.x", AK47, pD3DDevice );
 }
 
 void DeleteWeapon()
@@ -132,7 +131,7 @@ void RenderImg( IDirect3DDevice9* m_pD3DDevice, CShader const& Shader, IDirect3D
 void RenderingDirect3D( IDirect3DDevice9* D3DDevice )
 {
 	D3DXMATRIX MatrixWorld, MatrixWorldX, MatrixWorldY, MatrixWorldZ;
-
+	g_Camera.SetMesh( g_Mesh[Zona_1].GetMesh() );
 	if ( D3DDevice == 0 )
 		return;
 	//----------------------------------------------режим каркаса-------------------------------
@@ -180,9 +179,9 @@ void RenderingDirect3D( IDirect3DDevice9* D3DDevice )
 	D3DXMatrixTranslation( &MatrixWorld, 0, 0, 0 );
 	g_Text.RenderImage( g_Shader[FlatImage], 0.02f, MatrixWorld );
 	
-
+	
 // 	char        str[50];
-// 	sprintf(str, "x=%d  y=%f   z=%f", timeGetTime(), g_Camera.DirX.y, g_Camera.DirX.z );		
+// 	sprintf(str, "x=%d  y=%f   z=%f", timeGetTime(), g_Camera.m_DirX.y, g_Camera.m_DirX.z );		
 // 	DrawMyText( D3DDevice, str, 10, 10, 500, 700, D3DCOLOR_ARGB(250, 250, 250,50));
 
 	D3DDevice -> EndScene();

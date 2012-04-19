@@ -43,6 +43,8 @@ void CWeapon::Recharge()
 
 void CWeapon::Fire() 
 {
+	if ( !m_ChargerBullet )
+		SetEndFire();
 	if ( ( m_LastTimeFire == 0 ) || ( m_LastTimeFire + m_RateOfFire < timeGetTime() ) )
 		if ( m_ChargerBullet )
 		{
@@ -50,7 +52,7 @@ void CWeapon::Fire()
 			m_Fire = true;
 			Beep(150,40);
 			m_LastTimeFire = timeGetTime();
-		}
+		}	
 }
 
 void CWeapon::SetEndFire()
@@ -64,8 +66,6 @@ CWeapon::~CWeapon()
 	if ( m_Mesh.GetMesh() )
 		m_Mesh.Release();
 }
-
-
 
 void CWeapon::RenderWeapon( CameraDevice const& Camera, CShader const& Shader )
 {
