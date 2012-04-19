@@ -4,6 +4,8 @@
 
 enum                 Weapon          {  M16,   AK47,   MaxWeapon };
 std::string  const   WeaponNames[] = { "M16", "AK47" };
+
+
 class CWeapon
 {
 private:
@@ -11,7 +13,7 @@ private:
 	unsigned int  		 m_ChargerBullet;      // сколько в обойме
 	unsigned int         m_MaxChargerBullet;   // максимально сколько в обойме
 	unsigned int 		 m_Damage;		       // урон от пули
-	DWORD                m_RateOfFire;		   // скорострельность	
+	DWORD                m_RateOfFire;		   // время между пулями в милисекундах	
 	DWORD                m_LastTimeFire;
   	Weapon         		 m_NameWeapon;
 	CMesh3D        		 m_Mesh;

@@ -18,7 +18,6 @@ private:
 	D3DXMATRIX							m_MatrixProjection;
 	IDirect3DVertexBuffer9*				m_VertexBuffer;
 	IDirect3DIndexBuffer9*				m_IndexBuffer;
-	DWORD 								m_SizeFVF;
 	DWORD								m_TexturCount; 
 	D3DMATERIAL9*						m_pMeshMaterial;
 	std::vector<IDirect3DTexture9*>     m_pMeshTextura;

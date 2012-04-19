@@ -6,16 +6,17 @@ class CameraDevice
 public:
 	CameraDevice();
    
-	D3DXVECTOR3		PositionCamera;
-	D3DXVECTOR3		CameraUp;	// вверх
-	D3DXVECTOR3		TargetDir;	// вперед
-	D3DXVECTOR3     DirX;
-	D3DXVECTOR3     Point;
+	D3DXVECTOR3		m_PositionCamera;
+	D3DXVECTOR3		m_CameraUp;	// вверх
+	D3DXVECTOR3		m_TargetDir;	// вперед
+	D3DXVECTOR3     m_DirX;
+  	CSphere         m_CentrMass;
 	D3DXMATRIX		m_View;
 	D3DXMATRIX		m_Proj;
 	FLOAT           StepCamera;
 	FLOAT	        AngleCamera;
 	FLOAT	        Sensivity;
+	ID3DXMesh*      m_pMesh;
 
 	void  		MoveForv();
 	void  		MoveBack();
@@ -26,14 +27,8 @@ public:
 	void  		MouseRotateUp(    long Ang );
 	void  		MouseRotateDown(  long Ang );
 	void  		Refresh();
-	D3DXMATRIX  MatViewProject()
-	{
-		return m_View * m_Proj;
-	}
-	D3DXMATRIX  MatInverseViewProject()
-	{
-		D3DXMATRIX	InversView;
-		D3DXMatrixInverse( &InversView, 0, &m_View );
-		return  InversView * m_View * m_Proj;
-	}
+	bool		Collision( ID3DXMesh* pMesh );
+	D3DXMATRIX  MatViewProject();
+	D3DXMATRIX  MatInverseViewProject();
+	void        SetMesh( ID3DXMesh* pMesh );
 };

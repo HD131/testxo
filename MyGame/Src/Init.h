@@ -97,3 +97,8 @@ void DrawMyText( IDirect3DDevice9* pD3DDevice, char* StrokaTexta, int x, int y, 
 void Blending( BLEND Blend, IDirect3DDevice9* D3DDevice );
 
 
+struct CSphere
+{
+	D3DXVECTOR3 m_Centre;
+	float       m_Radius;
+};

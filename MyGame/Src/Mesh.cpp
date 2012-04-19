@@ -17,7 +17,6 @@ HRESULT CMesh3D::InitialMesh( LPCSTR Name, IDirect3DDevice9* pD3DDevice )
 	m_pMesh         = 0;
 	m_pMeshMaterial = 0;
 	m_pMeshTextura.resize(0);
-	m_SizeFVF       = 0;
 	m_Alpha         = 1.0f;	
 	ID3DXBuffer *pMaterialBuffer  = 0;
 	if ( FAILED( D3DXLoadMeshFromX( Name, D3DXMESH_SYSTEMMEM, m_pD3DDevice, 0, &pMaterialBuffer, 0, &m_TexturCount, &m_pMesh ) ) )
@@ -29,12 +28,8 @@ HRESULT CMesh3D::InitialMesh( LPCSTR Name, IDirect3DDevice9* pD3DDevice )
 		}
 	}
 	Log( "Load x-file" );
-	if ( m_pMesh->GetFVF() & D3DFVF_XYZ ) 
-		m_SizeFVF += sizeof(float)*3;
-	if ( m_pMesh->GetFVF() & D3DFVF_NORMAL ) 
-		m_SizeFVF += sizeof(float)*3;
-	if ( m_pMesh->GetFVF() & D3DFVF_TEX1 )
-		m_SizeFVF += sizeof(float)*2;
+
+	DWORD i = m_pMesh->GetNumFaces();// — Возвращает количество граней (треугольных ячеек) в сетке.
 
 	m_pMesh->GetVertexBuffer( &m_VertexBuffer );
 	m_pMesh->GetIndexBuffer(  &m_IndexBuffer  );
@@ -76,8 +71,8 @@ HRESULT CMesh3D::InitialMesh( LPCSTR Name, IDirect3DDevice9* pD3DDevice )
 
 void CMesh3D::RenderMesh( CameraDevice const& Camera, const D3DXMATRIX&  MatrixWorld, CShader const& Shader )
 {
-	D3DXMATRIX wvp;	
-	
+	D3DXMATRIX wvp;
+
 	if ( m_pMesh )
 	{
 		wvp = MatrixWorld * Camera.m_View * Camera.m_Proj;
@@ -88,20 +83,23 @@ void CMesh3D::RenderMesh( CameraDevice const& Camera, const D3DXMATRIX&  MatrixW
 			Shader.m_pConstTableVS->SetVector( m_pD3DDevice, "vec_light", &g_Light );
 			Shader.m_pConstTablePS->SetFloat(  m_pD3DDevice, "diffuse_intensity", g_Diffuse_intensity );	
 			Shader.m_pConstTablePS->SetFloat(  m_pD3DDevice, "Alpha", m_Alpha );	
-		}
-		// устанавливаем шейдеры
-		m_pD3DDevice->SetVertexShader( Shader.m_pVertexShader );
-		m_pD3DDevice->SetPixelShader(  Shader.m_pPixelShader );
+		
+			// устанавливаем шейдеры
+			m_pD3DDevice->SetVertexShader( Shader.m_pVertexShader );
+			m_pD3DDevice->SetPixelShader(  Shader.m_pPixelShader );
 
-		m_pD3DDevice->SetStreamSource( 0, m_VertexBuffer, 0, m_SizeFVF );
-		m_pD3DDevice->SetIndices( m_IndexBuffer );
-		for ( int i = 0; i < m_TexturCount; ++i )
-		{
-			m_pD3DDevice -> SetMaterial( &m_pMeshMaterial[i] );
-			m_pD3DDevice -> SetTexture( 0, m_pMeshTextura[i] );
-			//m_pMesh -> DrawSubset(i);
+			m_pD3DDevice->SetStreamSource( 0, m_VertexBuffer, 0, m_pMesh->GetNumBytesPerVertex() );
+			m_pD3DDevice->SetIndices( m_IndexBuffer );
+			m_pD3DDevice->SetFVF( m_pMesh->GetFVF() );
+
+			for ( int i = 0; i < m_TexturCount; ++i )
+			{
+				m_pD3DDevice -> SetMaterial( &m_pMeshMaterial[i] );
+				m_pD3DDevice -> SetTexture( 0, m_pMeshTextura[i] );
+				//m_pMesh -> DrawSubset(i);
+			}
+			m_pD3DDevice->DrawIndexedPrimitive( D3DPT_TRIANGLELIST, 0, 0, m_pMesh->GetNumVertices(), 0, m_pMesh->GetNumFaces() );
 		}
-		m_pD3DDevice->DrawIndexedPrimitive( D3DPT_TRIANGLELIST, 0, 0, m_pMesh->GetNumVertices(), 0, m_pMesh->GetNumFaces() ); 
 	}
 }
 
