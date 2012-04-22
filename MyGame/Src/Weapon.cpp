@@ -50,7 +50,7 @@ void CWeapon::Fire()
 		{
 			--m_ChargerBullet;
 			m_Fire = true;
-			Beep(150,40);
+			//Beep(150,40);
 			m_LastTimeFire = timeGetTime();
 		}	
 }

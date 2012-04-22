@@ -170,19 +170,20 @@ bool CameraDevice::Collision( ID3DXMesh* pMesh )
 		Triangle[2] = (CVertexFVF*)( pVertices + ( *pIndices++ ) );//точка C i-того треугольника
 
 		//тут можем работать с этим треугольником		
-		D3DXVECTOR3 n = D3DXVECTOR3( Triangle[0]->nx, Triangle[0]->ny, Triangle[0]->nz );	// нормаль треугольника
-		D3DXVECTOR3 V = -n;
-		float D = -n.x * Triangle[0]->x - n.y * Triangle[0]->y - n.z * Triangle[0]->z;
-		float k = -( n.x * m_PositionCamera.x + n.y * m_PositionCamera.y + n.z * m_PositionCamera.z + D ) / ( n.x * V.x + n.y * V.y + n.z * V.z );
+		D3DXVECTOR3 Normal = D3DXVECTOR3( Triangle[0]->nx, Triangle[0]->ny, Triangle[0]->nz );	// нормаль треугольника
+		D3DXVECTOR3 V = -Normal;
+		float D = -Normal.x * Triangle[0]->x - Normal.y * Triangle[0]->y - Normal.z * Triangle[0]->z;
+		float k = -( Normal.x * m_PositionCamera.x + Normal.y * m_PositionCamera.y + Normal.z * m_PositionCamera.z + D ) / ( Normal.x * V.x + Normal.y * V.y + Normal.z * V.z );
 		D3DXVECTOR3 P = D3DXVECTOR3( k * V.x + m_PositionCamera.x, k * V.y + m_PositionCamera.y, k * V.z + m_PositionCamera.z);
-		float d = D3DXVec3LengthSq( &(D3DXVECTOR3( m_PositionCamera.x - P.x, m_PositionCamera.y - P.y, m_PositionCamera.z - P.z )) );
+		// расстояние от камеры до точки столкновения 
+		float Dist = D3DXVec3LengthSq( &(D3DXVECTOR3( m_PositionCamera.x - P.x, m_PositionCamera.y - P.y, m_PositionCamera.z - P.z ) ) );
 
-		D3DXVECTOR3 A = D3DXVECTOR3( Triangle[0]->x, Triangle[0]->y, Triangle[0]->z );
-		D3DXVECTOR3 B = D3DXVECTOR3( Triangle[1]->x, Triangle[1]->y, Triangle[1]->z );
-		D3DXVECTOR3 C = D3DXVECTOR3( Triangle[2]->x, Triangle[2]->y, Triangle[2]->z );
-		if ( PointInTr( A, B, C, n, P) )
+		D3DXVECTOR3 V1 = D3DXVECTOR3( Triangle[0]->x, Triangle[0]->y, Triangle[0]->z );
+		D3DXVECTOR3 V2 = D3DXVECTOR3( Triangle[1]->x, Triangle[1]->y, Triangle[1]->z );
+		D3DXVECTOR3 V3 = D3DXVECTOR3( Triangle[2]->x, Triangle[2]->y, Triangle[2]->z );
+		if ( PointInTr( V1, V2, V3, Normal, P ) )
 		{
-			if ( d < m_CentrMass.m_Radius )
+			if ( Dist < m_CentrMass.m_Radius )
 			{
 				//Beep(200,40);
 				return true;

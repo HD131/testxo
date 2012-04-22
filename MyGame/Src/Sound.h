@@ -3,17 +3,24 @@
 #include "Init.h"
 #include <al.h>
 #include <alc.h>
+#include <alut.h>
+
+
 
 class CSound
 {
 private:
 	ALCdevice*		pDevice;
 	ALCcontext*		pContext;
+	ALfloat			ListenerPos[3];
+	ALfloat			ListenerVel[3];
+	ALfloat			ListenerOri[6];
 public:
-	bool InitializeOpenAL();
-	void DestroyOpenAL();
+	CSound();
+   ~CSound();
 	ALboolean CheckALCError();
 	ALboolean CheckALError();
+	void Play();
 };
 
 class remSnd  
@@ -21,10 +28,11 @@ class remSnd
 public:
 	ALfloat mVel[3];
 	ALfloat mPos[3];
-	bool  mLooped;
+	bool    mLooped;
 
 	// Functions
 	bool Open(const std::string &Filename, bool Looped, bool Streamed);
+	bool LoadWavFile (const std::string &Filename);
 	bool IsStreamed();
 	void Play();
 	void Close();
@@ -42,7 +50,7 @@ private:
 	// Потоковый ли наш звук?
 	bool      mStreamed;
 
-	bool LoadWavFile (const std::string &Filename);
+	
 };
 
 typedef struct 
