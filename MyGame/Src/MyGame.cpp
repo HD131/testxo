@@ -5,6 +5,7 @@
 #include "Sky.h"
 #include "Weapon.h"
 #include "Text.h"
+#include "Sound.h"
 #include <vector>
 
 
@@ -15,6 +16,7 @@ CText        g_Text;
 CMesh3D      g_Mesh[MaxMesh];
 CShader      g_Shader[MaxShader];
 CameraDevice g_Camera;
+CSound       g_Sound;
 bool         g_Exit      = false;
 bool		 g_Wireframe = false;
 CWeapon*     g_Weapon[MaxWeapon];
@@ -166,6 +168,7 @@ void RenderingDirect3D( IDirect3DDevice9* D3DDevice )
 		MatrixWorld = MatrixWorldSc * MatrixWorldTr * g_Camera.MatInverseViewProject();
 		int i = timeGetTime() %10;
 		RenderImg( D3DDevice, g_Shader[Text], 0, g_Text, MatrixWorld, i );
+		g_Sound.Play();
 	}
 	g_Weapon[ActiveWeapon]->RenderWeapon( g_Camera, g_Shader[Diffuse] );
 
@@ -214,7 +217,7 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance,
 {	
 	MSG			 Msg;
 	WNDCLASS	 w; 
-
+	
 	remove( "log.txt" );
 	Log("Begin");	
 	//Init( MaxField, MaxMine );

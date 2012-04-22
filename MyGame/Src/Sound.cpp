@@ -26,51 +26,108 @@ ALboolean CSound::CheckALError()
 	return AL_TRUE;
 }
 
-bool CSound::InitializeOpenAL()
+CSound::CSound()
 {
 	// Позиция слушателя.
-	ALfloat ListenerPos[] = { 0.0, 0.0, 0.0 };
+	ListenerPos[0] = 0.0;
+	ListenerPos[1] = 0.0;
+	ListenerPos[2] = 0.0;
 
 	// Скорость слушателя.
-	ALfloat ListenerVel[] = { 0.0, 0.0, 0.0 };
+	ListenerVel[0] = 0.0;
+	ListenerVel[1] = 0.0;
+	ListenerVel[2] = 0.0;
 
 	// Ориентация слушателя. (Первые 3 элемента – направление «на», последние 3 – «вверх»)
-	ALfloat ListenerOri[] = { 0.0, 0.0, -1.0,  0.0, 1.0, 0.0 };
+	ListenerOri[0] =  0.0; 
+	ListenerOri[1] =  0.0;
+	ListenerOri[2] = -1.0;
+	ListenerOri[3] =  0.0;
+	ListenerOri[4] =  1.0;
+	ListenerOri[5] =  0.0;
+
 	pDevice = 0;
 	// Открываем заданное по умолчанию устройство
 	pDevice = alcOpenDevice( 0 );
-	// Проверка на ошибки
-	if ( !pDevice )
+
+	if ( pDevice )
+	{
+		Log("Open sound device");
+		pContext = 0;
+		pContext = alcCreateContext( pDevice, 0 );
+		if ( pContext )
+			alcMakeContextCurrent( pContext );	// Делаем контекст текущим
+		else
+		{
+			Log("Default sound contex not present");
+			alcCloseDevice( pDevice );
+			return;
+		}
+	}	
+	else
 	{
 		Log("Default sound device not present");
-		return false;
+		return;
 	}
-	pContext = 0;
-	// Создаем контекст рендеринга
-	pContext = alcCreateContext( pDevice, 0 );
-	if ( !pContext ) 
-	{
-		Log("Default sound contex not present");
-		return false;
-	}
-	// Делаем контекст текущим
-	alcMakeContextCurrent( pContext );
-
-	// Устанавливаем параметры слушателя
-	// Позиция
-	alListenerfv(AL_POSITION,    ListenerPos);
-	// Скорость
-	alListenerfv(AL_VELOCITY,    ListenerVel);
-	// Ориентация
-	alListenerfv(AL_ORIENTATION, ListenerOri);
-	return true;
 }
 
-void CSound::DestroyOpenAL()
+void CSound::Play()
+{	
+	char		*filename;
+	ALuint		source;
+	ALfloat		mPos[3] = {-10.0, 0.0, 0.0};
+	ALfloat		mVel[3] = {0.0, 0.0, 0.0};
+
+	unsigned int buffer;
+	ALvoid		*p;
+	ALsizei		size;
+	ALsizei		rate; 
+	ALenum		format;
+	ALboolean	loop;
+
+	filename = "galil.wav";	
+
+	// Устанавливаем параметры слушателя
+	// Позиция	
+	alListenerfv( AL_POSITION,	  ListenerPos);
+	// Скорость
+	alListenerfv( AL_VELOCITY,    ListenerVel);
+	// Ориентация
+	alListenerfv( AL_ORIENTATION, ListenerOri);
+
+	alGenSources (1, &source);
+	/* Тон звука; Усиление с расстоянием */
+	alSourcef  (source, AL_PITCH, 1.0f);
+	alSourcef  (source, AL_GAIN, 1.0f);
+	alSourcefv (source, AL_POSITION, mPos);
+	alSourcefv (source, AL_VELOCITY, mVel);
+	/* Зациклен ли? */
+	alSourcef (source, AL_LOOPING, AL_FALSE);
+
+	/* Загрузить данные */
+	alGenBuffers (1, &buffer);
+	alutLoadWAVFile ((ALbyte *) filename, &format, &p, &size, &rate, &loop);
+	alBufferData (buffer, format, p, size, rate);
+	alutUnloadWAV ( format, p, size, rate );
+	alSourcei( source, AL_BUFFER, buffer );
+	
+	alSourcePlay (source);
+	ALint status;
+	do
+	{
+		alutSleep (0.1f);
+		alGetSourcei (source, AL_SOURCE_STATE, &status);
+	} 
+	while (status == AL_PLAYING);
+
+	alSourceStop (source);
+
+	alDeleteSources (1, &source);
+	alDeleteBuffers (1, &buffer);
+}
+
+CSound::~CSound()
 {
-	// Очищаем все буффера
-// 	for (TBuf::iterator i = Buffers.begin(); i != Buffers.end(); i++)
-// 		alDeleteBuffers(1, &i->second.ID);
 	// Выключаем текущий контекст
 	alcMakeContextCurrent(0);
 	// Уничтожаем контекст
@@ -78,6 +135,13 @@ void CSound::DestroyOpenAL()
 	// Закрываем звуковое устройство
 	alcCloseDevice(pDevice);
 }
+
+
+
+
+
+
+
 
 bool remSnd::Open(const std::string &Filename, bool Looped, bool Streamed)
 {
@@ -91,8 +155,6 @@ bool remSnd::Open(const std::string &Filename, bool Looped, bool Streamed)
 
 	// Создаем источник соответствующий нашему звуку
 	alGenSources(1, &mSourceID);
-// 	if (!CheckALError()) 
-// 		return false;
 
 	alSourcef (mSourceID, AL_PITCH,    1.0f);
 	alSourcef (mSourceID, AL_GAIN,    1.0f);
@@ -190,3 +252,5 @@ bool remSnd::LoadWavFile(const std::string &Filename)
 */
 	return true;
 }
+
+
