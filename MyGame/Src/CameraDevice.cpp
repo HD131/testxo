@@ -51,6 +51,7 @@ void CameraDevice::MoveBack()
 void CameraDevice::MoveRight()
 {
 	Refresh();
+	m_PositionCamera += m_DirX * StepCamera;
 	Collision( m_pMesh );
 	D3DXMatrixLookAtLH( &m_View, &m_PositionCamera, &(m_PositionCamera + m_TargetDir), &m_CameraUp );
 }
@@ -166,12 +167,13 @@ bool CameraDevice::Collision( ID3DXMesh* pMesh )
 
 		//тут можем работать с этим треугольником		
 		D3DXVECTOR3 Normal = D3DXVECTOR3( Triangle[0]->nx, Triangle[0]->ny, Triangle[0]->nz );	// нормаль треугольника
+		D3DXVec3Normalize( &Normal, &Normal );
 		D3DXVECTOR3 V = -Normal;
 		float D = -Normal.x * Triangle[0]->x - Normal.y * Triangle[0]->y - Normal.z * Triangle[0]->z;
 		float k = -( Normal.x * m_PositionCamera.x + Normal.y * m_PositionCamera.y + Normal.z * m_PositionCamera.z + D ) / ( Normal.x * V.x + Normal.y * V.y + Normal.z * V.z );
 		D3DXVECTOR3 P = D3DXVECTOR3( k * V.x + m_PositionCamera.x, k * V.y + m_PositionCamera.y, k * V.z + m_PositionCamera.z);
 		// расстояние от камеры до точки столкновения 
-		float Dist = D3DXVec3LengthSq( &(D3DXVECTOR3( m_PositionCamera.x - P.x, m_PositionCamera.y - P.y, m_PositionCamera.z - P.z ) ) );
+		float Dist = D3DXVec3Length( &(D3DXVECTOR3( m_PositionCamera.x - P.x, m_PositionCamera.y - P.y, m_PositionCamera.z - P.z ) ) );
 
 		D3DXVECTOR3 V1 = D3DXVECTOR3( Triangle[0]->x, Triangle[0]->y, Triangle[0]->z );
 		D3DXVECTOR3 V2 = D3DXVECTOR3( Triangle[1]->x, Triangle[1]->y, Triangle[1]->z );
@@ -179,7 +181,12 @@ bool CameraDevice::Collision( ID3DXMesh* pMesh )
 		if ( PointInTr( V1, V2, V3, Normal, P ) )
 		{
 			if ( Dist < m_CentrMass.m_Radius )
-			{				
+			{			
+				char str[20];
+				float Number = m_CentrMass.m_Radius - Dist;
+				// перевод числа в строку и добавление нулей перед числом
+				gcvt( Number,5, str);
+				Log(str);
 				m_PositionCamera += Normal * ( m_CentrMass.m_Radius - Dist );
 				return true;
 			}
