@@ -36,8 +36,7 @@ void CameraDevice::MoveForv()
 {
 	Refresh();
 	m_PositionCamera += m_TargetDir * StepCamera;
-	if ( Collision( m_pMesh ) )
-		m_PositionCamera -= m_TargetDir * StepCamera;
+	Collision( m_pMesh );
 	D3DXMatrixLookAtLH( &m_View, &m_PositionCamera, &(m_PositionCamera + m_TargetDir), &m_CameraUp );
 }
 
@@ -45,17 +44,14 @@ void CameraDevice::MoveBack()
 {
 	Refresh();
 	m_PositionCamera += m_TargetDir * -StepCamera;
-	if ( Collision( m_pMesh ) )
-		m_PositionCamera -= m_TargetDir * -StepCamera;
+	Collision( m_pMesh );
 	D3DXMatrixLookAtLH( &m_View, &m_PositionCamera, &(m_PositionCamera + m_TargetDir), &m_CameraUp );
 }
 
 void CameraDevice::MoveRight()
 {
 	Refresh();
-	m_PositionCamera += m_DirX * StepCamera;
-	if ( Collision( m_pMesh ) )
-		m_PositionCamera -= m_DirX * StepCamera;
+	Collision( m_pMesh );
 	D3DXMatrixLookAtLH( &m_View, &m_PositionCamera, &(m_PositionCamera + m_TargetDir), &m_CameraUp );
 }
 
@@ -63,8 +59,7 @@ void CameraDevice::MoveLeft()
 {
 	Refresh();
 	m_PositionCamera += m_DirX * -StepCamera;
-	if ( Collision( m_pMesh ) )
-		m_PositionCamera -= m_DirX * -StepCamera;
+	Collision( m_pMesh );
 	D3DXMatrixLookAtLH( &m_View, &m_PositionCamera, &(m_PositionCamera + m_TargetDir), &m_CameraUp );
 }
 
@@ -185,7 +180,7 @@ bool CameraDevice::Collision( ID3DXMesh* pMesh )
 		{
 			if ( Dist < m_CentrMass.m_Radius )
 			{				
-				m_PositionCamera += Normal * StepCamera;
+				m_PositionCamera += Normal * ( m_CentrMass.m_Radius - Dist );
 				return true;
 			}
 		}
