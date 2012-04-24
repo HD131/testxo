@@ -9,23 +9,22 @@
 #include <vector>
 
 
-CD3DDevice   g_Direct3D;
-CInputDevice g_DeviceInput;
-CSky         g_Sky;
-CText        g_Text;
-CMesh3D      g_Mesh[MaxMesh];
-CShader      g_Shader[MaxShader];
-CameraDevice g_Camera;
-CSound       g_Sound;
-bool         g_Exit      = false;
-bool		 g_Wireframe = false;
-CWeapon*     g_Weapon[MaxWeapon];
-byte         ActiveWeapon = M16;
-IDirect3DTexture9* TexTarget = 0;
+CD3DDevice   		g_Direct3D;
+CInputDevice 		g_DeviceInput;
+CSky         		g_Sky;
+CText        		g_Text;
+CMesh3D      		g_Mesh[MaxMesh];
+CShader      		g_Shader[MaxShader];
+CameraDevice 		g_Camera;
+bool         		g_Exit      = false;
+bool		 		g_Wireframe = false;
+CWeapon*     		g_Weapon[MaxWeapon];
+byte				ActiveWeapon = M16;
+IDirect3DTexture9*  TexTarget = 0;
 
 void InitWeapon( IDirect3DDevice9* pD3DDevice )
 {
-	for ( int i = 0; i < MaxWeapon; ++i )
+	for ( int i = 0; i < 1; ++i )
 		g_Weapon[i]  = new CWeapon( WeaponNames[i], pD3DDevice );
 }
 
@@ -168,7 +167,7 @@ void RenderingDirect3D( IDirect3DDevice9* D3DDevice )
 		MatrixWorld = MatrixWorldSc * MatrixWorldTr * g_Camera.MatInverseViewProject();
 		int i = timeGetTime() %10;
 		RenderImg( D3DDevice, g_Shader[Text], 0, g_Text, MatrixWorld, i );
-		g_Sound.Play();
+		//g_Sound.Play();
 	}
 	g_Weapon[ActiveWeapon]->RenderWeapon( g_Camera, g_Shader[Diffuse] );
 
