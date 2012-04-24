@@ -184,8 +184,8 @@ bool CameraDevice::Collision( ID3DXMesh* pMesh )
 		if ( PointInTr( V1, V2, V3, Normal, P ) )
 		{
 			if ( Dist < m_CentrMass.m_Radius )
-			{
-				//Beep(200,40);
+			{				
+				m_PositionCamera += Normal * StepCamera;
 				return true;
 			}
 		}

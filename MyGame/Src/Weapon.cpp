@@ -31,13 +31,14 @@ return out;
 
 void CWeapon::Recharge()
 {
-	if ( m_AmountBullet )
+	if ( ( m_AmountBullet ) && ( m_ChargerBullet != m_MaxChargerBullet ) )
 	{
 		int i = m_MaxChargerBullet - m_ChargerBullet;
 		if ( i > m_AmountBullet)
 			i = m_AmountBullet;
 		m_ChargerBullet += i;
 		m_AmountBullet  -= i;
+		m_Sound.Play(1);
 	}
 }
 
@@ -50,7 +51,7 @@ void CWeapon::Fire()
 		{
 			--m_ChargerBullet;
 			m_Fire = true;
-			//Beep(150,40);
+			m_Sound.Play(0);
 			m_LastTimeFire = timeGetTime();
 		}	
 }
