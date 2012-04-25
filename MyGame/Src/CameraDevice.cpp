@@ -8,12 +8,13 @@ CameraDevice::CameraDevice()
 	m_DirX					= D3DXVECTOR3( 1.0f, 0.0f, 0.0f );
 	m_CentrMass.m_Centre	= D3DXVECTOR3( 0.0f, 0.9f, 0.0f );
 	m_CentrMass.m_Radius    = 1.5f;
-	m_PositionCamera		= D3DXVECTOR3( 0.0f, 1.7f, 0.0f );
+	m_PositionCamera		= D3DXVECTOR3( 0.0f, 10.7f, 0.0f );
 	D3DXMatrixLookAtLH( &m_View, &m_PositionCamera, &(m_PositionCamera + m_TargetDir), &m_CameraUp );
 	D3DXMatrixPerspectiveFovLH(&m_Proj, D3DX_PI / 4, (FLOAT)Width / Height, 0.1f, 3000.0f);
 	StepCamera  = 0.2f;
 	AngleCamera = 1.0f * D3DX_PI / 180;
 	Sensivity   = 300.0f;
+	m_TimeGravity = 0;
 }
 
 void CameraDevice::SetMesh( ID3DXMesh* pMesh )
@@ -30,6 +31,7 @@ void CameraDevice::Refresh()
 
 	D3DXVec3Cross(&m_CameraUp, &m_TargetDir, &m_DirX);
 	D3DXVec3Normalize( &m_CameraUp, &m_CameraUp );
+	
 }
 
 void CameraDevice::MoveForv()
@@ -152,6 +154,7 @@ bool CameraDevice::Collision( ID3DXMesh* pMesh )
 	CVertexFVF* Triangle[3];
 	short*       pIndices;
 	CVertexFVF*  pVertices;
+	bool         Result = false;
 	
 	DWORD m_NumPolygons = pMesh->GetNumFaces();	
 		
@@ -178,22 +181,29 @@ bool CameraDevice::Collision( ID3DXMesh* pMesh )
 		D3DXVECTOR3 V1 = D3DXVECTOR3( Triangle[0]->x, Triangle[0]->y, Triangle[0]->z );
 		D3DXVECTOR3 V2 = D3DXVECTOR3( Triangle[1]->x, Triangle[1]->y, Triangle[1]->z );
 		D3DXVECTOR3 V3 = D3DXVECTOR3( Triangle[2]->x, Triangle[2]->y, Triangle[2]->z );
-		if ( PointInTr( V1, V2, V3, Normal, P ) )
-		{
+		
+		if ( PointInTr( V1, V2, V3, Normal, P ) )		
 			if ( Dist < m_CentrMass.m_Radius )
-			{			
-				char str[20];
-				float Number = m_CentrMass.m_Radius - Dist;
-				// перевод числа в строку и добавление нулей перед числом
-				gcvt( Number,5, str);
-				Log(str);
+			{
 				m_PositionCamera += Normal * ( m_CentrMass.m_Radius - Dist );
-				return true;
+				Result = true;
 			}
-		}
 	}
 	pMesh->UnlockIndexBuffer();
 	pMesh->UnlockVertexBuffer();
-return false;
+return Result;
 }
 
+void CameraDevice::Gravity()
+{
+	DWORD t = timeGetTime();
+	if ( m_TimeGravity )
+		m_TimeGravity = t - m_TimeGravity;
+	float s = 4.8 * m_TimeGravity * m_TimeGravity / 2000 + 0.01f;
+	m_PositionCamera = D3DXVECTOR3( m_PositionCamera.x, m_PositionCamera.y - s, m_PositionCamera.z );
+	if ( !Collision( m_pMesh ) )
+		m_TimeGravity = t;
+	else 
+		m_TimeGravity = 0;
+	D3DXMatrixLookAtLH( &m_View, &m_PositionCamera, &(m_PositionCamera + m_TargetDir), &m_CameraUp );
+}
