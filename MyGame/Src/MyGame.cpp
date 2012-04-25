@@ -155,7 +155,7 @@ void RenderingDirect3D( IDirect3DDevice9* D3DDevice )
 	D3DXMatrixTranslation( &MatrixWorld, 0, 0, 0 );
 	g_Mesh[Zona_1].RenderMesh( g_Camera, MatrixWorld, g_Shader[Diffuse] );
 
-	
+	g_Camera.Gravity();
 	//------------------------------------------Render Weapon----------------------------------------
 	if ( g_Weapon[ActiveWeapon]->GetFire() )
 	{

@@ -17,6 +17,7 @@ public:
 	FLOAT	        AngleCamera;
 	FLOAT	        Sensivity;
 	ID3DXMesh*      m_pMesh;
+	DWORD           m_TimeGravity;
 
 	void  		MoveForv();
 	void  		MoveBack();
@@ -28,6 +29,7 @@ public:
 	void  		MouseRotateDown(  long Ang );
 	void  		Refresh();
 	bool		Collision( ID3DXMesh* pMesh );
+	void		Gravity();
 	D3DXMATRIX  MatViewProject();
 	D3DXMATRIX  MatInverseViewProject();
 	void        SetMesh( ID3DXMesh* pMesh );
