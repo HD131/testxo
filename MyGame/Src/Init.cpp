@@ -162,3 +162,70 @@ void Log( char* Str )
 	fprintf( FileLog, "\n" );
 	fclose(  FileLog );
 }
+
+bool PointInTr( D3DXVECTOR3&  v1, D3DXVECTOR3&  v2, D3DXVECTOR3&  v3, D3DXVECTOR3&  n, D3DXVECTOR3&  ip )
+{
+	// проверяем, находится ли точка пересечения внутри треугольника.
+	D3DXVECTOR3 a;
+	D3DXVec3Cross( &a, &(v2 - v1), &(ip - v1) );
+	if( D3DXVec3Dot( &a, &n ) <= 0) 
+		return FALSE; 
+	D3DXVec3Cross( &a, &(v3 - v2), &(ip - v2) );
+	if( D3DXVec3Dot( &a, &n ) <= 0)
+		return FALSE; 
+	D3DXVec3Cross( &a, &(v1 - v3), &(ip - v3) );
+	if( D3DXVec3Dot( &a, &n ) <= 0)
+		return FALSE; 
+
+	return true;
+} 
+
+bool Collision( ID3DXMesh* pMesh, D3DXVECTOR3& Pos, float Radius )
+{
+	bool Result = false;
+
+	if ( pMesh )
+	{
+		CVertexFVF*  Triangle[3];
+		short*       pIndices;
+		CVertexFVF*  pVertices;		
+
+		DWORD m_NumPolygons = pMesh->GetNumFaces();	
+
+		pMesh->LockVertexBuffer( D3DLOCK_READONLY,( void** )&pVertices);
+		pMesh->LockIndexBuffer(  D3DLOCK_READONLY,( void** )&pIndices );
+
+
+		for( DWORD i = 0; i < m_NumPolygons; i++ )
+		{
+			Triangle[0] = (CVertexFVF*)( pVertices + ( *pIndices++ ) );//точка А i-того треугольника
+			Triangle[1] = (CVertexFVF*)( pVertices + ( *pIndices++ ) );//точка B i-того треугольника
+			Triangle[2] = (CVertexFVF*)( pVertices + ( *pIndices++ ) );//точка C i-того треугольника
+
+			//тут можем работать с этим треугольником		
+			D3DXVECTOR3 Normal = D3DXVECTOR3( Triangle[0]->nx, Triangle[0]->ny, Triangle[0]->nz );	// нормаль треугольника
+			D3DXVec3Normalize( &Normal, &Normal );
+			D3DXVECTOR3 V = -Normal;
+			float D = -Normal.x * Triangle[0]->x - Normal.y * Triangle[0]->y - Normal.z * Triangle[0]->z;
+			float k = -( Normal.x * Pos.x + Normal.y * Pos.y + Normal.z * Pos.z + D ) / ( Normal.x * V.x + Normal.y * V.y + Normal.z * V.z );
+			D3DXVECTOR3 P = D3DXVECTOR3( k * V.x + Pos.x, k * V.y + Pos.y, k * V.z + Pos.z);
+			// расстояние от камеры до точки столкновения 
+			float Dist = D3DXVec3Length( &(D3DXVECTOR3( Pos.x - P.x, Pos.y - P.y, Pos.z - P.z ) ) );
+
+			D3DXVECTOR3 V1 = D3DXVECTOR3( Triangle[0]->x, Triangle[0]->y, Triangle[0]->z );
+			D3DXVECTOR3 V2 = D3DXVECTOR3( Triangle[1]->x, Triangle[1]->y, Triangle[1]->z );
+			D3DXVECTOR3 V3 = D3DXVECTOR3( Triangle[2]->x, Triangle[2]->y, Triangle[2]->z );
+
+			if ( PointInTr( V1, V2, V3, Normal, P ) )		
+				if ( Dist < Radius )
+				{
+					Pos += Normal * ( Radius - Dist );
+					Result = true;
+				}
+		}
+		pMesh->UnlockIndexBuffer();
+		pMesh->UnlockVertexBuffer();
+	}
+return Result;
+}
+

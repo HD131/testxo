@@ -22,6 +22,7 @@ private:
 	D3DXMATRIX     		 m_MatrixWorld;
 	IDirect3DDevice9*    m_pD3DDevice;
 	CSound               m_Sound;
+	//CameraDevice         m_Camera;
 public:
 	CWeapon( std::string NameWeapon, IDirect3DDevice9* pD3DDevice );
 	char*  ReadIniFile( const char *filename, const char *section, const char *key );
@@ -33,6 +34,7 @@ public:
 	void   RenderWeapon( CameraDevice const& Camera, CShader const& Shader );
 	int    GetChargerBullet()	{	return m_ChargerBullet;	};
 	int    GetAmountBullet()	{	return m_AmountBullet;	};
+	bool   Hit( HWND hwnd, ID3DXMesh* pMesh, CameraDevice const& Camera, D3DXVECTOR3& Point, const CSphere& sphera );
    ~CWeapon();
-
+	RECT   Size;
 };

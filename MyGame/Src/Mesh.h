@@ -5,6 +5,7 @@
 class CMesh3D
 {
 public:
+	CSphere		m_Sphere;
 	ID3DXMesh*  GetMesh()   { return m_pMesh; }
 	HRESULT		InitialMesh( LPCSTR Name, IDirect3DDevice9* pD3DDevice );
 	void		Release();

@@ -27,8 +27,7 @@ public:
 	void  		MouseRotateRight( long Ang );
 	void  		MouseRotateUp(    long Ang );
 	void  		MouseRotateDown(  long Ang );
-	void  		Refresh();
-	bool		Collision( ID3DXMesh* pMesh );
+	void  		Refresh();	
 	void		Gravity();
 	D3DXMATRIX  MatViewProject();
 	D3DXMATRIX  MatInverseViewProject();

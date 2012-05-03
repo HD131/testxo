@@ -27,7 +27,7 @@ const D3DXVECTOR4 g_Light       = D3DXVECTOR4( 0.0f, 1.0f, -1.0f, 1.0f );
 const float	g_Diffuse_intensity = 1.0f;
 
 enum  NameShader { Sky , Diffuse, Text, FlatImage, MaxShader };
-enum  Mesh { Zona_1, MaxMesh };
+enum  Mesh { Zona_1, Bot, MaxMesh };
 enum  Game_State { STATE_PLAY, STATE_WIN, STATE_LOST };
 enum  BLEND { BLEND_DEFAULT, BLEND_ALPHA, BLEND_MUL, BLEND_ADD };
 
@@ -39,6 +39,8 @@ enum  BLEND { BLEND_DEFAULT, BLEND_ALPHA, BLEND_MUL, BLEND_ADD };
 #define KEYDOWN(name, key) (name[key]&0x80)
 
 void Log( char* Str );
+bool PointInTr( D3DXVECTOR3&  v1, D3DXVECTOR3&  v2, D3DXVECTOR3&  v3, D3DXVECTOR3&  n, D3DXVECTOR3&  ip );
+bool Collision( ID3DXMesh* pMesh, D3DXVECTOR3& Pos, float Radius );
 //---------------------------------------------------------
 class CD3DDevice
 {
