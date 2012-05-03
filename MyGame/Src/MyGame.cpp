@@ -22,6 +22,65 @@ CWeapon*     		g_Weapon[MaxWeapon];
 byte				ActiveWeapon = M16;
 IDirect3DTexture9*  TexTarget = 0;
 
+class CAi
+{
+public:
+	D3DXVECTOR3			m_Direct;
+	CSphere				m_Sphere;
+	ID3DXMesh*			m_pMesh;
+	DWORD				m_TimeGravity;
+
+public:
+	D3DXMATRIX			GetMatrixWorld( ID3DXMesh*  pMesh );
+	D3DXVECTOR3			GetVector();
+	CAi();
+	void				Gravity();
+};
+CAi g_Mob;
+
+CAi::CAi()
+{
+	m_Direct = GetVector();
+	m_Sphere.m_Centre = D3DXVECTOR3( 0.0f, 20.0f, 0.0f );
+	m_Sphere.m_Radius = 2.0f;	
+	m_TimeGravity = 0;
+}
+
+D3DXVECTOR3	CAi::GetVector()
+{
+	srand(timeGetTime());
+	D3DXVECTOR3 v = D3DXVECTOR3( rand()/float(RAND_MAX)*2-1, 0, rand()/float(RAND_MAX)*2-1 );
+	D3DXVec3Normalize(&v, &v);
+	return v;
+}
+
+D3DXMATRIX	CAi::GetMatrixWorld( ID3DXMesh*  pMesh )
+{
+	D3DXMATRIX MatWorld;
+	m_pMesh = pMesh;
+	Gravity();
+	m_Sphere.m_Centre += m_Direct * 0.4f;
+	if ( Collision( m_pMesh, m_Sphere.m_Centre, m_Sphere.m_Radius ) ) 
+		m_Direct = GetVector();
+	D3DXMatrixTranslation( &MatWorld, m_Sphere.m_Centre.x, m_Sphere.m_Centre.y, m_Sphere.m_Centre.z );
+
+return MatWorld;
+}
+
+void CAi::Gravity()
+{
+	DWORD t = timeGetTime();
+	if ( m_TimeGravity )
+		m_TimeGravity = t - m_TimeGravity;
+	float s = 4.8 * m_TimeGravity * m_TimeGravity / 2000 + 0.01f;
+	m_Sphere.m_Centre = D3DXVECTOR3( m_Sphere.m_Centre.x, m_Sphere.m_Centre.y - s, m_Sphere.m_Centre.z );
+	if ( !Collision( m_pMesh,  m_Sphere.m_Centre, m_Sphere.m_Radius ) )
+		m_TimeGravity = t;
+	else 
+		m_TimeGravity = 0;
+	
+}
+
 void InitWeapon( IDirect3DDevice9* pD3DDevice )
 {
 	for ( int i = 0; i < 1; ++i )
@@ -129,7 +188,7 @@ void RenderImg( IDirect3DDevice9* m_pD3DDevice, CShader const& Shader, IDirect3D
 	m_pD3DDevice -> DrawIndexedPrimitive( D3DPT_TRIANGLELIST, 0, 0, 4, 0, 2 );
 }
 
-void RenderingDirect3D( IDirect3DDevice9* D3DDevice )
+void RenderingDirect3D( HWND hwnd, IDirect3DDevice9* D3DDevice )
 {
 	D3DXMATRIX MatrixWorld, MatrixWorldX, MatrixWorldY, MatrixWorldZ;
 	g_Camera.SetMesh( g_Mesh[Zona_1].GetMesh() );
@@ -150,16 +209,21 @@ void RenderingDirect3D( IDirect3DDevice9* D3DDevice )
 	D3DDevice->BeginScene(); 
 	//------------------------------------------Render Sky----------------------------------------
 	g_Sky.RenderSky( g_Camera, g_Shader[Sky] );
-
+	
 	//------------------------------------------Render Zona----------------------------------------	
 	D3DXMatrixTranslation( &MatrixWorld, 0, 0, 0 );
 	g_Mesh[Zona_1].RenderMesh( g_Camera, MatrixWorld, g_Shader[Diffuse] );
 
 	g_Camera.Gravity();
+
+	
+	g_Mesh[Bot].RenderMesh( g_Camera, g_Mob.GetMatrixWorld( g_Mesh[Zona_1].GetMesh() ), g_Shader[Diffuse] );
+
+	
 	//------------------------------------------Render Weapon----------------------------------------
 	if ( g_Weapon[ActiveWeapon]->GetFire() )
 	{
-		D3DXMATRIX MatV, MatrixWorldTr, MatrixWorldSc;
+		D3DXMATRIX MatV, MatrixWorldTr, MatrixWorldSc, MatRot;
 		D3DXMatrixInverse( &MatV, 0, &g_Camera.m_View ); 
 		D3DXMatrixScaling( &MatrixWorldSc, 0.1f, 0.1f, 0.1f );
 		//D3DXMatrixRotationY( &MatrixWorld, 0 );
@@ -167,11 +231,38 @@ void RenderingDirect3D( IDirect3DDevice9* D3DDevice )
 		MatrixWorld = MatrixWorldSc * MatrixWorldTr * g_Camera.MatInverseViewProject();
 		int i = timeGetTime() %10;
 		RenderImg( D3DDevice, g_Shader[Text], 0, g_Text, MatrixWorld, i );
-		//g_Sound.Play();
+
+		D3DXMatrixScaling( &MatrixWorldSc, 0.01f, 100.1f, 0.1f );
+		D3DXMatrixRotationX( &MatRot, 1.57f );
+		D3DXMatrixTranslation( &MatrixWorldTr, 0.0f, -0.05f, 0.0f );
+		MatrixWorld = MatrixWorldSc * MatRot * MatrixWorldTr * g_Camera.MatInverseViewProject();
+		
+		RenderImg( D3DDevice, g_Shader[Text], 0, g_Text, MatrixWorld, i );
+		
+		D3DXVECTOR3 Point;
+		if ( g_Weapon[ActiveWeapon]->Hit( hwnd, g_Mesh[Bot].GetMesh(), g_Camera, Point, g_Mob.m_Sphere ) )
+		{
+			Beep(1000,50);			
+			D3DXMatrixScaling( &MatrixWorldSc, 1.1f, 1.1f, 1.1f );
+			D3DXMatrixTranslation( &MatrixWorldTr, Point.x, Point.y, Point.y );
+			MatrixWorld = MatrixWorldSc * MatrixWorldTr * g_Camera.MatViewProject();
+			int i = timeGetTime() % 10;
+			RenderImg( D3DDevice, g_Shader[Text], 0, g_Text, MatrixWorld, i );
+
+			char        str[50];
+			//sprintf(str, "x=%f  y=%f   z=%f", Point.x, Point.y, Point.z );		
+			//DrawMyText( D3DDevice, str, 10, 10, 500, 700, D3DCOLOR_ARGB(250, 250, 250,50));
+		}
 	}
 	g_Weapon[ActiveWeapon]->RenderWeapon( g_Camera, g_Shader[Diffuse] );
-
-	
+	POINT P;
+	GetCursorPos( &P );
+	RECT ClientRec;
+	GetClientRect ( GetForegroundWindow(), &ClientRec );
+	ClientToScreen( GetForegroundWindow(), (LPPOINT)&ClientRec );
+  	char        str[100];
+	//sprintf(str, "x=%d  y=%d x=%f  y=%f  z=%f", ClientRec.left, ClientRec.top, g_Camera.m_PositionCamera.x, g_Camera.m_PositionCamera.y, g_Camera.m_PositionCamera.z );		
+	//DrawMyText( D3DDevice, str, 10, 10, 500, 700, D3DCOLOR_ARGB(250, 250, 250,50));
 
 
 	//------------------------------------------Render Text----------------------------------------	
@@ -182,9 +273,7 @@ void RenderingDirect3D( IDirect3DDevice9* D3DDevice )
 	g_Text.RenderImage( g_Shader[FlatImage], 0.02f, MatrixWorld );
 	
 	
-// 	char        str[50];
-// 	sprintf(str, "x=%d  y=%f   z=%f", timeGetTime(), g_Camera.m_DirX.y, g_Camera.m_DirX.z );		
-// 	DrawMyText( D3DDevice, str, 10, 10, 500, 700, D3DCOLOR_ARGB(250, 250, 250,50));
+ 	
 
 	D3DDevice -> EndScene();
 	D3DDevice -> Present( 0, 0, 0, 0 ); // вывод содержимого заднего буфера в окно
@@ -227,7 +316,7 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	w.hbrBackground = (HBRUSH)GetStockObject( WHITE_BRUSH );
 	w.lpszClassName = "My Class";
 	w.hIcon         = LoadIcon( 0, IDI_QUESTION );//стандартная иконка приложения Win API 	
-	w.hCursor       = LoadCursor( 0, "aero_link_l.cur" );
+	//w.hCursor       = LoadCursor( 0, "aero_link_l.cur" );
 	RegisterClass(&w);
 	HWND hwnd = CreateWindow( "My Class", "MyGame", WS_SYSMENU | WS_MINIMIZEBOX,
 		250, 150, Width, Height, 0, 0, hInstance, 0 );	
@@ -241,15 +330,15 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance,
 		g_DeviceInput.InitialInput( hwnd );
 		InitWeapon( g_Direct3D.GetD3DDevice() );
 		g_Mesh[Zona_1].InitialMesh( "model\\Zona_1.x", g_Direct3D.GetD3DDevice() );
-		
-		g_Shader[  Sky  ].LoadShader( "shader\\Sky", g_Direct3D.GetD3DDevice() );
+		g_Mesh[ Bot  ].InitialMesh( "model\\Bot.x",    g_Direct3D.GetD3DDevice() );
+		g_Shader[  Sky  ].LoadShader( "shader\\Sky",   g_Direct3D.GetD3DDevice() );
 		g_Shader[Diffuse].LoadShader( "shader\\Diffuse", g_Direct3D.GetD3DDevice() );
-		g_Shader[  Text ].LoadShader( "shader\\Text", g_Direct3D.GetD3DDevice() );
+		g_Shader[  Text ].LoadShader( "shader\\Text",  g_Direct3D.GetD3DDevice() );
 		g_Shader[FlatImage].LoadShader( "shader\\FlatImage", g_Direct3D.GetD3DDevice() );
 		while( !g_Exit )
 		{
 			g_DeviceInput.ScanInput( &g_Camera, g_Weapon[ActiveWeapon] );				
-			RenderingDirect3D( g_Direct3D.GetD3DDevice() );				
+			RenderingDirect3D( hwnd, g_Direct3D.GetD3DDevice() );				
 			if ( PeekMessage( &Msg, 0, 0, 0, PM_REMOVE ) )
 			{
 				TranslateMessage( &Msg );
