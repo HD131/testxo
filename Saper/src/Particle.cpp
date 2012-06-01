@@ -110,7 +110,7 @@ void CException::RenderParticle(  CameraDevice const& Camera, CShader const& Sha
 {	
 	char        str[50];
 	sprintf(str, "x=%f  y=%f   z=%f", Camera.DirX.x, Camera.DirX.y, Camera.DirX.z );		
-	DrawMyText( m_D3DDevice, str, 10, 10, 500, 700, D3DCOLOR_ARGB(250, 250, 250,50));
+	//DrawMyText( m_D3DDevice, str, 10, 10, 500, 700, D3DCOLOR_ARGB(250, 250, 250,50));
 
 	if ( m_StartTime && !m_Kill )
 	{		
@@ -147,7 +147,7 @@ void CException::RenderParticle(  CameraDevice const& Camera, CShader const& Sha
 void CException::SetTime( POINT Point, DWORD Time )
 { 
 	m_StartTime = Time; 
-	m_Pos = D3DXVECTOR3( Point.x - int( MaxField / 2 ), 0, Point.y - int( MaxField / 2 ) );
+	m_Pos = D3DXVECTOR3( Point.x - int( MaxField / 2 ), 0.5f, Point.y - int( MaxField / 2 ) );
 	for ( int i = 0; i < m_Particles.size(); ++i )
 		m_Particles[i].m_Position = m_Pos;
 	Beep(100,100);
