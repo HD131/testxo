@@ -273,7 +273,7 @@ void RenderingDirect3D( CCell* Cell, int* Field, IDirect3DDevice9* D3DDevice )
 			if ( Units < 0 )
 				Tens = 0;
 			g_Mesh[ Units ].RenderMesh( g_Camera, MatWorld(  t + 0.8f, 0.0f, MaxField + 2, 0 ), g_Diffuse );
-			g_Mesh[ Tens ].RenderMesh( g_Camera,  MatWorld(  t + 0.2f, 0.0f, MaxField + 2, 0 ), g_Diffuse );
+			g_Mesh[ Tens  ].RenderMesh( g_Camera, MatWorld(  t + 0.2f, 0.0f, MaxField + 2, 0 ), g_Diffuse );
 			
 		}
 		//-----------------Particle--------------------
@@ -317,6 +317,19 @@ LONG WINAPI WndProc( HWND hwnd, UINT Message, WPARAM wparam, LPARAM lparam )
 	return DefWindowProc( hwnd, Message, wparam, lparam );
 }  
 
+void Init( int& F, int& M )
+{
+	FILE *File = fopen( "Init.txt", "r" );
+
+	while ( !feof( File ) )
+	{
+		fscanf( File,"%d",&F);
+		fscanf( File,"%d",&M);
+	}
+	
+	fclose(  File );
+}
+
 int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance,
 				   LPSTR     lpCmdLine, int       nCmdShow)
 {	
@@ -325,7 +338,7 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
 	remove( "log.txt" );
 	Log("Begin");	
-
+	//Init( MaxField, MaxMine );
 	memset( &w, 0, sizeof(WNDCLASS) );
 	w.style         = CS_HREDRAW | CS_VREDRAW;
 	w.lpfnWndProc   = WndProc;

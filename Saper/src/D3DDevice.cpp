@@ -148,4 +148,5 @@ void Log( char* Str )
 	fprintf( FileLog, "|%d:%d:%d| ", st.wHour, st.wMinute, st.wSecond );
 	fprintf( FileLog, Str );
 	fprintf( FileLog, "\n" );
+	fclose(  FileLog );
 }
