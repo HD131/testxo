@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<ArrayOfArrayOfArrayOfString xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <ArrayOfArrayOfString>
+    <ArrayOfString>
+      <string>h:\GoogleCode\Tank\Src\Game.cpp</string>
+      <string>h:\GoogleCode\Tank\Src\Game.h</string>
+    </ArrayOfString>
+    <ArrayOfString>
+      <string>h:\GoogleCode\Tank\Src\CameraDevice.cpp</string>
+      <string>h:\GoogleCode\Tank\Src\CameraDevice.h</string>
+    </ArrayOfString>
+    <ArrayOfString>
+      <string>h:\GoogleCode\Tank\Src\Particle.cpp</string>
+      <string>h:\GoogleCode\Tank\Src\Particle.h</string>
+    </ArrayOfString>
+    <ArrayOfString>
+      <string>h:\GoogleCode\Tank\Src\D3D.cpp</string>
+      <string>h:\GoogleCode\Tank\Src\D3D.h</string>
+    </ArrayOfString>
+    <ArrayOfString>
+      <string>h:\GoogleCode\Tank\Src\PhysX.cpp</string>
+      <string>h:\GoogleCode\Tank\Src\PhysX.h</string>
+    </ArrayOfString>
+    <ArrayOfString>
+      <string>h:\GoogleCode\Tank\Src\Class.cpp</string>
+      <string>h:\GoogleCode\Tank\Src\Class.h</string>
+    </ArrayOfString>
+    <ArrayOfString>
+      <string>h:\GoogleCode\Tank\Src\Tank.cpp</string>
+    </ArrayOfString>
+  </ArrayOfArrayOfString>
+</ArrayOfArrayOfArrayOfString>
