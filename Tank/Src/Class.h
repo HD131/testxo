@@ -215,13 +215,27 @@ private:
 
 enum EDetailTank
 {
-	BODY		= 0,
-	TURRET		= 1,
-	GUN			= 2,
-	TRACK_L		= 3,
-	TRACK_R		= 4,
-	Roller_L	= 5,
-	Roller_R	= 6
+	BODY			= 0,
+	TURRET,
+	GUN,
+	TRACK_L,
+	TRACK_R,
+	WHEEL_LEFT_1ST,
+	WHEEL_RIGHT_1ST,
+	WHEEL_LEFT_2ST,
+	WHEEL_RIGHT_2ST,
+	WHEEL_LEFT_3ST,
+	WHEEL_RIGHT_3ST,
+	WHEEL_LEFT_4ST,
+	WHEEL_RIGHT_4ST,
+	WHEEL_LEFT_5ST,
+	WHEEL_RIGHT_5ST,
+	WHEEL_LEFT_6ST,
+	WHEEL_RIGHT_6ST,
+	WHEEL_LEFT_7ST,
+	WHEEL_RIGHT_7ST,
+	WHEEL_LEFT_8ST,
+	WHEEL_RIGHT_8ST
 };
 
 class CTank
@@ -232,12 +246,13 @@ public:
 
 	CObject*			GetDetail( EDetailTank detail );
 	void				SetDetail( EDetailTank detail, CObject* pObj );
-	void				MoveForward( float fDT, CPhysX* pPhys );
-	void				MoveBack( float fDT );
-	void				RotateBody( float fDT );								// поворот корпуса
+	void				MoveForward( bool bForward );
+	void				MoveBack( bool bBack );
+	void				TurnLeft( bool bLeft );									// поворот корпуса
+	void				TurnRight( bool bRight );								// поворот корпуса
 	void				RotateTurret( float fDT );								// поворот башни
 	void				RotateGun( float fDT );									// поворот пушки
-	void				Update( float fDT, CPhysX* pPhys );
+	void				Update( float fDT );
 	void				Render( CameraDevice* pCamera, const CShader* pShader );
 	void				SetPosition( const D3DXVECTOR3& vPos );
 	D3DXVECTOR3 		GetForvard();
@@ -245,5 +260,10 @@ public:
 
 private:
 	std::map< EDetailTank, CObject* >	m_ObjectsTank;
-	PxRigidActor*						m_pActor;
+	CPhysX *							m_pPhysX;
+	PxRigidDynamic*						m_pActor;
+	bool								m_bMoveForward;
+	bool								m_bMoveBack;
+	bool								m_bTurnLeft;
+	bool								m_bTurnRight;	
 };

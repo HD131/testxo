@@ -405,11 +405,11 @@ void CObject::Update( float fDT )
 			D3DXMatrixRotationZ( &MatrixRotateZ, m_AngleXYZ.z );
 			D3DXMATRIX MatrixRotate  = MatrixRotateX * MatrixRotateY * MatrixRotateZ;
 			m_MatrixRelease = MatrixRotate * MatrixTrans;
+
+			// если есть предок, то сначала берём его матрицу
+			if( m_pObjectParent )
+				m_MatrixRelease = m_MatrixRelease * m_pObjectParent->GetReleaseMatrix();
 		}		
-		
-		// если есть предок, то сначала берём его матрицу
-		if( m_pObjectParent )
-			m_MatrixRelease = m_MatrixRelease * m_pObjectParent->GetReleaseMatrix();
 	}
 	
 	for( std::vector< CObject* >::iterator iter = m_ObjectChild.begin(); iter != m_ObjectChild.end(); ++iter )
@@ -536,57 +536,96 @@ bool CObject::CreateTriangleMesh( CPhysX const* pPhysX )
 //------------------------------------------------------------------------------------------
 
 CTank::CTank():
-	m_pActor( 0 )
+	m_pActor( 0 ),
+	m_bMoveForward( false ),
+	m_bMoveBack( false ),
+	m_bTurnLeft( false ),
+	m_bTurnRight( false ),	
+	m_pPhysX( 0 )
 {
 }
 
-void CTank::Update( float fDT, CPhysX* pPhys )
+void CTank::Update( float fDT )
 {
 	if( m_pActor )
-	{
-		if( m_pActor->isRigidDynamic() )
-		{
-			PxRigidDynamic* pStat = reinterpret_cast<PxRigidDynamic*>( m_pActor );
-			if( pStat )
-			{
-				PxTransform pos = pStat->getGlobalPose();
-				PxVec3 ang = pos.q.getImaginaryPart();
-				PxMat33 mat = PxMat33( pos.q );				
-				PxMat44 Matrix = physx::PxMat44(physx::PxMat33(m_pActor->getGlobalPose().q), m_pActor->getGlobalPose().p); //PxMat44( mat, PxVec3(0,0,0) );
-				D3DMATRIX dxmat;				
-				memcpy( &dxmat._11, Matrix.front(), 4 * 4 * sizeof(float) );
-				
-				D3DXVECTOR4 v( pos.q.x, pos.q.y, pos.q.z, pos.q.w );
+	{							
+		PxMat44 Matrix = physx::PxMat44( physx::PxMat33( m_pActor->getGlobalPose().q ), m_pActor->getGlobalPose().p );
+		D3DXMATRIX dxmat;				
+		memcpy( &dxmat._11, Matrix.front(), 4 * 4 * sizeof(float) );		
 
-				if( CObject* pBody = GetDetail( BODY ) )
-					pBody->SetReleaseMatrix( dxmat, true );
+		if( CObject* pBody = GetDetail( BODY ) )
+			pBody->SetReleaseMatrix( dxmat, true );			
+
+		if( m_pPhysX )
+		{
+			if( PxVehicleWheels* pDriveTank = m_pPhysX->GetTank() )
+			{
+				PxShape* carShapes[5];
+				
+				const PxU32 numShapes = m_pActor->getNbShapes();
+				m_pActor->getShapes( carShapes, numShapes );
+
+				const PxTransform& tr0 = carShapes[0]->getLocalPose();
+				const PxTransform& tr1 = carShapes[1]->getLocalPose();
+				const PxTransform& tr2 = carShapes[2]->getLocalPose();
+				const PxTransform& tr3 = carShapes[3]->getLocalPose();
+				const PxTransform& tr4 = m_pActor->getGlobalPose();
+				PxVec3 v = m_pActor->getLinearVelocity();					
+				
+				PxMat44 MatrixR = physx::PxMat44(physx::PxMat33( tr0.q ), tr0.p );
+				D3DXMATRIX dxmatR;
+				memcpy( &dxmatR._11, MatrixR.front(), 4 * 4 * sizeof(float) );
+
+				if( CObject* pBody = GetDetail( WHEEL_LEFT_1ST ) )
+					pBody->SetReleaseMatrix( dxmatR * dxmat, true );
+
+				MatrixR = physx::PxMat44(physx::PxMat33( tr1.q ), tr1.p );				
+				memcpy( &dxmatR._11, MatrixR.front(), 4 * 4 * sizeof(float) );
+
+				if( CObject* pBody = GetDetail( WHEEL_RIGHT_1ST ) )
+					pBody->SetReleaseMatrix( dxmatR * dxmat, true );
+
+				PxVehicleDriveTank& vehDriveTank = (PxVehicleDriveTank&)*pDriveTank;
+				PxVehicleDriveDynData& driveDynData = vehDriveTank.mDriveDynData;
+
+				PxReal e = driveDynData.getEngineRotationSpeed();		
+
+				static char t[ 32 ] = {0};
+				sprintf( t, "EngineRotationSpeed = %f", e );
+				SetWindowText( GetForegroundWindow(), t );
+				
+				PxVehicleDriveTankRawInputData  carRawInputs( PxVehicleDriveTank::eDRIVE_MODEL_STANDARD );
+
+				carRawInputs.setDigitalAccel( m_bMoveForward || m_bMoveBack );
+				carRawInputs.setDigitalLeftBrake( m_bTurnLeft );
+				carRawInputs.setDigitalRightBrake( m_bTurnRight );
+				//carRawInputs.setGearUp( !m_bMoveForward && m_bMoveBack);
+				carRawInputs.setDigitalLeftThrust( m_bMoveForward && !m_bTurnLeft );
+				carRawInputs.setDigitalRightThrust( m_bMoveForward && !m_bTurnRight );
+				//carRawInputs.setGearDown( !m_bMoveBack && m_bMoveForward );				
+
+				static PxVehicleKeySmoothingData KeySmoothingData =
+				{
+					{
+						3.0f,	//rise rate eANALOG_INPUT_ACCEL		
+						3.0f,	//rise rate eANALOG_INPUT_BRAKE		
+						10.0f,	//rise rate eANALOG_INPUT_HANDBRAKE	
+						2.5f,	//rise rate eANALOG_INPUT_STEER_LEFT	
+						2.5f,	//rise rate eANALOG_INPUT_STEER_RIGHT	
+					},
+					{
+						5.0f,	//fall rate eANALOG_INPUT__ACCEL		
+						5.0f,	//fall rate eANALOG_INPUT__BRAKE		
+						10.0f,	//fall rate eANALOG_INPUT__HANDBRAKE	
+						5.0f,	//fall rate eANALOG_INPUT_STEER_LEFT	
+						5.0f	//fall rate eANALOG_INPUT_STEER_RIGHT	
+					}
+				};
+
+				PxVehicleDriveTankSmoothDigitalRawInputsAndSetAnalogInputs( KeySmoothingData, carRawInputs, fDT, vehDriveTank );			
 			}
 		}
 	}
-
-	if( pPhys )
-		if( PxVehicleWheels* pDriveTank = pPhys->GetTank() )
-		{
-			PxShape* carShapes[5];
-			const PxRigidDynamic* pActor = pDriveTank->getRigidDynamicActor();
-			const PxU32 numShapes= pActor->getNbShapes();
-			pActor->getShapes( carShapes, numShapes );
-
-			const PxTransform& tr0 = carShapes[0]->getLocalPose();
-			const PxTransform& tr1 = carShapes[1]->getLocalPose();
-			const PxTransform& tr2 = carShapes[2]->getLocalPose();
-			const PxTransform& tr3 = carShapes[3]->getLocalPose();
-			const PxTransform& tr4 = pActor->getGlobalPose();
-			PxVec3 v = pActor->getLinearVelocity();
-
-			if( CObject* pBody = GetDetail( Roller_L ) )
-				pBody->SetPosition( D3DXVECTOR3( tr0.p.x, tr0.p.y, tr0.p.z ) );
-
-			if( CObject* pBody = GetDetail( Roller_L ) )
-				pBody->SetPosition( D3DXVECTOR3( tr1.p.x, tr1.p.y, tr1.p.z ) );
-
-			int a = 0;
-		}
 
 	for( std::map< EDetailTank, CObject* >::iterator iter = m_ObjectsTank.begin(), iter_end = m_ObjectsTank.end(); iter != iter_end; ++iter )
 	{
@@ -618,11 +657,12 @@ void CTank::SetDetail( EDetailTank detail, CObject* pObj )
 	m_ObjectsTank[ detail ] = pObj;
 }
 
-void CTank::MoveForward( float fDT, CPhysX* pPhys )
+void CTank::MoveForward( bool bForward )
 {
-	if( CObject* pBody = GetDetail( BODY ) )
-	{
-		pBody->SetForward( fDT );
+	m_bMoveForward = bForward;
+// 	if( CObject* pBody = GetDetail( BODY ) )
+// 	{
+// 		pBody->SetForward( fDT );
 
 // 		if( CObject* pTankTrack = GetDetail( TRACK_L ) )					
 // 			pTankTrack->SetOffsetUV( D3DXVECTOR4( -fDT, 0.f, 0.f, 0.f ) );
@@ -661,123 +701,39 @@ void CTank::MoveForward( float fDT, CPhysX* pPhys )
 // 			}
 // 		}
 
-		if( pPhys )
-			if( PxVehicleWheels* pDriveTank = pPhys->GetTank() )
-			{
-				PxVehicleDriveTank& vehDriveTank = (PxVehicleDriveTank&)*pDriveTank;
-				PxVehicleDriveDynData& driveDynData = vehDriveTank.mDriveDynData;
-				
-				//PxVehicleDriveTankRawInputData  carRawInputs;
-				PxVehicleDriveTankRawInputData  carRawInputs( PxVehicleDriveTank::eDRIVE_MODEL_STANDARD );
-
-				carRawInputs.setDigitalAccel( true );
- 				//carRawInputs.setGearUp( true );
-				carRawInputs.setDigitalLeftThrust( true );
-				carRawInputs.setDigitalRightThrust( true );
- 				//carRawInputs.setGearDown( false );
-				//carRawInputs.setDigitalLeftBrake( true );
-				
-				
-				PxReal e = driveDynData.getEngineRotationSpeed();
-				
-				if( e > 30.f )
-				{
-					int a = 0;
-				}
-
-				static char t[32] = {0};
-				sprintf( t, "EngineRotationSpeed = %f", e );
-				//SetWindowText( GetForegroundWindow(), t );
-
-				static PxVehicleKeySmoothingData KeySmoothingData =
-				{
-					{
-						3.0f,	//rise rate eANALOG_INPUT_ACCEL		
-						3.0f,	//rise rate eANALOG_INPUT_BRAKE		
-						10.0f,	//rise rate eANALOG_INPUT_HANDBRAKE	
-						2.5f,	//rise rate eANALOG_INPUT_STEER_LEFT	
-						2.5f,	//rise rate eANALOG_INPUT_STEER_RIGHT	
-					},
-					{
-						5.0f,	//fall rate eANALOG_INPUT__ACCEL		
-						5.0f,	//fall rate eANALOG_INPUT__BRAKE		
-						10.0f,	//fall rate eANALOG_INPUT__HANDBRAKE	
-						5.0f,	//fall rate eANALOG_INPUT_STEER_LEFT	
-						5.0f	//fall rate eANALOG_INPUT_STEER_RIGHT	
-					}
-				};
-
-				PxVehicleDriveTankSmoothDigitalRawInputsAndSetAnalogInputs( KeySmoothingData, carRawInputs, fDT, vehDriveTank );				
-			}
-	}
 }
 
-void CTank::MoveBack( float fDT )
+void CTank::MoveBack( bool bBack )
 {
-	if( CObject* pBody = GetDetail( BODY ) )
-	{
-		pBody->SetForward( -fDT );
-
-		if( CObject* pTankTrack = GetDetail( TRACK_L ) )					
-			pTankTrack->SetOffsetUV( D3DXVECTOR4( fDT, 0.f, 0.f, 0.f ) );
-
-		if( CObject* pTankTrack = GetDetail( TRACK_R ) )					
-			pTankTrack->SetOffsetUV( D3DXVECTOR4( fDT, 0.f, 0.f, 0.f ) );
-
-		if( CObject* pTankGun = GetDetail( Roller_L ) )
-			pTankGun->RotateAxisZ( -fDT );
-
-		if( CObject* pTankGun = GetDetail( Roller_R ) )
-			pTankGun->RotateAxisZ( -fDT );
-	}
-
+	m_bMoveBack = bBack;
 }
 
-void CTank::RotateBody( float fDT )
+void CTank::TurnRight( bool bRight )
 {
-	if( CObject* pBody = GetDetail( BODY ) )
-	{
-		pBody->RotateAxisY( fDT );
+	m_bTurnRight = bRight;
+}
 
-		if( m_pActor&& m_pActor->isRigidDynamic() )
-		{
-			PxRigidDynamic* pStat = reinterpret_cast<PxRigidDynamic*>( m_pActor );
-			if( pStat )
-			{
-				PxTransform pos = pStat->getGlobalPose();
-				PxReal ang;
-				PxVec3 axis = PxVec3( 0, pos.q.y, 0 );
-				pos.q.toRadiansAndUnitAxis( ang, axis );
-				ang += fDT;
-// 				if( ang > D3DX_PI )
-// 					ang -= 2*D3DX_PI;
+void CTank::TurnLeft( bool bLeft )
+{
+	m_bTurnLeft = bLeft;
+// 	if( CObject* pBody = GetDetail( BODY ) )
+// 	{
+// 		pBody->RotateAxisY( fDT );
 // 
-// 				if( ang < -D3DX_PI )
-// 					ang += 2*D3DX_PI;
-
-				pStat->setGlobalPose( PxTransform( pos.p, PxQuat( ang, axis ) ) );
-				//pStat->addTorque()
-			}
-		}
-
-// 		if( CObject* pTankTrack = GetObject( "TrackL" ) )					
-// 			pTankTrack->SetOffsetUV( D3DXVECTOR4( -fDT, 0.f, 0.f, 0.f ) );
-// 
-// 		if( CObject* pTankTrack = GetObject( "TrackR" ) )					
-// 			pTankTrack->SetOffsetUV( D3DXVECTOR4( fDT * 0.3f, 0.f, 0.f, 0.f ) );
-// 
-// 		if( CObject* pTankGun = GetObject( "RollerL1" ) )
-// 			pTankGun->RotateAxisZ( fDT * 0.7f );
-// 
-// 		if( CObject* pTankGun = GetObject( "RollerL2" ) )
-// 			pTankGun->RotateAxisZ( fDT * 0.7f );
-// 
-// 		if( CObject* pTankGun = GetObject( "RollerL3" ) )
-// 			pTankGun->RotateAxisZ( fDT * 0.7f );
-// 
-// 		if( CObject* pTankGun = GetObject( "RollerL4" ) )
-// 			pTankGun->RotateAxisZ( fDT * 0.7f );
-	}
+// 		if( m_pActor&& m_pActor->isRigidDynamic() )
+// 		{
+// 			PxRigidDynamic* pStat = reinterpret_cast<PxRigidDynamic*>( m_pActor );
+// 			if( pStat )
+// 			{
+// 				PxTransform pos = pStat->getGlobalPose();
+// 				PxReal ang;
+// 				PxVec3 axis = PxVec3( 0, pos.q.y, 0 );
+// 				pos.q.toRadiansAndUnitAxis( ang, axis );
+// 				ang += fDT;
+// 				pStat->setGlobalPose( PxTransform( pos.p, PxQuat( ang, axis ) ) );				
+// 			}
+// 		}
+// 	}
 }
 
 void CTank::RotateTurret( float fDT )
@@ -818,6 +774,7 @@ bool CTank::CreateTankActor( CPhysX * pPhysX )
 	{
 		if ( pBody->CreateTriangleMesh( pPhysX ) )
 		{
+			m_pPhysX = pPhysX;
 			pBody->Update( 0.f );
 			PxMaterial*     pMaterial    = pPhysX->GetPhysics()->createMaterial( 0.5f, 0.5f, 0.2f );    //коэффициенты трения скольжения и покоя(Dynamic friction,Static friction), коэффициент упругости
 			PxTriangleMesh* triangleMesh = pBody->GetTriangleMesh();
@@ -850,13 +807,13 @@ bool CTank::CreateTankActor( CPhysX * pPhysX )
 			const PxF32  wheelMass   = 50.f;
 			//const PxVec3 wheelCentreOffsets[ nWheels ] = { PxVec3( -2, -1, 1 ), PxVec3( 2, -1, 1), PxVec3( -2, -1, -1 ), PxVec3( 2, -1, -1 ) };
 			PxVec3 wheelCentreOffsets[ nWheels ];
-			wheelCentreOffsets[ PxVehicleDriveTank::eTANK_WHEEL_FRONT_LEFT			 ] = PxVec3(  2, -1,  1 );
-			wheelCentreOffsets[ PxVehicleDriveTank::eTANK_WHEEL_FRONT_RIGHT			 ] = PxVec3(  2, -1, -1 );
-			wheelCentreOffsets[ PxVehicleDriveTank::eTANK_WHEEL_1ST_FROM_FRONT_LEFT  ] = PxVec3( -2, -1,  1 );
-			wheelCentreOffsets[ PxVehicleDriveTank::eTANK_WHEEL_1ST_FROM_FRONT_RIGHT ] = PxVec3( -2, -1, -1 );
+			wheelCentreOffsets[ PxVehicleDriveTank::eTANK_WHEEL_FRONT_LEFT			 ] = PxVec3( -1.45f, -0.6f,  2.f );
+			wheelCentreOffsets[ PxVehicleDriveTank::eTANK_WHEEL_FRONT_RIGHT			 ] = PxVec3(  1.45f, -0.6f,  2.f );
+			wheelCentreOffsets[ PxVehicleDriveTank::eTANK_WHEEL_1ST_FROM_FRONT_LEFT  ] = PxVec3( -1.45f, -0.6f, -2.f );
+			wheelCentreOffsets[ PxVehicleDriveTank::eTANK_WHEEL_1ST_FROM_FRONT_RIGHT ] = PxVec3(  1.45f, -0.6f, -2.f );
 
 			// размеры корпуса
-			const PxVec3 chassisDims( 6.5f, 2.2f, 3.5f );// = computeChassisAABBDimensions(chassisConvexMesh);
+			const PxVec3 chassisDims( 3.5f, 2.2f, 6.5f );// = computeChassisAABBDimensions(chassisConvexMesh);
 
 			// Начало координат находится в центре шасси сетку.
 			// Установить центр масс будет ниже этой точки и немного вперед.
@@ -882,7 +839,7 @@ bool CTank::CreateTankActor( CPhysX * pPhysX )
 			chassisMOI.y *= 0.8f;
 
 			const PxF32 massRear  = 0.5f * chassisMass * ( chassisDims.z - 3 * chassisCMOffset.z ) / chassisDims.z;
-			const PxF32 massFront = chassisMass - massRear;
+			const PxF32 massFront = massRear;
 
 			//Extract the wheel radius and width from the wheel convex meshes
 			PxF32 wheelWidths[ nWheels ] = {0.5f, 0.5f, 0.5f, 0.5f};
@@ -1000,7 +957,7 @@ bool CTank::CreateTankActor( CPhysX * pPhysX )
 			
 			PxTriangleMesh* pTriangleMesh = 0;
 			D3DXVECTOR3     vPosition;
-			if( CObject* pRoller = GetDetail( Roller_L ) )
+			if( CObject* pRoller = GetDetail( WHEEL_LEFT_1ST ) )
 			{
 				if ( pRoller->CreateTriangleMesh( pPhysX ) )
 				{
@@ -1025,7 +982,7 @@ bool CTank::CreateTankActor( CPhysX * pPhysX )
 			wheelCollFilterData.word1 = COLLISION_FLAG_WHEEL_AGAINST;
 
 			// Нам нужно добавить шасси столкновения форм, их местный позы, материала для шасси и моделирования фильтр для шасси.
-			PxBoxGeometry chassisConvexGeom( 1, 1, 1 );
+			PxBoxGeometry chassisConvexGeom( 1.f, 0.3f, 4.f );
 
 			const PxGeometry* chassisGeoms[ 1 ] = {&chassisConvexGeom};
 			const PxTransform chassisLocalPoses[ 1 ] = {PxTransform::createIdentity()};
@@ -1072,10 +1029,8 @@ bool CTank::CreateTankActor( CPhysX * pPhysX )
 			pPhysX->AddTank( pTank );
 
 			//Free the sim data because we don't need that any more.
-			wheelsSimData->free();
-			
-			pTank->setToRestState();
-			//pTank->mDriveDynData.forceGearChange(PxVehicleGearsData::eFIRST);
+			wheelsSimData->free();			
+			pTank->setToRestState();			
 			pTank->mDriveDynData.setUseAutoGears( true );
 
 			return true;

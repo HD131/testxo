@@ -187,17 +187,17 @@ HWND CGame::Init( HINSTANCE hInstance, WNDPROC pWndProc )
 						{
 							m_Mesh.push_back( meshTrack );
 
-							CObject* pMeshTrackL = new CObject;						
-							pMeshB->SetChild( pMeshTrackL );
-							pMeshTrackL->SetMesh( meshTrack );											
-							pMeshTrackL->SetPosition( D3DXVECTOR3( 1.6f, -0.7f, -0.4f ) );
-							m_Objects[ "TrackL" ] = pMeshTrackL;
-
-							CObject* pMeshTrackR = new CObject;						
-							pMeshB->SetChild( pMeshTrackR );
-							pMeshTrackR->SetMesh( meshTrack );											
-							pMeshTrackR->SetPosition( D3DXVECTOR3( -1.6f, -0.7f, -0.4f ) );
-							m_Objects[ "TrackR" ] = pMeshTrackR;
+// 							CObject* pMeshTrackL = new CObject;						
+// 							pMeshB->SetChild( pMeshTrackL );
+// 							pMeshTrackL->SetMesh( meshTrack );											
+// 							pMeshTrackL->SetPosition( D3DXVECTOR3( 1.6f, -0.4f, 0.f ) );
+// 							m_Objects[ "TrackL" ] = pMeshTrackL;
+// 
+// 							CObject* pMeshTrackR = new CObject;						
+// 							pMeshB->SetChild( pMeshTrackR );
+// 							pMeshTrackR->SetMesh( meshTrack );											
+// 							pMeshTrackR->SetPosition( D3DXVECTOR3( -1.6f, -0.4f, 0.f ) );
+// 							m_Objects[ "TrackR" ] = pMeshTrackR;
 
 							CMesh3D* meshRoller = new CMesh3D;
 							if( SUCCEEDED( meshRoller->InitMesh( "model\\Tank\\Roller.x", CD3DGraphic::GetDevice() ) ) )
@@ -207,14 +207,14 @@ HWND CGame::Init( HINSTANCE hInstance, WNDPROC pWndProc )
 								CObject* pMeshRollerL = new CObject;						
 								pMeshB->SetChild( pMeshRollerL );
 								pMeshRollerL->SetMesh( meshRoller );											
-								pMeshRollerL->SetPosition( D3DXVECTOR3( 1.6f, -1.f, -1.5f ) );
+								//pMeshRollerL->SetPosition( D3DXVECTOR3( 1.6f, -1.f, -1.5f ) );
 								pMeshRollerL->SetStepRotate( 10.f );
 								m_Objects[ "RollerL1" ] = pMeshRollerL;
 
 								CObject* pMeshRollerR = new CObject;						
 								pMeshB->SetChild( pMeshRollerR );
 								pMeshRollerR->SetMesh( meshRoller );											
-								pMeshRollerR->SetPosition( D3DXVECTOR3( -1.6f, -1.f, -1.5f ) );
+								//pMeshRollerR->SetPosition( D3DXVECTOR3( -1.6f, -1.f, -1.5f ) );
 								pMeshRollerR->SetStepRotate( 10.f );
 								m_Objects[ "RollerL2" ] = pMeshRollerR;							
 
@@ -222,10 +222,10 @@ HWND CGame::Init( HINSTANCE hInstance, WNDPROC pWndProc )
 								pTank->SetDetail( BODY,     pMeshB );
 								pTank->SetDetail( TURRET,   pMeshH );
 								pTank->SetDetail( GUN,      pMeshP );
-								pTank->SetDetail( TRACK_L,  pMeshTrackL );
-								pTank->SetDetail( TRACK_R,  pMeshTrackR );
-								pTank->SetDetail( Roller_L, pMeshRollerL );
-								pTank->SetDetail( Roller_R, pMeshRollerR );
+// 								pTank->SetDetail( TRACK_L,  pMeshTrackL );
+// 								pTank->SetDetail( TRACK_R,  pMeshTrackR );
+								pTank->SetDetail( WHEEL_LEFT_1ST,  pMeshRollerL );
+								pTank->SetDetail( WHEEL_RIGHT_1ST, pMeshRollerR );
 
 								pTank->CreateTankActor( m_pPhysX );
 
@@ -292,7 +292,7 @@ void CGame::Update( float fDT )
 			if( m_pPhysX )
 				(*iter)->SetPosition( m_pPhysX->GetPos() );			
 
-			(*iter)->Update( fDT, m_pPhysX );
+			(*iter)->Update( fDT );
 		}
 
 		for( std::vector< CBullet* >::iterator iter = m_Bullet.begin(); iter != m_Bullet.end(); ++iter )
@@ -356,30 +356,16 @@ void CGame::Update( float fDT )
 			m_pMyTank->RotateGun( fDT );
 
 		// поворот корпуса налево
-		if( m_DeviceInput->PressKey( DIK_LEFTARROW ) )
-			m_pMyTank->RotateBody( fDT );
+		m_pMyTank->TurnLeft( m_DeviceInput->PressKey( DIK_LEFTARROW ) );
 
 		// поворот корпуса направо
-		if( m_DeviceInput->PressKey( DIK_RIGHTARROW ) )
-			m_pMyTank->RotateBody( -fDT );
+		m_pMyTank->TurnRight( m_DeviceInput->PressKey( DIK_RIGHTARROW ) );
 
-		// ход вперёд
-		if( m_DeviceInput->PressKey( DIK_UPARROW ) )
-		{
-			m_pMyTank->MoveForward( fDT, m_pPhysX );
-
-			if( m_pPhysX )
-			{
-				D3DXVECTOR3 dir = m_pMyTank->GetForvard();
-				m_pPhysX->SetForce( true, PxVec3( dir.x, dir.y, dir.z ) );
-			}
-		}
-		else if( m_pPhysX )
-			m_pPhysX->SetForce( false, PxVec3( 0, 0, 0 ) );
+		// ход вперёд		
+		m_pMyTank->MoveForward( m_DeviceInput->PressKey( DIK_UPARROW ) );
 
 		// ход назад
-		if( m_DeviceInput->PressKey( DIK_DOWNARROW ) )
-			m_pMyTank->MoveForward( -fDT, m_pPhysX );
+		m_pMyTank->MoveBack( m_DeviceInput->PressKey( DIK_DOWNARROW ) );
 
 		// выстрел из пушки
 		if( m_DeviceInput->KeyDown( DIK_SPACE ) )
