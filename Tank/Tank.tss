@@ -28,5 +28,8 @@
     <ArrayOfString>
       <string>h:\GoogleCode\Tank\Src\Tank.cpp</string>
     </ArrayOfString>
+    <ArrayOfString>
+      <string>h:\GoogleCode\sdk\PhysX_SDK\Include\vehicle\PxVehicleDriveTank.h</string>
+    </ArrayOfString>
   </ArrayOfArrayOfString>
 </ArrayOfArrayOfArrayOfString>
