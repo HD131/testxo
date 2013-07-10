@@ -138,7 +138,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="alut.lib OpenAL32.lib d3d9.lib d3dx9.lib winmm.lib dinput8.lib dxguid.lib dsound.lib"
+				AdditionalDependencies="alut.lib OpenAL32.lib d3d9.lib d3dx9.lib winmm.lib dinput8.lib dxguid.lib dsound.lib PhysX3_x86.lib PhysX3Extensions.lib PhysX3Common_x86.lib PhysX3Cooking_x86.lib PhysX3Vehicle.lib PxToolkit.lib RepX3PROFILE.lib PhysXProfileSDK.lib PhysX3PROFILE_x86.lib"
 				OutputFile="..\\Game\\Tank.exe"
 				LinkIncremental="1"
 				GenerateDebugInformation="true"
@@ -180,6 +180,14 @@
 			Filter="cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx"
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
+			<File
+				RelativePath=".\3DModel.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\3DModel.h"
+				>
+			</File>
 			<File
 				RelativePath=".\CameraDevice.cpp"
 				>

@@ -7,27 +7,25 @@
 
 void SampleVehicleSetupDrivableShapeQueryFilterData(PxFilterData* qryFilterData)
 {
-	//CHECK_MSG( 0 == qryFilterData->word3, "word3 is reserved for filter data for vehicle raycast queries");
 	qryFilterData->word3 = (PxU32)SAMPLEVEHICLE_DRIVABLE_SURFACE;
 }
 
 void SampleVehicleSetupNonDrivableShapeQueryFilterData(PxFilterData* qryFilterData)
 {
-	//CHECK_MSG( 0 == qryFilterData->word3, "word3 is reserved for filter data for vehicle raycast queries");
 	qryFilterData->word3 = (PxU32)SAMPLEVEHICLE_UNDRIVABLE_SURFACE;
 }
 
 void SampleVehicleSetupVehicleShapeQueryFilterData(PxFilterData* qryFilterData)
 {
-	//CHECK_MSG(0==qryFilterData->word3, "word3 is reserved for filter data for vehicle raycast queries");
 	qryFilterData->word3 = (PxU32)SAMPLEVEHICLE_UNDRIVABLE_SURFACE;
 }
 
 SampleVehicleSceneQueryData* SampleVehicleSceneQueryData::allocate(const PxU32 maxNumWheels)
 {
-	const PxU32 size = sizeof(SampleVehicleSceneQueryData) + sizeof(PxRaycastQueryResult)*maxNumWheels + sizeof(PxRaycastHit)*maxNumWheels;
-	SampleVehicleSceneQueryData* sqData = new SampleVehicleSceneQueryData[ size ];//(SampleVehicleSceneQueryData*)PX_ALLOC(size, PX_DEBUG_EXP("PxVehicleNWSceneQueryData"));
+	const PxU32 size = sizeof(SampleVehicleSceneQueryData) + sizeof(PxRaycastQueryResult) * maxNumWheels + sizeof(PxRaycastHit) * maxNumWheels;
+	SampleVehicleSceneQueryData* sqData = new SampleVehicleSceneQueryData[ size ];
 	sqData->init();
+
 	PxU8* ptr = (PxU8*) sqData;
 	ptr += sizeof(SampleVehicleSceneQueryData);
 	sqData->mSqResults = (PxRaycastQueryResult*)ptr;
@@ -43,7 +41,7 @@ void SampleVehicleSceneQueryData::free()
 	//delete[] sqData;//PX_FREE( this );
 }
 
-PxBatchQuery* SampleVehicleSceneQueryData::setUpBatchedSceneQuery(PxScene* scene)
+PxBatchQuery* SampleVehicleSceneQueryData::setUpBatchedSceneQuery( PxScene* scene )
 {
 	PxBatchQueryDesc sqDesc;
 
@@ -61,10 +59,14 @@ PxBatchQuery* SampleVehicleSceneQueryData::setUpBatchedSceneQuery(PxScene* scene
 
 PxDefaultAllocator gDefaultAllocatorCallback;
 
-//Tire model friction for each combination of drivable surface type and tire type.
-static PxF32 gTireFrictionMultipliers[4][4] =
+// Шина модели трения для каждой комбинации ходу типа поверхности и типа шин.
+static PxF32 gTireFrictionMultipliers[8][4] =
 {
 	//WETS	SLICKS	ICE		MUD
+	{0.95f,	0.95f,	0.95f,	0.95f},		//MUD
+	{0.10f,	0.15f,	0.10f,	0.10f},		//TARMAC
+	{0.70f,	0.70f,	0.70f,	0.70f},		//ICE
+	{0.80f,	0.80f,	0.80f,	0.80f},		//GRASS
 	{0.95f,	0.95f,	0.95f,	0.95f},		//MUD
 	{1.10f,	1.15f,	1.10f,	1.10f},		//TARMAC
 	{0.70f,	0.70f,	0.70f,	0.70f},		//ICE
@@ -142,8 +144,7 @@ bool CPhysX::InitPhisX()
 		m_pCooking = PxCreateCooking( PX_PHYSICS_VERSION, *m_pFoundation, PxCookingParams() );
 		if( !m_pCooking )
 			Log("PxCreateCooking failed!" );
-
-		//PVD::PvdConnection* pConnection( physx::PxVisualDebuggerExt::connect( m_pPhysics->getPvdConnectionManager(), "localhost", 5425, 100, true ) );
+		
 		PxVisualDebuggerConnectionFlags theConnectionFlags( PxVisualDebuggerExt::getAllConnectionFlags() );		
 
 		if( m_pPhysics->getVisualDebugger() )
@@ -158,7 +159,6 @@ bool CPhysX::InitPhisX()
 			PxVisualDebuggerConnectionFlags theConnectionFlags( PxVisualDebuggerExt::getAllConnectionFlags() );
 			m_pPVD = PxVisualDebuggerExt::createConnection( m_pPhysics->getPvdConnectionManager(), "127.0.0.1", 5425, 10, theConnectionFlags );		
 		}
-
 
 		//Create scene description
 		PxSceneDesc sceneDesc( m_pPhysics->getTolerancesScale() );
@@ -193,48 +193,32 @@ bool CPhysX::InitPhisX()
 		m_pScene->setVisualizationParameter( PxVisualizationParameter::eCOLLISION_SHAPES,  1.f );
 		m_pScene->setVisualizationParameter( PxVisualizationParameter::eCOLLISION_STATIC,  1.f );
 		m_pScene->setVisualizationParameter( PxVisualizationParameter::eCOLLISION_DYNAMIC, 1.f );
-		m_pScene->setVisualizationParameter( PxVisualizationParameter::eCOLLISION_EDGES ,  1.f );
+		m_pScene->setVisualizationParameter( PxVisualizationParameter::eCOLLISION_EDGES ,  1.f );		
 
-		PxMaterial* pMaterial = m_pPhysics->createMaterial( 0.5f, 0.5f, 0.1f );    //коэффициенты трения скольжения и покоя(Dynamic friction,Static friction), коэффициент упругости
-		if( pMaterial )
-			m_Materials.push_back( pMaterial );
-		else
-			Log( "CreateMaterial failed!");
+		PxU32						 nWheel			  = 12;
+		PxF32						 restitutions	  = 0.1f;
+		PxF32						 staticFrictions  = 0.5f;
+		PxF32						 dynamicFrictions = 0.5f;
+		PxMaterial*					 mStandardMaterials[ 12 ];
+		PxVehicleDrivableSurfaceType mVehicleDrivableSurfaceTypes[ 12 ];
 
-		PxF32 restitutions[4] = {0.2f, 0.2f, 0.2f, 0.2f};
-		PxF32 staticFrictions[4] = {0.5f, 0.5f, 0.5f, 0.5f};
-		PxF32 dynamicFrictions[4] = {0.5f, 0.5f, 0.5f, 0.5f};
-		PxMaterial* mStandardMaterials[4];
-		PxVehicleDrivableSurfaceType mVehicleDrivableSurfaceTypes[4];
-
-		for(PxU32 i=0;i<4;i++) 
+		for( PxU32 i = 0; i < nWheel; i++ ) 
 		{
-			//Create a new material.
-			mStandardMaterials[i] = m_pPhysics->createMaterial(staticFrictions[i], dynamicFrictions[i], restitutions[i]);			
-
-			//Set up the drivable surface type that will be used for the new material.
-			mVehicleDrivableSurfaceTypes[i].mType = i;
+			mStandardMaterials[ i ]					= m_pPhysics->createMaterial( staticFrictions, dynamicFrictions, restitutions );				
+			mVehicleDrivableSurfaceTypes[ i ].mType = 1;
 		}
 
-		mSqData = SampleVehicleSceneQueryData::allocate( 1 * 4 );
+		mSqData = SampleVehicleSceneQueryData::allocate( nWheel );
 
-		//Set up the friction values arising from combinations of tire type and surface type.		
-		m_pSurfaceTirePairs = PxVehicleDrivableSurfaceToTireFrictionPairs::create( 4, 4, (const PxMaterial**)mStandardMaterials, mVehicleDrivableSurfaceTypes );
-		for(PxU32 i=0;i<4;i++)
+		// Установить значения трения, возникающие из комбинаций типов шин и типа поверхности.
+		m_pSurfaceTirePairs = PxVehicleDrivableSurfaceToTireFrictionPairs::create( nWheel, nWheel, (const PxMaterial**)mStandardMaterials, mVehicleDrivableSurfaceTypes );
+		for(PxU32 i = 0; i < nWheel; i++ )
 		{
-			for(PxU32 j=0;j<4;j++)
+			for( PxU32 j = 0; j < nWheel; j++ )
 			{
 				m_pSurfaceTirePairs->setTypePairFriction( i, j, gTireFrictionMultipliers[ i ][ j ] );
 			}
 		}
-
-// 		PxVehicleWheelsSimData* wheelsSimData = PxVehicleWheelsSimData::allocate(12);
-// 		PxVehicleDriveSimData4W driveSimData;
-// 		setupTankSimData(wheelsSimData,driveSimData);
-// 		PxVehicleDriveTank* tank = PxVehicleDriveTank::allocate(12);
-// 		PxRigidDynamic* vehActor=createVehicleActor12W();
-// 		tank->setup(&physics,vehActor,*wheelsSimData,tankDriveSimData,12);
-
 
 // 		PxMaterial* pMaterial = m_pPhysics->createMaterial( 0.5f, 0.5f, 0.1f );    //коэффициенты трения скольжения и покоя(Dynamic friction,Static friction), коэффициент упругости
 // 		if( pMaterial )
@@ -285,13 +269,12 @@ void CPhysX::Update( float fDT )
 	if( fTime >= fStepSize )
 	{
 		fTime = 0.f;
+
 		//Create a scene query if we haven't already done so.
 		if( !m_pSqWheelRaycastBatchQuery && mSqData )
 			m_pSqWheelRaycastBatchQuery = mSqData->setUpBatchedSceneQuery( m_pScene );
 		
-		//Raycasts.
-		
-
+		//Raycasts
 		if( m_pScene )
 		{
 			if( !m_Tanks.empty() && mSqData )
@@ -341,13 +324,6 @@ void CPhysX::Update( float fDT )
 // 				b2 = pActor2->getWorldBounds();
 // 				c2 = b2.getCenter();
 // 			}
-
-			int a = 0;
-
-			//D3DXMATRIX mPose; // матрица мира физ. объекта
-
-			// получаем значение матрицы у актора.
-			//m_pBox->getGlobalPose().getColumnMajor44(reinterpret_cast<NxF32*>(&mPose));
 		}
 	}
 }

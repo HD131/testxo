@@ -11,6 +11,7 @@
 #include "InputDevice.h"
 #include "Particle.h"
 #include "PhysX.h"
+#include "3DModel.h"
 
 class CGame
 {

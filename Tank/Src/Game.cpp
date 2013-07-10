@@ -55,7 +55,7 @@ HWND CGame::Init( HINSTANCE hInstance, WNDPROC pWndProc )
 			}
 
 			m_pCamera = new CameraDevice;
-			m_pCamera->SetPosition( D3DXVECTOR3( -70.f, 20.f, 0.f ) );
+			m_pCamera->SetPosition( D3DXVECTOR3( 0.f, 0.f, -20.f ) );
 			m_Camers[ 1 ] = m_pCamera;
 
 			m_pCamera = new CameraDevice;
@@ -66,8 +66,11 @@ HWND CGame::Init( HINSTANCE hInstance, WNDPROC pWndProc )
 			m_ShaderManager.SetShader( 1, m_ShaderManager.LoadShader( "shader\\Sky" ) );
 			m_Sky.InitialSky( CD3DGraphic::GetDevice() );
 
+			C3DModel* pModel = new C3DModel;
+			pModel->Parse( "model\\Tank\\cub.blg" );
+
 			CMesh3D* mesh = new CMesh3D;
-			if( SUCCEEDED( mesh->InitMesh( "model\\Tank\\Grass1.x", CD3DGraphic::GetDevice() ) ) )
+			if( SUCCEEDED( mesh->InitMesh( "model\\Tank\\Grass4.x", CD3DGraphic::GetDevice() ) ) )
 			{
 				m_Mesh.push_back( mesh );
 				CObject* pEarth = new CObject;
@@ -91,7 +94,6 @@ HWND CGame::Init( HINSTANCE hInstance, WNDPROC pWndProc )
 							SampleVehicleSetupDrivableShapeQueryFilterData(&qryFilterData);							
 							pShape->setSimulationFilterData(simFilterData);
 							pShape->setQueryFilterData(qryFilterData);
-
 							pShape->setFlag( PxShapeFlag::eSIMULATION_SHAPE, true );
 						}
 						
@@ -151,7 +153,7 @@ HWND CGame::Init( HINSTANCE hInstance, WNDPROC pWndProc )
 				delete mesh;
 
 			CMesh3D* meshBasa = new CMesh3D;
-			if( SUCCEEDED( meshBasa->InitMesh( "model\\Tank\\Basa.x", CD3DGraphic::GetDevice() ) ) )
+			if( SUCCEEDED( meshBasa->InitMesh( "model\\t-34\\basa_t34.x", CD3DGraphic::GetDevice() ) ) )
 			{
 				m_Mesh.push_back( meshBasa );
 
@@ -161,71 +163,128 @@ HWND CGame::Init( HINSTANCE hInstance, WNDPROC pWndProc )
 				m_Objects[ "Basa" ] = pMeshB;
 
 				CMesh3D* meshHead = new CMesh3D;
-				if( SUCCEEDED( meshHead->InitMesh( "model\\Tank\\Head.x", CD3DGraphic::GetDevice() ) ) )
+				if( SUCCEEDED( meshHead->InitMesh( "model\\t-34\\tower_t34.x", CD3DGraphic::GetDevice() ) ) )
 				{
 					m_Mesh.push_back( meshHead );
 
 					CObject* pMeshH = new CObject;					
 					pMeshB->SetChild( pMeshH );
 					pMeshH->SetMesh( meshHead );								
-					pMeshH->SetPosition( D3DXVECTOR3( 0.f, 0.5f, 0.f ) );					
+					pMeshH->SetPosition( D3DXVECTOR3( 0.f, 0.4f, 0.5f ) );					
 					m_Objects[ "Turret" ] = pMeshH;
 
 					CMesh3D* meshPushka = new CMesh3D;
-					if( SUCCEEDED( meshPushka->InitMesh( "model\\Tank\\Pushka.x", CD3DGraphic::GetDevice() ) ) )
+					if( SUCCEEDED( meshPushka->InitMesh( "model\\t-34\\gun_t34.x", CD3DGraphic::GetDevice() ) ) )
 					{
 						m_Mesh.push_back( meshPushka );
 
 						CObject* pMeshP = new CObject;						
 						pMeshH->SetChild( pMeshP );
 						pMeshP->SetMesh( meshPushka );										
-						pMeshP->SetPosition( D3DXVECTOR3( 0.f, 0.5f, 0.f ) );
+						pMeshP->SetPosition( D3DXVECTOR3( 0.1f, 0.5f, 1.1f ) );
 						m_Objects[ "Gun" ] = pMeshP;						
 
 						CMesh3D* meshTrack = new CMesh3D;
-						if( SUCCEEDED( meshTrack->InitMesh( "model\\Tank\\Tracks.x", CD3DGraphic::GetDevice() ) ) )
+						if( SUCCEEDED( meshTrack->InitMesh( "model\\t-34\\track_t34.x", CD3DGraphic::GetDevice() ) ) )
 						{
 							m_Mesh.push_back( meshTrack );
 
-// 							CObject* pMeshTrackL = new CObject;						
-// 							pMeshB->SetChild( pMeshTrackL );
-// 							pMeshTrackL->SetMesh( meshTrack );											
-// 							pMeshTrackL->SetPosition( D3DXVECTOR3( 1.6f, -0.4f, 0.f ) );
-// 							m_Objects[ "TrackL" ] = pMeshTrackL;
-// 
-// 							CObject* pMeshTrackR = new CObject;						
-// 							pMeshB->SetChild( pMeshTrackR );
-// 							pMeshTrackR->SetMesh( meshTrack );											
-// 							pMeshTrackR->SetPosition( D3DXVECTOR3( -1.6f, -0.4f, 0.f ) );
-// 							m_Objects[ "TrackR" ] = pMeshTrackR;
+							CObject* pMeshTrackL = new CObject;						
+							pMeshB->SetChild( pMeshTrackL );
+							pMeshTrackL->SetMesh( meshTrack );											
+							pMeshTrackL->SetPosition( D3DXVECTOR3( 1.2f, -0.48f, -0.1f ) );
+							m_Objects[ "TrackL" ] = pMeshTrackL;
+
+							CObject* pMeshTrackR = new CObject;						
+							pMeshB->SetChild( pMeshTrackR );
+							pMeshTrackR->SetMesh( meshTrack );											
+							pMeshTrackR->SetPosition( D3DXVECTOR3( -1.2f, -0.48f, -0.1f ) );
+							m_Objects[ "TrackR" ] = pMeshTrackR;
 
 							CMesh3D* meshRoller = new CMesh3D;
-							if( SUCCEEDED( meshRoller->InitMesh( "model\\Tank\\Roller.x", CD3DGraphic::GetDevice() ) ) )
+							if( SUCCEEDED( meshRoller->InitMesh( "model\\t-34\\roller_1.x", CD3DGraphic::GetDevice() ) ) )
 							{
 								m_Mesh.push_back( meshRoller );
 
-								CObject* pMeshRollerL = new CObject;						
-								pMeshB->SetChild( pMeshRollerL );
-								pMeshRollerL->SetMesh( meshRoller );											
-								//pMeshRollerL->SetPosition( D3DXVECTOR3( 1.6f, -1.f, -1.5f ) );
-								pMeshRollerL->SetStepRotate( 10.f );
-								m_Objects[ "RollerL1" ] = pMeshRollerL;
+								CObject* pMeshRollerL1 = new CObject;						
+								pMeshB->SetChild( pMeshRollerL1 );
+								pMeshRollerL1->SetMesh( meshRoller );								
+								m_Objects[ "RollerL1" ] = pMeshRollerL1;
 
-								CObject* pMeshRollerR = new CObject;						
-								pMeshB->SetChild( pMeshRollerR );
-								pMeshRollerR->SetMesh( meshRoller );											
-								//pMeshRollerR->SetPosition( D3DXVECTOR3( -1.6f, -1.f, -1.5f ) );
-								pMeshRollerR->SetStepRotate( 10.f );
-								m_Objects[ "RollerL2" ] = pMeshRollerR;							
+								CObject* pMeshRollerR1 = new CObject;						
+								pMeshB->SetChild( pMeshRollerR1 );
+								pMeshRollerR1->SetMesh( meshRoller );								
+								m_Objects[ "RollerR1" ] = pMeshRollerR1;
+
+								CObject* pMeshRollerL2 = new CObject;						
+								pMeshB->SetChild( pMeshRollerL2 );
+								pMeshRollerL2->SetMesh( meshRoller );								
+								m_Objects[ "RollerL2" ] = pMeshRollerL2;
+
+								CObject* pMeshRollerR2 = new CObject;						
+								pMeshB->SetChild( pMeshRollerR2 );
+								pMeshRollerR2->SetMesh( meshRoller );								
+								m_Objects[ "RollerR1" ] = pMeshRollerR2;
+
+								CObject* pMeshRollerL3 = new CObject;						
+								pMeshB->SetChild( pMeshRollerL3 );
+								pMeshRollerL3->SetMesh( meshRoller );								
+								m_Objects[ "RollerL1" ] = pMeshRollerL3;
+
+								CObject* pMeshRollerR3 = new CObject;						
+								pMeshB->SetChild( pMeshRollerR3 );
+								pMeshRollerR3->SetMesh( meshRoller );								
+								m_Objects[ "RollerR1" ] = pMeshRollerR3;
+
+								CObject* pMeshRollerL4 = new CObject;						
+								pMeshB->SetChild( pMeshRollerL4 );
+								pMeshRollerL4->SetMesh( meshRoller );								
+								m_Objects[ "RollerL2" ] = pMeshRollerL4;
+
+								CObject* pMeshRollerR4 = new CObject;						
+								pMeshB->SetChild( pMeshRollerR4 );
+								pMeshRollerR4->SetMesh( meshRoller );								
+								m_Objects[ "RollerR1" ] = pMeshRollerR4;
+
+								CObject* pMeshRollerL5 = new CObject;						
+								pMeshB->SetChild( pMeshRollerL5 );
+								pMeshRollerL5->SetMesh( meshRoller );								
+								m_Objects[ "RollerL1" ] = pMeshRollerL5;
+
+								CObject* pMeshRollerR5 = new CObject;						
+								pMeshB->SetChild( pMeshRollerR5 );
+								pMeshRollerR5->SetMesh( meshRoller );								
+								m_Objects[ "RollerR1" ] = pMeshRollerR5;
+
+								CObject* pMeshRollerL6 = new CObject;						
+								pMeshB->SetChild( pMeshRollerL6 );
+								pMeshRollerL6->SetMesh( meshRoller );								
+								m_Objects[ "RollerL2" ] = pMeshRollerL6;
+
+								CObject* pMeshRollerR6 = new CObject;						
+								pMeshB->SetChild( pMeshRollerR6 );
+								pMeshRollerR6->SetMesh( meshRoller );								
+								m_Objects[ "RollerR1" ] = pMeshRollerR6;
 
 								CTank* pTank = new CTank;
 								pTank->SetDetail( BODY,     pMeshB );
 								pTank->SetDetail( TURRET,   pMeshH );
 								pTank->SetDetail( GUN,      pMeshP );
-// 								pTank->SetDetail( TRACK_L,  pMeshTrackL );
-// 								pTank->SetDetail( TRACK_R,  pMeshTrackR );
-								pTank->SetDetail( WHEEL_LEFT_1ST,  pMeshRollerL );
-								pTank->SetDetail( WHEEL_RIGHT_1ST, pMeshRollerR );
+								pTank->SetDetail( TRACK_L,  pMeshTrackL );
+								pTank->SetDetail( TRACK_R,  pMeshTrackR );
+								pTank->SetDetail( WHEEL_LEFT_1ST,  pMeshRollerL1 );
+								pTank->SetDetail( WHEEL_RIGHT_1ST, pMeshRollerR1 );
+								pTank->SetDetail( WHEEL_LEFT_2ST,  pMeshRollerL2 );
+								pTank->SetDetail( WHEEL_RIGHT_2ST, pMeshRollerR2 );
+								pTank->SetDetail( WHEEL_LEFT_3ST,  pMeshRollerL3 );
+								pTank->SetDetail( WHEEL_RIGHT_3ST, pMeshRollerR3 );
+								pTank->SetDetail( WHEEL_LEFT_4ST,  pMeshRollerL4 );
+								pTank->SetDetail( WHEEL_RIGHT_4ST, pMeshRollerR4 );
+								pTank->SetDetail( WHEEL_LEFT_5ST,  pMeshRollerL5 );
+								pTank->SetDetail( WHEEL_RIGHT_5ST, pMeshRollerR5 );
+								pTank->SetDetail( WHEEL_LEFT_6ST,  pMeshRollerL6 );
+								pTank->SetDetail( WHEEL_RIGHT_6ST, pMeshRollerR6 );
+
 
 								pTank->CreateTankActor( m_pPhysX );
 
@@ -389,8 +448,8 @@ void CGame::Update( float fDT )
 				
 				D3DXMATRIX mat   = pTankHead->GetReleaseMatrix();
 				D3DXVECTOR3	vPos( mat._41, mat._42, mat._43 );
-				D3DXVECTOR3	vPos1 = vPos  + T * 35.0f;	
-				m_Camers[ 1 ]->SetPosition( D3DXVECTOR3(vPos1.x, vPos1.y, vPos1.z ) );
+				D3DXVECTOR3	vPos1 = vPos  - T * 15.0f;	
+				m_Camers[ 1 ]->SetPosition( D3DXVECTOR3(vPos1.x, vPos1.y + 4.f, vPos1.z ) );
 				
 				m_pCamera->Update( fDT );					
 			}
