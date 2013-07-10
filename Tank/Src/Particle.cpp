@@ -128,9 +128,7 @@ void CParticles::Render( CameraDevice* pCamera, const CShader* Shader )
 	if( Shader && pCamera )
 	{		
 		D3DXMATRIX MatrixWorld;
-		float      m_Alpha = -1.f;
-
-		//Update( pCamera );
+		float      m_Alpha = -1.f;		
 
 		D3DXMatrixTranslation( &MatrixWorld, 1.0f, 1.0f, 1.0f );		
 		D3DXMATRIX wvp = MatrixWorld * pCamera->GetMatrixViewProject();

@@ -10,6 +10,7 @@
 #include "CameraDevice.h"
 #include "D3D.h"
 #include "PhysX.h"
+#include "Lua.h"
 
 #define D3DFVF_CUSTOMVERTEX ( D3DFVF_XYZ | D3DFVF_NORMAL | D3DFVF_TEX1 )
 typedef unsigned int uint;
@@ -214,13 +215,8 @@ private:
 };
 
 enum EDetailTank
-{
-	BODY			= 0,
-	TURRET,
-	GUN,
-	TRACK_L,
-	TRACK_R,
-	WHEEL_LEFT_1ST,
+{	
+	WHEEL_LEFT_1ST  = 0,
 	WHEEL_RIGHT_1ST,
 	WHEEL_LEFT_2ST,
 	WHEEL_RIGHT_2ST,
@@ -235,7 +231,13 @@ enum EDetailTank
 	WHEEL_LEFT_7ST,
 	WHEEL_RIGHT_7ST,
 	WHEEL_LEFT_8ST,
-	WHEEL_RIGHT_8ST
+	WHEEL_RIGHT_8ST,		
+	BODY,
+	TURRET,
+	GUN,
+	TRACK_L,
+	TRACK_R,
+	MAX_DETAIL
 };
 
 class CTank
@@ -265,5 +267,6 @@ private:
 	bool								m_bMoveForward;
 	bool								m_bMoveBack;
 	bool								m_bTurnLeft;
-	bool								m_bTurnRight;	
+	bool								m_bTurnRight;
+	float								m_fSpeedTank;
 };

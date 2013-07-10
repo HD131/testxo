@@ -60,7 +60,7 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 				fps_time = time_cur;
 				static char t[32] = {0};
 				sprintf( t, "Tanks FPS: %d, delat: %f", FPS, delta );
-				//SetWindowText( hwnd, t );
+				SetWindowText( hwnd, t );
 				FPS = 0;
 			}
 		}		
