@@ -3,6 +3,16 @@
 IDirect3DDevice9*   CD3DGraphic::m_pD3DDevice	= 0;	
 IDirect3D9*			CD3DGraphic::m_pDirect3D	= 0; 
 
+CTexture::CTexture():
+	m_pTexture( 0 )
+{
+}
+
+CTexture::CTexture( IDirect3DTexture9* pTexture, const std::string& srPathTexture ):
+	m_pTexture( pTexture ),
+	m_srPathTexture( srPathTexture )
+{
+}
 CD3DGraphic::CD3DGraphic() :
 	FullScreen( true )
 {
@@ -66,7 +76,9 @@ HRESULT CD3DGraphic::InitD3D( HWND hwnd )
 	m_pD3DDevice->SetRenderState( D3DRS_AMBIENT,			0xffffffff );
 
 	m_pD3DDevice->SetSamplerState( 0, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR );				// фильтраци€ текстуры дл€ плавности перехода
-
+	m_pD3DDevice->SetSamplerState( 1, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR );				// фильтраци€ текстуры дл€ плавности перехода
+	m_pD3DDevice->SetSamplerState( 2, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR );				// фильтраци€ текстуры дл€ плавности перехода
+	m_pD3DDevice->SetSamplerState( 8, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR );				// фильтраци€ текстуры дл€ плавности перехода
 	
 	m_pD3DDevice->SetRenderState( D3DRS_ALPHATESTENABLE, TRUE );
 	m_pD3DDevice->SetRenderState( D3DRS_ALPHAREF,        0x01 );
@@ -79,6 +91,15 @@ HRESULT CD3DGraphic::InitD3D( HWND hwnd )
 	m_pD3DDevice->SetTextureStageState( 0, D3DTSS_ALPHAOP,   D3DTOP_MODULATE );
 	m_pD3DDevice->SetTextureStageState( 0, D3DTSS_ALPHAARG1, D3DTA_TEXTURE );
 	m_pD3DDevice->SetTextureStageState( 0, D3DTSS_ALPHAARG2, D3DTA_DIFFUSE );
+
+
+	m_pD3DDevice->SetTextureStageState( 1, D3DTSS_COLOROP,   D3DTOP_MODULATE );
+	m_pD3DDevice->SetTextureStageState( 1, D3DTSS_COLORARG1, D3DTA_TEXTURE );
+	m_pD3DDevice->SetTextureStageState( 1, D3DTSS_COLORARG2, D3DTA_DIFFUSE );
+
+	m_pD3DDevice->SetTextureStageState( 1, D3DTSS_ALPHAOP,   D3DTOP_MODULATE );
+	m_pD3DDevice->SetTextureStageState( 1, D3DTSS_ALPHAARG1, D3DTA_TEXTURE );
+	m_pD3DDevice->SetTextureStageState( 1, D3DTSS_ALPHAARG2, D3DTA_DIFFUSE );
 
 	
 

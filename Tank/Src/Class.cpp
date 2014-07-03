@@ -55,86 +55,107 @@ CShader::~CShader()
 	Release();
 }
 
-CShader* CManagerShader::GetShader( int shader )
+CManagerShader::CManagerShader()
 {
-	std::map< int, CShader* >::iterator iter = m_MapShader.find( shader );
-	if( iter != m_MapShader.end() )
-		return iter->second;
+	m_Shader.resize( MAX_SHASER );
+}
 
-	return 0;
+CShader * CManagerShader::GetShader( ESHADER NameShader )
+{
+	return m_Shader[ NameShader ];
 }
 
 //--------------------------------------------------------------------------------------------------------
 CShader* CManagerShader::LoadShader( const char * File )
 {	
-	IDirect3DDevice9* pD3DDevice = CD3DGraphic::GetDevice();
+	IDirect3DDevice9* pD3DDevice  = CD3DGraphic::GetDevice();
+	CShader*          pShader     = 0;
+	ID3DXBuffer*      pErrors     = 0;
+	ID3DXBuffer*      pShaderBuff = 0;
+
 	if( pD3DDevice && File && strlen( File ) )
-	{
-		ID3DXBuffer* pErrors        = 0;
-		ID3DXBuffer* pShaderBuff    = 0;		
-		CShader*     pShader        = new CShader;
+	{				
 		std::string  FileName( File );
+		pShader = new CShader;
 
 		// вертексный шейдер
-		std::string FileNameVS = FileName + std::string( ".vsh" );		
-		if( SUCCEEDED( D3DXCompileShaderFromFile( FileNameVS.c_str(), 0, 0, "main", "vs_2_0", D3DXSHADER_OPTIMIZATION_LEVEL3, &pShaderBuff, &pErrors, &pShader->m_pConstTableVS ) ) )
+		std::string FileNameVS = FileName + std::string( ".vsh" );
+		HRESULT hr = D3DXCompileShaderFromFile( FileNameVS.c_str(), 0, 0, "main", "vs_2_0", D3DXSHADER_OPTIMIZATION_LEVEL3, &pShaderBuff, &pErrors, &pShader->m_pConstTableVS );
+
+		if( hr == S_OK )
 		{
 			if( pShaderBuff )
 			{
 				pD3DDevice->CreateVertexShader( (DWORD*)pShaderBuff->GetBufferPointer(), &pShader->m_pVertexShader );
-				pShaderBuff->Release();
+				RELEASE_ONE( pShaderBuff );
+			}
+
+			if( pErrors )
+			{
+				Log( (LPCSTR)pErrors->GetBufferPointer() );
+				RELEASE_ONE( pErrors );
 			}
 
 			// пиксельный шейдер
 			std::string FileNamePS = FileName + std::string( ".psh" );
-			if( SUCCEEDED( D3DXCompileShaderFromFile( FileNamePS.c_str(), 0, 0, "main", "ps_2_0", D3DXSHADER_OPTIMIZATION_LEVEL3, &pShaderBuff, &pErrors, &pShader->m_pConstTablePS ) ) )
+			hr = D3DXCompileShaderFromFile( FileNamePS.c_str(), 0, 0, "main", "ps_2_0", D3DXSHADER_OPTIMIZATION_LEVEL3, &pShaderBuff, &pErrors, &pShader->m_pConstTablePS );
+			
+			if( hr == S_OK )
 			{
 				if( pShaderBuff )
 				{
 					pD3DDevice->CreatePixelShader( (DWORD*)pShaderBuff->GetBufferPointer(), &pShader->m_pPixelShader );
-					pShaderBuff->Release();
-				}
-
-				std::string Load = "Load shader " + FileName;
-				Log( Load.c_str() );
-
-				return pShader;
+					RELEASE_ONE( pShaderBuff );
+				}								
 			}
 			else
 			{
-				std::string Error = "Error load pixel shader " + FileNameVS;
+				std::string Error = "Error load pixel shader " + FileNamePS + "\n";
 				Log( Error.c_str() );
+				pShader->Release();	
+				DELETE_ONE( pShader );	
 			}
 		}
 		else
 		{
-			std::string Error = "Error load vertex shader " + FileNameVS;
+			std::string Error = "Error load vertex shader " + FileNameVS + "\n";
 			Log( Error.c_str() );
-		}
+			pShader->Release();	
+			DELETE_ONE( pShader );	
+		}						
+	}
+	else
+		Log( "Error D3DDevice Load shader" );	
 
-		pShader->Release();	
-		DELETE_ONE( pShader );					
+	if( pShaderBuff )
+		RELEASE_ONE( pShaderBuff );
+
+	if( pErrors )
+	{
+		Log( (LPCSTR)pErrors->GetBufferPointer() );
+		RELEASE_ONE( pErrors );
 	}
 
-	Log( "Error D3DDevice Load shader" );	
-	return 0;	
+	return pShader;	
 }
 
-void CManagerShader::SetShader( int number, CShader* pShader )
+void CManagerShader::SetShader( ESHADER NameShader, CShader * pShader )
 {
-	if( pShader )
-		m_MapShader[ number ] = pShader;
+	m_Shader[ NameShader ] = pShader;
 }
 
 void CManagerShader::Release()
 {
-	for( std::map< int, CShader* >::iterator iter = m_MapShader.begin(), iter_end = m_MapShader.end(); iter != iter_end; ++iter )
+	for( std::vector< CShader* >::iterator iter = m_Shader.begin(), iter_end = m_Shader.end(); iter != iter_end; ++iter )
 	{
-		iter->second->Release();
-		DELETE_ONE( iter->second );
+		if( CShader * pShader = *iter )
+		{
+			pShader->Release();
+			DELETE_ONE( pShader );
+		}
 	}
 
-	m_MapShader.clear();
+	m_Shader.clear();
 }
 
 //--------------------------------------------------------------------------------------------------------

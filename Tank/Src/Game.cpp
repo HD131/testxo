@@ -25,7 +25,7 @@ CObject* CGame::GetObject( std::string srName )
 
 	return 0;
 }
-
+C3DModel* g_pModel;
 HWND CGame::Init( HINSTANCE hInstance, WNDPROC pWndProc )
 {
 	WNDCLASS w; 
@@ -62,12 +62,13 @@ HWND CGame::Init( HINSTANCE hInstance, WNDPROC pWndProc )
 			m_pCamera->SetPosition( D3DXVECTOR3( -0.f, 5.f, -10.f ) );
 			m_Camers[ 2 ] = m_pCamera;
 
-			m_ShaderManager.SetShader( 0, m_ShaderManager.LoadShader( "shader\\Diffuse" ) );
-			m_ShaderManager.SetShader( 1, m_ShaderManager.LoadShader( "shader\\Sky" ) );
+			m_ShaderManager.SetShader( DIFFUSE, m_ShaderManager.LoadShader( "shader\\Diffuse" ) );
+			m_ShaderManager.SetShader( Sky, m_ShaderManager.LoadShader( "shader\\Sky" ) );
+			m_ShaderManager.SetShader( DIFFUSE_NORMAL_SPECULAR, m_ShaderManager.LoadShader( "shader\\DNS" ) );
 			m_Sky.InitialSky( CD3DGraphic::GetDevice() );
 
-			C3DModel* pModel = new C3DModel;
-			pModel->Parse( "model\\Tank\\cub.blg" );
+			g_pModel = new C3DModel;
+			g_pModel->Parse( "model\\t-34\\tank.BLG" );
 
 			CMesh3D* mesh = new CMesh3D;
 			if( SUCCEEDED( mesh->InitMesh( "model\\Tank\\Grass4.x", CD3DGraphic::GetDevice() ) ) )
@@ -467,12 +468,13 @@ void CGame::RenderingScene()
 		pD3DDevice->Clear( 0, 0, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER, D3DCOLOR_XRGB( 0, 0, 0 ), 1.f, 0 );	// очистка заднего буфера	
 		pD3DDevice->BeginScene(); // начало рендеринга	
 		
-		m_Sky.RenderSky( m_pCamera, m_ShaderManager.GetShader( 1 ) );
+		m_Sky.RenderSky( m_pCamera, m_ShaderManager.GetShader( Sky ) );
 
 		if( CObject* pEarth = GetObject( "Earth" ) )
-			pEarth->Render( m_pCamera, m_ShaderManager.GetShader( 0 ) );
+			pEarth->Render( m_pCamera, m_ShaderManager.GetShader( DIFFUSE ) );
 
-// 		D3DXMatrixTranslation( &MatrixWorld, 0, 0, 0 );
+ 		D3DXMatrixTranslation( &MatrixWorld, 3.f, 0.8f, 0.f );
+		g_pModel->RenderMesh( m_pCamera, MatrixWorld, m_ShaderManager.GetShader( DIFFUSE_NORMAL_SPECULAR ) );
 // 		for( std::vector< CMesh3D* >::iterator iter = m_Mesh.begin(); iter != m_Mesh.end(); ++iter )
 // 		{
 // 			(*iter)->RenderMesh( m_pCamera, MatrixWorld, m_ShaderManager.GetShader( 0 ) );
@@ -481,17 +483,17 @@ void CGame::RenderingScene()
 
 		for( std::vector< CBullet* >::iterator iter = m_Bullet.begin(); iter != m_Bullet.end(); ++iter )
 		{
-			(*iter)->Render( m_pCamera, m_ShaderManager.GetShader( 0 ) );			
+			(*iter)->Render( m_pCamera, m_ShaderManager.GetShader( DIFFUSE ) );			
 		}
 
 		for( std::vector< CTank* >::iterator iter = m_Tanks.begin(); iter != m_Tanks.end(); ++iter )
 		{
-			(*iter)->Render( m_pCamera, m_ShaderManager.GetShader( 0 ) );
+			(*iter)->Render( m_pCamera, m_ShaderManager.GetShader( DIFFUSE ) );
 		}
 		
 		for( std::vector< CParticles* >::iterator iter = m_Particles.begin(); iter != m_Particles.end(); ++iter )
 		{
-			(*iter)->Render( m_pCamera, m_ShaderManager.GetShader( 0 ) );
+			(*iter)->Render( m_pCamera, m_ShaderManager.GetShader( DIFFUSE ) );
 		}		
 
 		pD3DDevice->EndScene();

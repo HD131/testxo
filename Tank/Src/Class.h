@@ -15,17 +15,19 @@
 #define D3DFVF_CUSTOMVERTEX ( D3DFVF_XYZ | D3DFVF_NORMAL | D3DFVF_TEX1 )
 typedef unsigned int uint;
 
-const D3DXVECTOR4 g_Light       = D3DXVECTOR4( 0.0f, 1.0f, -1.0f, 1.0f );
+const D3DXVECTOR4 g_Light       = D3DXVECTOR4( 0.f, 10000.f, 0.f, 1.f );
 const float       g_Diffuse_intensity = 1.0f;
 
-enum  Shader 
+enum ESHADER 
 { 
-	Sky, 
-	Diffuse,
+	DIFFUSE = 0,
+	Sky,	
 	Text,
 	FlatImage,
-	MaxShader
+	DIFFUSE_NORMAL_SPECULAR,
+	MAX_SHASER
 };
+
 //---------------------------------------------------------
 struct CVertex
 {
@@ -104,14 +106,17 @@ public:
 class CManagerShader
 {
 public:	
-	CShader*	GetShader( int shader );
-	CShader*	LoadShader( const char * File );
+	CManagerShader();
+
+	CShader *	GetShader( ESHADER NameShader );
+	CShader *	LoadShader( const char * File );
 	void		Release();
-	void		SetShader( int number, CShader* pShader );
+	void		SetShader( ESHADER NameShader, CShader * pShader );
 
 private:
-	std::map< int, CShader* >	m_MapShader;
+	std::vector< CShader* >	m_Shader;
 };
+
 //---------------------------------------------------------
 class CMesh3D
 {

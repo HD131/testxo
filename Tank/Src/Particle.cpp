@@ -175,5 +175,6 @@ void CParticles::Release()
 
 CParticles::~CParticles()
 {
+	Release();
 }
 
