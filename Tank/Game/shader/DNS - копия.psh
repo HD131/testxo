@@ -1,0 +1,41 @@
+float  diffuse_intensity;
+float  Alpha;
+
+float4 m_vAmbient;
+float4 m_vDiffuse;
+float4 m_vSpec;
+float4 m_vHelper;
+
+sampler2D m_Diff: register(s1); // Base map
+sampler2D m_Spec: register(s2); // Base map
+sampler2D m_Bump: register(s8); // Dot3 map
+
+float4 main(float2 texcoord: TEXCOORD0,
+            float3 light:    TEXCOORD1,
+            float3 view:     TEXCOORD2): COLOR0
+{
+    float4 tx_base = tex2D( m_Diff, texcoord ); // Load base texture
+	float4 tx_spec = tex2D( m_Spec, texcoord ); // Load base texture
+    float4 tx_bump = tex2D( m_Bump, texcoord ) * 2.f - 1.f; // Load bump texture
+
+    tx_bump = normalize( tx_bump );	    
+    float3 nrmd_view  = normalize( view );  				// Normalize view     
+    
+    float3 reflect_vec = reflect( nrmd_view, light );		// Calculate reflect vector    
+    float n_dot_l      = dot( tx_bump, light );				// Normal dot light    
+    float r_dot_v      = dot( reflect_vec, nrmd_view );		// Reflect dot view
+
+    // Calculate ambient model
+    float4 ambient = tx_base * m_vAmbient * m_vHelper.x; 
+	
+    // Calculate diffuse model
+    float4 diffuse = tx_base + n_dot_l / 4;
+	
+    // Calculate specular model
+    float4 spec = m_vSpec * m_vHelper.z + pow( r_dot_v, m_vHelper.w );
+    
+    // Result lighting model
+    float4 color = diffuse;
+    
+    return color;
+}

@@ -12,7 +12,7 @@ CameraDevice::CameraDevice() :
 	m_DirX					= D3DXVECTOR3( 1.f, 0.f, 0.f );	
 	m_PositionCamera		= D3DXVECTOR3( 0.f, 0.f, 0.f );
 	D3DXMatrixLookAtLH( &m_View, &m_PositionCamera, &(m_PositionCamera + m_TargetDir), &m_CameraUp );
-	D3DXMatrixPerspectiveFovLH( &m_Proj, D3DX_PI / 4, m_fAspect, 1.f, 20000.f );	
+	D3DXMatrixPerspectiveFovLH( &m_Proj, D3DX_PI / 4, m_fAspect, 0.1f, 20000.f );	
 	AngleCamera   = 1.f * D3DX_PI / 180.f;
 	Refresh();
 }
