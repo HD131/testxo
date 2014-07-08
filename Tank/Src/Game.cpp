@@ -54,6 +54,7 @@ HWND CGame::Init( HINSTANCE hInstance, WNDPROC pWndProc )
 				return 0;
 			}
 
+			CTextureManager::Create( m_D3D.GetDevice() );
 			m_pCamera = new CameraDevice;
 			m_pCamera->SetPosition( D3DXVECTOR3( 0.f, 0.f, -20.f ) );
 			m_Camers[ 1 ] = m_pCamera;
@@ -531,12 +532,14 @@ void CGame::Release()
 	}
 
 	DELETE_ONE( m_pPhysX );
+	DELETE_ONE( g_pModel );
 
 	m_Objects.clear();
 	m_Camers.clear();
 	m_Mesh.clear();
 	m_Sky.Release();
 	m_ShaderManager.Release();
+	CTextureManager::Release();
 	m_D3D.Release();	
 }
 

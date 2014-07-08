@@ -2,23 +2,24 @@
 
 #include "CameraDevice.h"
 #include "D3D.h"
-#include <vector>
-#include <map>
+#include "Precompile.h"
 
-#pragma warning( disable : 4996 )
-
-#define ID_AM 0   //!< Ambient 
-#define ID_DI 1   //!< Diffuse
-#define ID_SP 2   //!< Specular
-#define ID_SH 3   //!< Glossiness (Shininess in 3ds Max release 2.0 and earlier)
-#define ID_SS 4   //!< Specular Level (Shininess strength in 3ds Max release 2.0 and earlier)
-#define ID_SI 5   //!< Self-illumination
-#define ID_OP 6   //!< Opacity
-#define ID_FI 7   //!< Filter color
-#define ID_BU 8   //!< Bump 
-#define ID_RL 9   //!< Reflection
-#define ID_RR 10  //!< Refraction 
-#define ID_DP 11  //!< Displacement 
+enum ETypeTexture
+{
+	ID_AM  = 0,   // Ambient 
+	ID_DI  = 1,   // Diffuse
+	ID_SP  = 2,   // Specular
+	ID_SH  = 3,   // Glossiness (Shininess in 3ds Max release 2.0 and earlier)
+	ID_SS  = 4,   // Specular Level (Shininess strength in 3ds Max release 2.0 and earlier)
+	ID_SI  = 5,   // Self-illumination
+	ID_OP  = 6,   // Opacity
+	ID_FI  = 7,   // Filter color
+	ID_BU  = 8,   // Bump 
+	ID_RL  = 9,   // Reflection
+	ID_RR  = 10,  // Refraction 
+	ID_DP  = 11,  // Displacement
+	MAX_ID = 12,
+};
 
 struct MeshHeader
 {
@@ -77,7 +78,7 @@ private:
 	DWORD							m_MatID;
 	std::vector< MyVertex >			m_Vertices;
 	std::vector< WORD >				m_Indices;
-	std::map< int, CTexture >		m_TexturesMesh;
+	TEXTURE  						m_TexturesMesh[ MAX_ID ];
 	IDirect3DVertexDeclaration9*    m_pVertexDeclaration;
 	D3DXVECTOR4						m_Light;
 };
