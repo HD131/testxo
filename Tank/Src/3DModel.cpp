@@ -13,6 +13,7 @@ C3DModel::C3DModel():
 	m_pVertexDeclaration( 0 )
 {
 	m_Light = D3DXVECTOR4( 100.f, 100.f, 0.f, 1.f );
+	memset( m_TexturesMesh, 0, sizeof( m_TexturesMesh ) );
 }
 
 HRESULT C3DModel::Parse( const char * szFile )
@@ -57,15 +58,8 @@ HRESULT C3DModel::Parse( const char * szFile )
 
 			std::string szTexture( s );
 			szTexture = FilePath + szTexture;
-			IDirect3DTexture9* pTex = 0;
-
-			if( pD3DDevice && FAILED( D3DXCreateTextureFromFileEx( pD3DDevice, szTexture.c_str(), 0, 0, 0, 0, D3DFMT_A8R8G8B8, D3DPOOL_MANAGED, D3DX_DEFAULT, D3DX_DEFAULT, 0, 0, 0, &pTex ) ) )
-			{
-				std::string szError = std::string( "error load texture Mesh" ) + szTexture;
-				Log( szError.c_str() );				
-			}
-
-			m_TexturesMesh[ ID ] = CTexture( pTex, szTexture );
+			TEXTURE pTex = LoadTexture( szTexture );
+			m_TexturesMesh[ ID ] = pTex;
 			delete[] s;
 		}		
 
@@ -182,9 +176,9 @@ void C3DModel::RenderMesh( CameraDevice * pCamera, const D3DXMATRIX & MatrixWorl
 		if( m_pVertexDeclaration )
 			pD3DDevice->SetVertexDeclaration( m_pVertexDeclaration );
 
-		for( std::map< int, CTexture >::iterator iter =	m_TexturesMesh.begin(); iter != m_TexturesMesh.end(); ++iter )
+		for( unsigned int i = 0; i < MAX_ID; ++i )
 		{
- 			pD3DDevice->SetTexture( iter->first, iter->second.GetTexture() );				
+ 			SetTexture( i, m_TexturesMesh[ i ] );				
  		}
 
 		pD3DDevice->DrawIndexedPrimitive( D3DPT_TRIANGLELIST, 0, 0, m_dwNumVertices, 0, m_dwNumFaces );		
@@ -197,11 +191,15 @@ void C3DModel::Release()
 	RELEASE_ONE( m_pIndexBuffer );
 	RELEASE_ONE( m_pVertexDeclaration );
 
-	for( std::map< int, CTexture >::iterator iter =	m_TexturesMesh.begin(); iter != m_TexturesMesh.end(); ++iter )
+	for( unsigned int i = 0; i < MAX_ID; ++i )
 	{
-		if( IDirect3DTexture9* pTexture = iter->second.GetTexture() )
-			RELEASE_ONE( pTexture );
+		if( TEXTURE pTex = m_TexturesMesh[ i ] )
+		{			
+			FreeTexture( pTex );
+		}
 	}
+	
+	memset( m_TexturesMesh, 0, MAX_ID );
 }
 
 C3DModel::~C3DModel()

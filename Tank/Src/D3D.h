@@ -29,17 +29,3 @@ private:
 	static IDirect3D9*			m_pDirect3D;				// указатель на Главный интерфейс отвечающий за Direct3D	
 	bool						FullScreen;
 };
-
-class CTexture
-{
-public:
-	CTexture();
-	CTexture( IDirect3DTexture9* pTexture, const std::string& srPathTexture );
-
-	IDirect3DTexture9*  GetTexture()	const	{ return m_pTexture; }
-	const std::string&  GetPathTexture() const  { return m_srPathTexture; }
-
-private:
-	IDirect3DTexture9*	m_pTexture;
-	std::string			m_srPathTexture;
-};

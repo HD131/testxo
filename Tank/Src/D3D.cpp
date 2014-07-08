@@ -3,16 +3,6 @@
 IDirect3DDevice9*   CD3DGraphic::m_pD3DDevice	= 0;	
 IDirect3D9*			CD3DGraphic::m_pDirect3D	= 0; 
 
-CTexture::CTexture():
-	m_pTexture( 0 )
-{
-}
-
-CTexture::CTexture( IDirect3DTexture9* pTexture, const std::string& srPathTexture ):
-	m_pTexture( pTexture ),
-	m_srPathTexture( srPathTexture )
-{
-}
 CD3DGraphic::CD3DGraphic() :
 	FullScreen( true )
 {
@@ -23,11 +13,10 @@ CD3DGraphic::~CD3DGraphic()
 }
 
 HRESULT CD3DGraphic::InitD3D( HWND hwnd )
-{	
-	D3DPRESENT_PARAMETERS Direct3DParametr;		// структура задающая парметры рендеринга 
-	D3DDISPLAYMODE        Display;				// возвращает параметры дисплея
+{
+	m_pDirect3D = Direct3DCreate9( D3D_SDK_VERSION );
 
-	if( ( m_pDirect3D = Direct3DCreate9( D3D_SDK_VERSION ) ) == 0 ) // создаётся главный интерфейс
+	if( !m_pDirect3D ) // создаётся главный интерфейс
 	{
 		Log( "Error Initial Direct3D" );
 		return E_FAIL;
@@ -35,34 +24,51 @@ HRESULT CD3DGraphic::InitD3D( HWND hwnd )
 	else
 		Log( "Initial Direct3D" );
 
+	// возвращает параметры дисплея
+	D3DDISPLAYMODE Display;				
+
 	if( FAILED( m_pDirect3D->GetAdapterDisplayMode( D3DADAPTER_DEFAULT, &Display ) ) ) // получаем текущий формат дисплея
 	{
 		Log( "Error GetAdapterDisplayMode" );
 		return E_FAIL;
 	}
 
-	ZeroMemory( &Direct3DParametr, sizeof( Direct3DParametr ) );
-	Direct3DParametr.Windowed               = FullScreen;					// видео режим окно (или полноэкранный режим)
-	Direct3DParametr.SwapEffect             = D3DSWAPEFFECT_DISCARD;		// определяет обмен буферов
-	Direct3DParametr.BackBufferFormat       = Display.Format;				// формат поверхности заднего буфера
-	Direct3DParametr.EnableAutoDepthStencil = TRUE;							// включаем Z-буфер
-	Direct3DParametr.AutoDepthStencilFormat = D3DFMT_D16;					// 16-разрядный буфер глубины
-	Direct3DParametr.PresentationInterval	= D3DPRESENT_INTERVAL_IMMEDIATE;// D3DPRESENT_INTERVAL_IMMEDIATE			D3DPRESENT_INTERVAL_DEFAULT
+	// структура задающая парметры рендеринга 
+	D3DPRESENT_PARAMETERS Direct3DParametr = {0};		
+	//ZeroMemory( &Direct3DParametr, sizeof( Direct3DParametr ) );
+	Direct3DParametr.BackBufferFormat		= D3DFMT_A8R8G8B8;					// формат пикселей
+	Direct3DParametr.BackBufferCount		= 1;
+	Direct3DParametr.MultiSampleType		= D3DMULTISAMPLE_NONE;
+	Direct3DParametr.MultiSampleQuality		= 0;
+	Direct3DParametr.Windowed               = FullScreen;						// видео режим окно (или полноэкранный режим)
+	Direct3DParametr.SwapEffect             = D3DSWAPEFFECT_DISCARD;			// определяет обмен буферов
+	Direct3DParametr.BackBufferFormat       = Display.Format;					// формат поверхности заднего буфера
+	Direct3DParametr.EnableAutoDepthStencil = TRUE;								// включаем Z-буфер
+	Direct3DParametr.AutoDepthStencilFormat = D3DFMT_D16;						// 16-разрядный буфер глубины
+	Direct3DParametr.PresentationInterval	= D3DPRESENT_INTERVAL_IMMEDIATE;	// D3DPRESENT_INTERVAL_IMMEDIATE			D3DPRESENT_INTERVAL_DEFAULT
 
 	// полноэкранный режим
 	if( !FullScreen )
 	{
 		Direct3DParametr.BackBufferWidth			= GetSystemMetrics( SM_CXSCREEN );
 		Direct3DParametr.BackBufferHeight			= GetSystemMetrics( SM_CYSCREEN );
-		Direct3DParametr.BackBufferCount			= 3;
-		Direct3DParametr.FullScreen_RefreshRateInHz = Display.RefreshRate;
+		Direct3DParametr.FullScreen_RefreshRateInHz = D3DPRESENT_RATE_DEFAULT;//Display.RefreshRate;
 	}
 	
-	if( FAILED( m_pDirect3D->CreateDevice( D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, hwnd, D3DCREATE_HARDWARE_VERTEXPROCESSING, &Direct3DParametr, &m_pD3DDevice ) ) ) // создаётся интерфейс устройства
+	HRESULT hr = m_pDirect3D->CreateDevice( D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, hwnd, D3DCREATE_HARDWARE_VERTEXPROCESSING, &Direct3DParametr, &m_pD3DDevice );
+
+	if( FAILED( hr ) ) // создаётся интерфейс устройства
 	{
-		Log( "Error Create Device Direct3D" );
-		Release();
-		return E_FAIL;
+		Log( "Error Create Device Direct3D HARDWARE" );
+
+		hr = m_pDirect3D->CreateDevice( D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, hwnd, D3DCREATE_SOFTWARE_VERTEXPROCESSING, &Direct3DParametr, &m_pD3DDevice );
+
+		if( FAILED( hr ) )
+		{
+			Log( "Error Create Device Direct3D SOFTWARE" );
+			Release();
+			return E_FAIL;
+		}
 	}
 	else
 		Log( "Create Device Direct3D" );
