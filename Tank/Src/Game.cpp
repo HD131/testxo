@@ -1,4 +1,97 @@
 #include "Game.h"
+#include <set>
+#include <process.h>
+
+bool g_CloseThreade = false;
+static std::set< std::string >	g_ChangeFileDirectory;
+static CRITICAL_SECTION			g_pChangeFileMutex;
+
+unsigned __stdcall FuncChange( void * pParam )
+{
+	char buffer[ MAX_PATH ] = {0};
+	GetCurrentDirectory( MAX_PATH, buffer );
+
+	std::string str( buffer );
+	str += "\\shader\\";
+
+	HANDLE hDir = CreateFile( str.c_str(),
+								FILE_LIST_DIRECTORY,
+								FILE_SHARE_READ | FILE_SHARE_DELETE | FILE_SHARE_WRITE,
+								0,
+								OPEN_EXISTING,
+								FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OVERLAPPED,
+								0 );
+
+	OVERLAPPED o = {0};
+	o.hEvent = CreateEvent( 0, FALSE, FALSE, 0 );
+
+	BYTE outBuffer[5120]= {0};
+	VOID *pBuf = (BYTE*)&outBuffer;
+	FILE_NOTIFY_INFORMATION InfoNotify1= {0};
+	BOOL ResultReadChange;
+	DWORD outSize = sizeof(outBuffer);
+
+	while( !g_CloseThreade )
+	{
+		ResultReadChange = ReadDirectoryChangesW( hDir,	&outBuffer, outSize, TRUE, FILE_NOTIFY_CHANGE_SIZE| FILE_NOTIFY_CHANGE_DIR_NAME | FILE_NOTIFY_CHANGE_FILE_NAME, 0, &o, 0 );
+
+		if( ResultReadChange )
+		{
+			// Теперь необходимо дождаться начатой операции
+			if( WaitForSingleObject( o.hEvent, INFINITE ) == WAIT_OBJECT_0 )
+			{
+				PFILE_NOTIFY_INFORMATION fni = (PFILE_NOTIFY_INFORMATION)pBuf;
+				DWORD cbOffset = 0;
+
+				do
+				{
+					cbOffset = fni->NextEntryOffset;
+					ZeroMemory(fni,sizeof(fni));
+
+					switch( fni->Action )
+					{
+					case FILE_ACTION_ADDED:
+						{
+							int a = 0;
+							break;
+						}
+
+					case FILE_ACTION_REMOVED:
+						{
+							int a = 0;
+							break;
+						}
+
+					case FILE_ACTION_MODIFIED:
+					case FILE_ACTION_RENAMED_OLD_NAME:
+					case FILE_ACTION_RENAMED_NEW_NAME:
+						{
+							if( fni->FileName )
+							{
+								std::string srDst;
+								AnsiToUtf8W( fni->FileName, srDst );
+								EnterCriticalSection( &g_pChangeFileMutex );
+								g_ChangeFileDirectory.insert( "shader\\" + srDst );
+								LeaveCriticalSection( &g_pChangeFileMutex );
+							}
+							break;
+						}
+					}
+
+					fni = (PFILE_NOTIFY_INFORMATION)( (LPBYTE)fni + cbOffset );
+				}
+				while( cbOffset );
+
+				memset( outBuffer, 0, outSize );
+			}
+		}
+	}
+
+	CloseHandle( o.hEvent );
+	CloseHandle( hDir );
+
+	return 0;
+}
 
 HWND		CGame::m_hWnd		= 0;
 HINSTANCE	CGame::m_hInstance	= 0;
@@ -25,7 +118,9 @@ CObject* CGame::GetObject( std::string srName )
 
 	return 0;
 }
-C3DModel* g_pModel;
+
+C3DModel * g_pModel = 0;
+
 HWND CGame::Init( HINSTANCE hInstance, WNDPROC pWndProc )
 {
 	WNDCLASS w; 
@@ -40,10 +135,12 @@ HWND CGame::Init( HINSTANCE hInstance, WNDPROC pWndProc )
 	w.hIcon         = LoadIcon( 0, IDI_QUESTION );	
 	
 	RegisterClass( &w );
+	m_hWnd = CreateWindow( "MyTank", "Tank", WS_SYSMENU | WS_MINIMIZEBOX, 250, 150, m_nWidth, m_nHeight, 0, 0, hInstance, 0 );
 
-	if( m_hWnd = CreateWindow( "MyTank", "Tank", WS_SYSMENU | WS_MINIMIZEBOX, 250, 150, m_nWidth, m_nHeight, 0, 0, hInstance, 0 ) )
+	if( m_hWnd )
 	{
 		m_hInstance = hInstance;
+
 		if( SUCCEEDED( m_D3D.InitD3D( m_hWnd ) ) )
 		{
 			m_pPhysX = new CPhysX;
@@ -55,6 +152,10 @@ HWND CGame::Init( HINSTANCE hInstance, WNDPROC pWndProc )
 			}
 
 			CTextureManager::Create( m_D3D.GetDevice() );
+
+			InitializeCriticalSection( &g_pChangeFileMutex );
+			m_pThreadChange = _beginthreadex( 0, 0, FuncChange, 0, 0, 0 );
+
 			m_pCamera = new CameraDevice;
 			m_pCamera->SetPosition( D3DXVECTOR3( 0.f, 0.f, -20.f ) );
 			m_Camers[ 1 ] = m_pCamera;
@@ -334,6 +435,22 @@ bool CGame::InitInputDevice()
 
 void CGame::Update( float fDT )
 {
+	if( !g_ChangeFileDirectory.empty() )
+	{
+		EnterCriticalSection( &g_pChangeFileMutex );
+
+		for( std::set< std::string >::iterator iter = g_ChangeFileDirectory.begin(), iter_end = g_ChangeFileDirectory.end(); iter != iter_end; ++iter )
+		{
+			std::string & str = *iter;
+			//std::replace( str.begin(), str.end(), '\\', '/' );
+			
+			if( m_ShaderManager.IsReload( str ) )
+				continue;
+		}
+
+		g_ChangeFileDirectory.clear();		
+		LeaveCriticalSection( &g_pChangeFileMutex );
+	}
 	if( m_pPhysX )
 	{
 		m_pPhysX->Update( fDT );		
@@ -347,21 +464,22 @@ void CGame::Update( float fDT )
 	{
 		m_DeviceInput->ScanInput( m_pCamera );
 
-		for( std::vector< CTank* >::iterator iter = m_Tanks.begin(); iter != m_Tanks.end(); ++iter )
+		for( std::vector< CTank* >::iterator iter = m_Tanks.begin(), iter_end = m_Tanks.end(); iter != iter_end; ++iter )
 		{
+			CTank * pTank = *iter;
 			
 			if( m_pPhysX )
-				(*iter)->SetPosition( m_pPhysX->GetPos() );			
+				pTank->SetPosition( m_pPhysX->GetPos() );			
 
-			(*iter)->Update( fDT );
+			pTank->Update( fDT );
 		}
 
-		for( std::vector< CBullet* >::iterator iter = m_Bullet.begin(); iter != m_Bullet.end(); ++iter )
+		for( std::vector< CBullet* >::iterator iter = m_Bullet.begin(), iter_end = m_Bullet.end(); iter != iter_end; ++iter )
 		{
 			(*iter)->Update( fDT );
 		}
 
-		for( std::vector< CBullet* >::iterator iter = m_Bullet.begin(); iter != m_Bullet.end(); ++iter )
+		for( std::vector< CBullet* >::iterator iter = m_Bullet.begin(), iter_end = m_Bullet.end(); iter != iter_end; ++iter )
 		{
 			CBullet* pBullet = *iter;
 			if( pBullet->IsDown() )
@@ -378,7 +496,7 @@ void CGame::Update( float fDT )
 			}
 		}
 
-		for( std::vector< CParticles* >::iterator iter = m_Particles.begin(); iter != m_Particles.end(); ++iter )
+		for( std::vector< CParticles* >::iterator iter = m_Particles.begin(), iter_end = m_Particles.end(); iter != iter_end; ++iter )
 		{
 			CParticles* pTemp = *iter;
 			pTemp->Update( fDT, m_pCamera );
@@ -461,13 +579,36 @@ void CGame::Update( float fDT )
 
 void CGame::RenderingScene()
 {
-	if( IDirect3DDevice9* pD3DDevice = CD3DGraphic::GetDevice() )
+	if( IDirect3DDevice9 * pD3DDevice = CD3DGraphic::GetDevice() )
 	{
+		HRESULT hr = pD3DDevice->TestCooperativeLevel();
+
+		if( hr == D3DERR_DEVICELOST )
+			return;
+		else if( hr == D3DERR_DEVICENOTRESET )
+		{
+			D3DDISPLAYMODE Mode = {0};
+
+			if( true )
+			{
+				if( FAILED( CD3DGraphic::GetDirect3D()->GetAdapterDisplayMode( D3DADAPTER_DEFAULT, &Mode ) ) || Mode.Format == D3DFMT_UNKNOWN )
+				{
+					Log( "Can't determine desktop video mode" );
+					return;
+				}
+			}
+
+// 			if( !_GfxRestore() )
+// 				return false;
+		}
+
 		D3DXMATRIX MatrixWorld;		
 		float      Ang = timeGetTime() / 200.f;		
 
 		pD3DDevice->Clear( 0, 0, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER, D3DCOLOR_XRGB( 0, 0, 0 ), 1.f, 0 );	// очистка заднего буфера	
-		pD3DDevice->BeginScene(); // начало рендеринга	
+
+		if( FAILED( pD3DDevice->BeginScene() ) )
+			return;
 		
 		m_Sky.RenderSky( m_pCamera, m_ShaderManager.GetShader( Sky ) );
 
@@ -504,6 +645,9 @@ void CGame::RenderingScene()
 
 void CGame::Release()
 {
+	g_CloseThreade = true;
+	DeleteCriticalSection( &g_pChangeFileMutex );
+
 	for( std::map< std::string, CObject* >::iterator iter = m_Objects.begin(); iter != m_Objects.end(); ++iter )
 	{
 		DELETE_ONE( iter->second );

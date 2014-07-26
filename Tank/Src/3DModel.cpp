@@ -2,6 +2,8 @@
 #include "Help.h"
 #include <iostream>
 #include <fstream>
+#include "ShaderManager.h"
+#include "Class.h"
 
 C3DModel::C3DModel():
 	m_pVertexBuffer( 0 ),
@@ -19,11 +21,13 @@ C3DModel::C3DModel():
 HRESULT C3DModel::Parse( const char * szFile )
 {
 	HRESULT hResult = E_FAIL;
-	IDirect3DDevice9* pD3DDevice = CD3DGraphic::GetDevice();
+	IDirect3DDevice9 * pD3DDevice = CD3DGraphic::GetDevice();
+	FILE * file = 0;
+	errno_t err = fopen_s( &file, szFile, "rb" );
 
-	if( FILE* file = fopen( szFile, "rb" ) )
+	if( !err )
 	{
-#define READ( data )fread( &data, sizeof( data ), 1, file );
+#define READ( data )	fread( &data, sizeof( data ), 1, file );
 
 		unsigned int subMeshesCount = 0;
 		READ( subMeshesCount );
@@ -121,10 +125,11 @@ HRESULT C3DModel::Parse( const char * szFile )
 void C3DModel::RenderMesh( CameraDevice * pCamera, const D3DXMATRIX & MatrixWorld, const CShader * pShader )
 {
 	m_Light.z -= 0.03f;
+
 	if( m_Light.z < -100.f )
 		m_Light.z = 100.f;
 	
-	IDirect3DDevice9* pD3DDevice = CD3DGraphic::GetDevice();
+	IDirect3DDevice9 * pD3DDevice = CD3DGraphic::GetDevice();
 
 	static const D3DVERTEXELEMENT9 pVertexElemMesh[] =
 	{
@@ -141,7 +146,7 @@ void C3DModel::RenderMesh( CameraDevice * pCamera, const D3DXMATRIX & MatrixWorl
 
 	if( pCamera && pShader )
 	{
-		const D3DXMATRIX& vp  = pCamera->GetMatrixViewProject();
+		const D3DXMATRIX & vp = pCamera->GetMatrixViewProject();
 		D3DXMATRIX        wvp = MatrixWorld * vp;
 
 		if( pShader->m_pConstTableVS )

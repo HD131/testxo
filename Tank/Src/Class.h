@@ -10,23 +10,13 @@
 #include "CameraDevice.h"
 #include "D3D.h"
 #include "PhysX.h"
-#include "Lua.h"
+#include "ShaderManager.h"
 
 #define D3DFVF_CUSTOMVERTEX ( D3DFVF_XYZ | D3DFVF_NORMAL | D3DFVF_TEX1 )
 typedef unsigned int uint;
 
 const D3DXVECTOR4 g_Light       = D3DXVECTOR4( 0.f, 10000.f, 0.f, 1.f );
 const float       g_Diffuse_intensity = 1.0f;
-
-enum ESHADER 
-{ 
-	DIFFUSE = 0,
-	Sky,	
-	Text,
-	FlatImage,
-	DIFFUSE_NORMAL_SPECULAR,
-	MAX_SHASER
-};
 
 //---------------------------------------------------------
 struct CVertex
@@ -43,6 +33,7 @@ struct CVertex
 	x(X), y(Y), z(Z), nx(NX), ny(NY), nz(NZ), u(U), v(V)
 	{}
 };
+
 //---------------------------------------------------------
 class CDirection
 {
@@ -87,60 +78,34 @@ public:
 		m_vRight    = D3DXVECTOR3( 0.f, 0.f, -1.f );
 	}
 };
-//---------------------------------------------------------
-class CShader
-{
-public:
-	CShader();
-	~CShader();
-
-	void Release();
-
-public:
-	IDirect3DPixelShader9*  m_pPixelShader;
-	IDirect3DVertexShader9* m_pVertexShader;
-	ID3DXConstantTable*     m_pConstTableVS;
-	ID3DXConstantTable*     m_pConstTablePS;
-};
-
-class CManagerShader
-{
-public:	
-	CManagerShader();
-
-	CShader *	GetShader( ESHADER NameShader );
-	CShader *	LoadShader( const char * File );
-	void		Release();
-	void		SetShader( ESHADER NameShader, CShader * pShader );
-
-private:
-	std::vector< CShader* >	m_Shader;
-};
 
 //---------------------------------------------------------
+class CShader;
+
 class CMesh3D
 {
 public:	
-	CMesh3D();
+				CMesh3D();
 
-	ID3DXMesh*  GetMesh()								{ return m_pMesh; }
-	D3DXVECTOR4	GetOffsetUV()							{ return m_vOffetUV; }
-	HRESULT		InitMesh( LPCSTR Name, IDirect3DDevice9* pD3DDevice );
+	ID3DXMesh * GetMesh()																						{ return m_pMesh; }
+	D3DXVECTOR4	GetOffsetUV()																					{ return m_vOffetUV; }
+	HRESULT		InitMesh( LPCSTR Name, IDirect3DDevice9 * pD3DDevice );
 	void		Release();
-	void        RenderMesh( CameraDevice* pCamera, const D3DXMATRIX&  MatrixWorld, const CShader* pShader );
-	void		SetOffsetUV( const D3DXVECTOR4& vec )	{ m_vOffetUV = vec; }
+	void        RenderMesh( CameraDevice * pCamera, const D3DXMATRIX &  MatrixWorld, const CShader * pShader );
+	void		SetOffsetUV( const D3DXVECTOR4 & vec )															{ m_vOffetUV = vec; }
 
 private:
-	ID3DXMesh*							m_pMesh;
-	IDirect3DDevice9*                   m_pD3DDevice;
+	ID3DXMesh *							m_pMesh;
+	IDirect3DDevice9 *                  m_pD3DDevice;
 	float								m_Alpha;	
-	IDirect3DVertexBuffer9*				m_VertexBuffer;
-	IDirect3DIndexBuffer9*				m_IndexBuffer;
+	IDirect3DVertexBuffer9 *			m_VertexBuffer;
+	IDirect3DIndexBuffer9 *				m_IndexBuffer;
 	DWORD								m_TexturCount; 
-	D3DMATERIAL9*						m_pMeshMaterial;
-	std::vector<IDirect3DTexture9*>     m_pMeshTextura;
+	D3DMATERIAL9 *						m_pMeshMaterial;
+	std::vector< IDirect3DTexture9* >    m_pMeshTextura;
 	D3DXVECTOR4							m_vOffetUV;			
 };
+
 //---------------------------------------------------------
 class CBullet
 {
@@ -149,10 +114,10 @@ public:
 
 	D3DXVECTOR3			GetPosition()													{ return m_vPosition;}
 	void				Update( float fDT );	
-	void				SetMesh( CMesh3D* pMesh )										{ m_pMeshBullet = pMesh; }		
+	void				SetMesh( CMesh3D * pMesh )										{ m_pMeshBullet = pMesh; }		
 	void				SetSpeed( float fSpeed )										{ m_fSpeed		= fSpeed;}
 	void				SetReleaseMatrix( const D3DXMATRIX& mat );	
-	void				Render( CameraDevice* pCamera, const CShader* pShader );
+	void				Render( CameraDevice * pCamera, const CShader * pShader );
 	bool				IsDown()														{ return m_vPosition.y < 0.f ? true : false; }
 
 private:
@@ -161,7 +126,7 @@ private:
 	float				m_fSpeed;
 	D3DXVECTOR3			m_vTargetDir;
 	float				m_fTime;
-	CMesh3D*			m_pMeshBullet;	
+	CMesh3D *			m_pMeshBullet;	
 	D3DXMATRIX			m_MatrixRelease;
 	float				m_fTimeFull;
 	float				m_fLen;

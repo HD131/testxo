@@ -276,6 +276,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ShaderManager.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ShaderManager.h"
+				>
+			</File>
+			<File
 				RelativePath=".\Sky.cpp"
 				>
 			</File>
