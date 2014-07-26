@@ -3,6 +3,9 @@
 #include "D3D.h"
 #include "CameraDevice.h"
 #include <vector>
+#include "Class.h"
+
+class CShader;
 
 struct CEmmiter
 {

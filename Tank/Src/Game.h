@@ -39,7 +39,7 @@ private:
 	int									m_nWidth;
 	int									m_nHeight;
 	CD3DGraphic							m_D3D;
-	CManagerShader						m_ShaderManager;
+	CShaderManager						m_ShaderManager;
 	CLua								m_Lua;
 	CameraDevice* 						m_pCamera;
 	CSky         						m_Sky;
@@ -52,4 +52,5 @@ private:
 	std::map< int, CameraDevice* >		m_Camers;
 	CTank*								m_pMyTank;
 	static CPhysX*						m_pPhysX;
+	uintptr_t							m_pThreadChange;
 };

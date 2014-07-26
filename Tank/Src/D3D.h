@@ -1,6 +1,7 @@
 #pragma once
 
-#include "Class.h"
+#include "..//..//sdk//dx9//Include//d3d9.h"
+#include "..//..//sdk//dx9//Include//d3dx9.h"
 
 enum  BLENDING 
 {

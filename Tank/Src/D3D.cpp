@@ -1,4 +1,5 @@
 #include "D3D.h"
+#include "Help.h"
 
 IDirect3DDevice9*   CD3DGraphic::m_pD3DDevice	= 0;	
 IDirect3D9*			CD3DGraphic::m_pDirect3D	= 0; 
@@ -105,9 +106,7 @@ HRESULT CD3DGraphic::InitD3D( HWND hwnd )
 
 	m_pD3DDevice->SetTextureStageState( 1, D3DTSS_ALPHAOP,   D3DTOP_MODULATE );
 	m_pD3DDevice->SetTextureStageState( 1, D3DTSS_ALPHAARG1, D3DTA_TEXTURE );
-	m_pD3DDevice->SetTextureStageState( 1, D3DTSS_ALPHAARG2, D3DTA_DIFFUSE );
-
-	
+	m_pD3DDevice->SetTextureStageState( 1, D3DTSS_ALPHAARG2, D3DTA_DIFFUSE );	
 
 	return S_OK;
 }
@@ -148,6 +147,3 @@ void CD3DGraphic::Release()
 	RELEASE_ONE( m_pD3DDevice );	
 	RELEASE_ONE( m_pDirect3D  );	
 }
-//-------------------------------------------------------------------------------------
-
-
