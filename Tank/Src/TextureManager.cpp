@@ -19,7 +19,7 @@ IDirect3DTexture9 * ConvertToD3DXTex( TEXTURE Tex )
 	IDirect3DTexture9 * pD3DXTex = 0;
 
 	if( CTexItem * pItem = reinterpret_cast< CTexItem* >( Tex ) )
-		pD3DXTex = pItem->m_pD3DTexture;
+		pD3DXTex = pItem->GetPtrTex();
 
 	return pD3DXTex;
 }
@@ -51,6 +51,34 @@ CTexItem::CTexItem( const std::string & srPath ):
 	m_srPath( srPath ),
 	m_nRefCount( 1 )
 {
+}
+
+bool CTexItem::Load( const std::string & srPath, IDirect3DDevice9 * pD3DDevice )
+{
+	if( pD3DDevice )
+	{
+		if( SUCCEEDED( D3DXCreateTextureFromFileEx( pD3DDevice, srPath.c_str(), 0, 0, 0, 0, D3DFMT_A8R8G8B8, D3DPOOL_MANAGED, D3DX_DEFAULT, D3DX_DEFAULT, 0, 0, 0, &m_pD3DTexture ) ) )
+		{
+			m_srPath = srPath;
+			return true;							
+		}
+		else
+			Log( "Don't load texture: %s", srPath.c_str() );
+	}
+
+	return false;
+}
+
+bool CTexItem::IsReload( const std::string & srPath, IDirect3DDevice9 * pD3DDevice )
+{
+	if( srPath == m_srPath )
+	{
+		Release();
+		Load( srPath, pD3DDevice );
+		return true;
+	}
+
+	return false;
 }
 
 void CTexItem::Release()
@@ -106,21 +134,15 @@ TEXTURE	CTextureManager::LoadTexture( const std::string & srPath )
 		{
 			CTexItem * pItem = *iter;
 
-			if( !_stricmp( srPath.c_str(), pItem->m_srPath.c_str() ) )
+			if( !_stricmp( srPath.c_str(), pItem->GetPathTex().c_str() ) )
 			{
-				++pItem->m_nRefCount;
+				pItem->AddRef();
 				return reinterpret_cast< TEXTURE >( pItem );
 			}
 		}
 
-		CTexItem * pItem = new CTexItem( srPath );
-		
-		if( FAILED( D3DXCreateTextureFromFileEx( m_pD3DDevice, srPath.c_str(), 0, 0, 0, 0, D3DFMT_A8R8G8B8, D3DPOOL_MANAGED, D3DX_DEFAULT, D3DX_DEFAULT, 0, 0, 0, &pItem->m_pD3DTexture ) ) )
-		{
-			std::string szError = std::string( "error load texture Mesh" ) + srPath;
-			Log( szError.c_str() );				
-		}
-
+		CTexItem * pItem = new CTexItem;
+		pItem->Load( srPath, m_pD3DDevice );
 		m_Textures.push_back( pItem );
 		pTex = reinterpret_cast< TEXTURE >( pItem );
 
@@ -133,11 +155,11 @@ void CTextureManager::FreeTexture( TEXTURE Tex )
 {
 	if( CTexItem * pItem = reinterpret_cast< CTexItem* >( Tex ) )
 	{
-		--pItem->m_nRefCount;
+		pItem->DelRef();
 
-		if( !pItem->m_nRefCount )
+		if( !pItem->GetRefCount() )
 		{
-			for ( std::list< CTexItem* >::iterator iter = m_Textures.begin(), iter_end = m_Textures.end(); iter != iter_end; ++iter )
+			for( std::list< CTexItem* >::iterator iter = m_Textures.begin(), iter_end = m_Textures.end(); iter != iter_end; ++iter )
 			{
 				CTexItem * pTexItem = *iter;
 
@@ -158,7 +180,20 @@ void CTextureManager::SetTexture( DWORD Stage, TEXTURE Tex )
 {
 	if( m_pD3DDevice )
 		if( CTexItem * pItem = reinterpret_cast< CTexItem* >( Tex ) )
-			m_pD3DDevice->SetTexture( Stage, pItem->m_pD3DTexture );
+			m_pD3DDevice->SetTexture( Stage, pItem->GetPtrTex() );
+}
+
+bool CTextureManager::IsReload( const std::string & srPath )
+{
+	for( std::list< CTexItem* >::iterator iter = m_Textures.begin(), iter_end = m_Textures.end(); iter != iter_end; ++iter )
+	{
+		CTexItem * pTexItem = *iter;
+
+		if( pTexItem->IsReload( srPath, m_pD3DDevice ) )
+			return true;
+	}
+
+	return false;
 }
 
 void CTextureManager::Release()

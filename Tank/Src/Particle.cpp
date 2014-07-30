@@ -32,11 +32,11 @@ void CParticles::Init( IDirect3DDevice9* D3DDevice )
 		m_D3DDevice = D3DDevice;
 
 		// создаём буфер вершин
-		if ( FAILED( m_D3DDevice->CreateVertexBuffer( m_Size * 4 * sizeof( CVertex ), 0, D3DFVF_CUSTOMVERTEX, D3DPOOL_DEFAULT, &m_VertexBuffer, 0 ) ) )		
+		if( FAILED( m_D3DDevice->CreateVertexBuffer( m_Size * 4 * sizeof( CVertex ), D3DUSAGE_WRITEONLY, D3DFVF_CUSTOMVERTEX, D3DPOOL_DEFAULT, &m_VertexBuffer, 0 ) ) )		
 			Log( "error create vertex buffer Explosion" );
 
 		// создаём буфер индексов
-		if ( FAILED( m_D3DDevice->CreateIndexBuffer( m_Size * 6 * sizeof( short ), 0, D3DFMT_INDEX16, D3DPOOL_DEFAULT, &m_IndexBuffer, 0 ) ) )  		
+		if( FAILED( m_D3DDevice->CreateIndexBuffer( m_Size * 6 * sizeof( short ), 0, D3DFMT_INDEX16, D3DPOOL_DEFAULT, &m_IndexBuffer, 0 ) ) )  		
 			Log( "error create index buffer Explosion" );
 
 		for( int i = 0; i < m_Size; ++i )

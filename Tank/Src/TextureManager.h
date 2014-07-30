@@ -20,9 +20,16 @@ public:
 	explicit			CTexItem( const std::string & srPath );
 						~CTexItem();
 
+	void				AddRef()																	{ ++m_nRefCount; }
+	void				DelRef()																	{ m_nRefCount = ( m_nRefCount > 0 ) ? m_nRefCount - 1 : 0; }
+	unsigned int		GetRefCount() const															{ return m_nRefCount; }
+	IDirect3DTexture9 * GetPtrTex() const															{ return m_pD3DTexture; }
+	const std::string & GetPathTex() const															{ return m_srPath; }
+	bool				Load( const std::string & srPath, IDirect3DDevice9 * pD3DDevice );
+	bool				IsReload( const std::string & srPath, IDirect3DDevice9 * pD3DDevice );
 	void				Release();
 
-public:
+private:
 	IDirect3DTexture9 * m_pD3DTexture;
 	std::string			m_srPath;
 	unsigned int		m_nRefCount;
@@ -42,6 +49,7 @@ public:
 	void						FreeTexture( TEXTURE Tex );
 
 	void						SetTexture( DWORD Stage, TEXTURE Tex );
+	bool						IsReload( const std::string & srPath );
 
 								~CTextureManager();
 
