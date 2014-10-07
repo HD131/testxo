@@ -27,29 +27,6 @@ LRESULT WINAPI WndProc( HWND hwnd, UINT Message, WPARAM wparam, LPARAM lparam )
 int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow )
 {
 	MSG	Msg;
-	String str1 = "1235456";
-	String str2 = "0987654321";
-	String str3 = str1 + str2;
-	str1 = str2;
-	str2 = "000";
-	str2[2] = 50;
-	str2[1] = str1[3];
-	str2 += str1;
-	str2 += "55555";
-
-	if( str1 == "000" )
-	{
-		int a = 0;
-	}
-
-	String s;
-	if( "000" != s )
-	{
-		int a = 0;
-	}
-
-	size_t n = str2.Find( "765" );
-
 	remove( "log.txt" );
 	Log("Begin");
 

@@ -228,6 +228,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\GameObject.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\GameObject.h"
+				>
+			</File>
+			<File
 				RelativePath=".\Help.cpp"
 				>
 			</File>

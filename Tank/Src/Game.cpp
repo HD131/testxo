@@ -1,6 +1,7 @@
 #include "Game.h"
 #include <set>
 #include <process.h>
+#include "GameObject.h"
 
 bool g_CloseThreade = false;
 static std::set< std::string >	g_ChangeFileDirectory;
@@ -96,7 +97,6 @@ unsigned __stdcall FuncChange( void * pParam )
 HWND		CGame::m_hWnd		= 0;
 HINSTANCE	CGame::m_hInstance	= 0;
 bool		CGame::m_bEndGame   = false;
-CPhysX*		CGame::m_pPhysX		= 0;
 
 CGame::CGame() :
 	m_nWidth( 1024 ),
@@ -110,9 +110,9 @@ CGame::~CGame()
 {
 }
 
-CObject* CGame::GetObject( std::string srName )
+GameObject * CGame::GetObject( std::string srName )
 {
-	std::map< std::string, CObject* >::iterator iter = m_Objects.find( srName );
+	std::map< std::string, GameObject* >::iterator iter = m_Objects.find( srName );
 	if( iter != m_Objects.end() )
 		return iter->second;
 
@@ -143,14 +143,6 @@ HWND CGame::Init( HINSTANCE hInstance, WNDPROC pWndProc )
 
 		if( SUCCEEDED( m_D3D.InitD3D( m_hWnd ) ) )
 		{
-			m_pPhysX = new CPhysX;
-
-			if( !m_pPhysX->InitPhisX() )
-			{
-				DELETE_ONE( m_pPhysX );
-				return 0;
-			}
-
 			CTextureManager::Create( m_D3D.GetDevice() );
 
 			InitializeCriticalSection( &g_pChangeFileMutex );
@@ -176,15 +168,16 @@ HWND CGame::Init( HINSTANCE hInstance, WNDPROC pWndProc )
 			if( SUCCEEDED( mesh->InitMesh( "model\\Tank\\Grass4.x", CD3DGraphic::GetDevice() ) ) )
 			{
 				m_Mesh.push_back( mesh );
-				CObject* pEarth = new CObject;
+				GameObject * pEarth = new GameObject;
 				pEarth->SetMesh( mesh );							
 				pEarth->SetPosition( D3DXVECTOR3( 0.f, 0.f, 0.f ) );
+				physx::PxPhysics * pPhysX =	CPhysX::GetPhysX()->GetPhysics();
 
-				if ( pEarth->CreateTriangleMesh( m_pPhysX ) )
+				if ( pEarth->CreateTriangleMesh( CPhysX::GetPhysX() ) )
 				{
-					PxMaterial*     pMaterial    = m_pPhysX->GetPhysics()->createMaterial( 0.5f, 0.5f, 0.2f );    //коэффициенты трения скольжения и покоя(Dynamic friction,Static friction), коэффициент упругости
-					PxTriangleMesh* triangleMesh = pEarth->GetTriangleMesh();
-					PxRigidStatic*  pEarth       = m_pPhysX->GetPhysics()->createRigidStatic( PxTransform( physx::PxVec3( 0, 0.f, 0 ) ) );
+					PxMaterial *     pMaterial    = pPhysX->createMaterial( 0.5f, 0.5f, 0.2f );    //коэффициенты трения скольжения и покоя(Dynamic friction,Static friction), коэффициент упругости
+					PxTriangleMesh * triangleMesh = pEarth->GetTriangleMesh();
+					PxRigidStatic *  pEarth       = pPhysX->createRigidStatic( PxTransform( physx::PxVec3( 0, 0.f, 0 ) ) );
 
 					if( pEarth && pMaterial && triangleMesh )
 					{						
@@ -201,9 +194,9 @@ HWND CGame::Init( HINSTANCE hInstance, WNDPROC pWndProc )
 						}
 						
 						if( pMaterial )
-							m_pPhysX->PushMaterial( pMaterial );
+							CPhysX::GetPhysX()->PushMaterial( pMaterial );
 						
-						m_pPhysX->AddActorScene( pEarth );
+						CPhysX::GetPhysX()->AddActorScene( pEarth );
 					}
 				}
 
@@ -260,7 +253,7 @@ HWND CGame::Init( HINSTANCE hInstance, WNDPROC pWndProc )
 			{
 				m_Mesh.push_back( meshBasa );
 
-				CObject* pMeshB = new CObject;
+				GameObject* pMeshB = new GameObject;
 				pMeshB->SetMesh( meshBasa );							
 				pMeshB->SetPosition( D3DXVECTOR3( 0.f, 3.f, 0.f ) );
 				m_Objects[ "Basa" ] = pMeshB;
@@ -270,7 +263,7 @@ HWND CGame::Init( HINSTANCE hInstance, WNDPROC pWndProc )
 				{
 					m_Mesh.push_back( meshHead );
 
-					CObject* pMeshH = new CObject;					
+					GameObject* pMeshH = new GameObject;					
 					pMeshB->SetChild( pMeshH );
 					pMeshH->SetMesh( meshHead );								
 					pMeshH->SetPosition( D3DXVECTOR3( 0.f, 0.4f, 0.5f ) );					
@@ -281,7 +274,7 @@ HWND CGame::Init( HINSTANCE hInstance, WNDPROC pWndProc )
 					{
 						m_Mesh.push_back( meshPushka );
 
-						CObject* pMeshP = new CObject;						
+						GameObject* pMeshP = new GameObject;						
 						pMeshH->SetChild( pMeshP );
 						pMeshP->SetMesh( meshPushka );										
 						pMeshP->SetPosition( D3DXVECTOR3( 0.1f, 0.5f, 1.1f ) );
@@ -292,13 +285,13 @@ HWND CGame::Init( HINSTANCE hInstance, WNDPROC pWndProc )
 						{
 							m_Mesh.push_back( meshTrack );
 
-							CObject* pMeshTrackL = new CObject;						
+							GameObject* pMeshTrackL = new GameObject;						
 							pMeshB->SetChild( pMeshTrackL );
 							pMeshTrackL->SetMesh( meshTrack );											
 							pMeshTrackL->SetPosition( D3DXVECTOR3( 1.2f, -0.48f, -0.1f ) );
 							m_Objects[ "TrackL" ] = pMeshTrackL;
 
-							CObject* pMeshTrackR = new CObject;						
+							GameObject* pMeshTrackR = new GameObject;						
 							pMeshB->SetChild( pMeshTrackR );
 							pMeshTrackR->SetMesh( meshTrack );											
 							pMeshTrackR->SetPosition( D3DXVECTOR3( -1.2f, -0.48f, -0.1f ) );
@@ -309,62 +302,62 @@ HWND CGame::Init( HINSTANCE hInstance, WNDPROC pWndProc )
 							{
 								m_Mesh.push_back( meshRoller );
 
-								CObject* pMeshRollerL1 = new CObject;						
+								GameObject* pMeshRollerL1 = new GameObject;						
 								pMeshB->SetChild( pMeshRollerL1 );
 								pMeshRollerL1->SetMesh( meshRoller );								
 								m_Objects[ "RollerL1" ] = pMeshRollerL1;
 
-								CObject* pMeshRollerR1 = new CObject;						
+								GameObject* pMeshRollerR1 = new GameObject;						
 								pMeshB->SetChild( pMeshRollerR1 );
 								pMeshRollerR1->SetMesh( meshRoller );								
 								m_Objects[ "RollerR1" ] = pMeshRollerR1;
 
-								CObject* pMeshRollerL2 = new CObject;						
+								GameObject* pMeshRollerL2 = new GameObject;						
 								pMeshB->SetChild( pMeshRollerL2 );
 								pMeshRollerL2->SetMesh( meshRoller );								
 								m_Objects[ "RollerL2" ] = pMeshRollerL2;
 
-								CObject* pMeshRollerR2 = new CObject;						
+								GameObject* pMeshRollerR2 = new GameObject;						
 								pMeshB->SetChild( pMeshRollerR2 );
 								pMeshRollerR2->SetMesh( meshRoller );								
 								m_Objects[ "RollerR1" ] = pMeshRollerR2;
 
-								CObject* pMeshRollerL3 = new CObject;						
+								GameObject* pMeshRollerL3 = new GameObject;						
 								pMeshB->SetChild( pMeshRollerL3 );
 								pMeshRollerL3->SetMesh( meshRoller );								
 								m_Objects[ "RollerL1" ] = pMeshRollerL3;
 
-								CObject* pMeshRollerR3 = new CObject;						
+								GameObject* pMeshRollerR3 = new GameObject;						
 								pMeshB->SetChild( pMeshRollerR3 );
 								pMeshRollerR3->SetMesh( meshRoller );								
 								m_Objects[ "RollerR1" ] = pMeshRollerR3;
 
-								CObject* pMeshRollerL4 = new CObject;						
+								GameObject* pMeshRollerL4 = new GameObject;						
 								pMeshB->SetChild( pMeshRollerL4 );
 								pMeshRollerL4->SetMesh( meshRoller );								
 								m_Objects[ "RollerL2" ] = pMeshRollerL4;
 
-								CObject* pMeshRollerR4 = new CObject;						
+								GameObject* pMeshRollerR4 = new GameObject;						
 								pMeshB->SetChild( pMeshRollerR4 );
 								pMeshRollerR4->SetMesh( meshRoller );								
 								m_Objects[ "RollerR1" ] = pMeshRollerR4;
 
-								CObject* pMeshRollerL5 = new CObject;						
+								GameObject* pMeshRollerL5 = new GameObject;						
 								pMeshB->SetChild( pMeshRollerL5 );
 								pMeshRollerL5->SetMesh( meshRoller );								
 								m_Objects[ "RollerL1" ] = pMeshRollerL5;
 
-								CObject* pMeshRollerR5 = new CObject;						
+								GameObject* pMeshRollerR5 = new GameObject;						
 								pMeshB->SetChild( pMeshRollerR5 );
 								pMeshRollerR5->SetMesh( meshRoller );								
 								m_Objects[ "RollerR1" ] = pMeshRollerR5;
 
-								CObject* pMeshRollerL6 = new CObject;						
+								GameObject* pMeshRollerL6 = new GameObject;						
 								pMeshB->SetChild( pMeshRollerL6 );
 								pMeshRollerL6->SetMesh( meshRoller );								
 								m_Objects[ "RollerL2" ] = pMeshRollerL6;
 
-								CObject* pMeshRollerR6 = new CObject;						
+								GameObject* pMeshRollerR6 = new GameObject;						
 								pMeshB->SetChild( pMeshRollerR6 );
 								pMeshRollerR6->SetMesh( meshRoller );								
 								m_Objects[ "RollerR1" ] = pMeshRollerR6;
@@ -389,7 +382,7 @@ HWND CGame::Init( HINSTANCE hInstance, WNDPROC pWndProc )
 								pTank->SetDetail( WHEEL_RIGHT_6ST, pMeshRollerR6 );
 
 
-								pTank->CreateTankActor( m_pPhysX );
+								pTank->CreateTankActor( CPhysX::GetPhysX() );
 
 								m_Tanks.push_back( pTank );
 								m_pMyTank = pTank;
@@ -451,14 +444,11 @@ void CGame::Update( float fDT )
 		g_ChangeFileDirectory.clear();		
 		LeaveCriticalSection( &g_pChangeFileMutex );
 	}
-	if( m_pPhysX )
-	{
-		m_pPhysX->Update( fDT );		
-	}
+	
+	CPhysX::GetPhysX()->Update( fDT );		
 
-	if( CObject* pEarth = GetObject( "Earth" ) )
+	if( GameObject* pEarth = GetObject( "Earth" ) )
 		pEarth->Update( fDT );	
-
 
 	if( m_DeviceInput )
 	{
@@ -467,10 +457,7 @@ void CGame::Update( float fDT )
 		for( std::vector< CTank* >::iterator iter = m_Tanks.begin(), iter_end = m_Tanks.end(); iter != iter_end; ++iter )
 		{
 			CTank * pTank = *iter;
-			
-			if( m_pPhysX )
-				pTank->SetPosition( m_pPhysX->GetPos() );			
-
+			pTank->SetPosition( CPhysX::GetPhysX()->GetPos() );
 			pTank->Update( fDT );
 		}
 
@@ -553,7 +540,7 @@ void CGame::Update( float fDT )
 			bullet->SetMesh( m_Mesh[ 1 ] );
 			bullet->SetSpeed( 800.f );
 
-			if( CObject* pTankGun = GetObject( "Gun" ) )
+			if( GameObject* pTankGun = GetObject( "Gun" ) )
 				bullet->SetReleaseMatrix( pTankGun->GetReleaseMatrix() );
 
 			m_Bullet.push_back( bullet );
@@ -561,7 +548,7 @@ void CGame::Update( float fDT )
 
 		if( m_pCamera )
 		{
-			if( CObject* pTankHead = GetObject( "Turret" ) )
+			if( GameObject* pTankHead = GetObject( "Turret" ) )
 			{					
 				D3DXVECTOR3 T = pTankHead->GetForward();
 				m_Camers[ 1 ]->SetForvard( T );				
@@ -612,7 +599,7 @@ void CGame::RenderingScene()
 		
 		m_Sky.RenderSky( m_pCamera, m_ShaderManager.GetShader( Sky ) );
 
-		if( CObject* pEarth = GetObject( "Earth" ) )
+		if( GameObject* pEarth = GetObject( "Earth" ) )
 			pEarth->Render( m_pCamera, m_ShaderManager.GetShader( DIFFUSE ) );
 
  		D3DXMatrixTranslation( &MatrixWorld, 3.f, 0.8f, 0.f );
@@ -648,7 +635,7 @@ void CGame::Release()
 	g_CloseThreade = true;
 	DeleteCriticalSection( &g_pChangeFileMutex );
 
-	for( std::map< std::string, CObject* >::iterator iter = m_Objects.begin(); iter != m_Objects.end(); ++iter )
+	for( std::map< std::string, GameObject* >::iterator iter = m_Objects.begin(); iter != m_Objects.end(); ++iter )
 	{
 		DELETE_ONE( iter->second );
 	}
@@ -675,7 +662,7 @@ void CGame::Release()
 		DELETE_ONE( iter->second );
 	}
 
-	DELETE_ONE( m_pPhysX );
+	CPhysX::ReleasePhysics();
 	DELETE_ONE( g_pModel );
 
 	m_Objects.clear();

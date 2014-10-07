@@ -1,5 +1,6 @@
 #include "Class.h"
 #include <iostream>
+#include "GameObject.h"
 
 PxVehiclePadSmoothingData gCarPadSmoothingData=
 {
@@ -236,211 +237,32 @@ void CBullet::Render( CameraDevice * pCamera, const CShader* pShader )
 	}
 }
 
-//--------------------------------------------------------------------------------------------------------
-CObject::CObject() :
-	m_pObjectParent( 0 ),
-	m_fStepMove( 0.005f ),
-	m_fStepRotate( 0.5f ),
-	m_pMeshObject( 0 ),
-	m_pTriangleMesh( 0 ),
-	m_bUseMatrix( false )
-{	
-	D3DXMatrixTranslation( &m_MatrixRelease, 0.f, 0.f, 0.f );
-	m_vPosition = D3DXVECTOR3( 0.f, 0.f, 0.f );
-	m_AngleXYZ  = D3DXVECTOR3( 0.f, 0.f, 0.f );
-	m_vOffetUV  = D3DXVECTOR4( 0.f, 0.f, 0.f, 0.f );
-}
-
-CObject::~CObject()
-{
-	SAFE_RELEASE( m_pTriangleMesh );
-}
-
-D3DXVECTOR3	CObject::GetAngle()
-{ 
-	D3DXVECTOR3 vec = m_AngleXYZ;
-
-	if( m_pObjectParent )
-		vec += m_pObjectParent->GetAngle();
-
-	return vec; 
-}
-
-D3DXVECTOR3	CObject::GetPosition()
-{ 
-	D3DXVECTOR3 T(0,0,0);
-	D3DXVec3TransformCoord( &T, &T, &m_MatrixRelease );
-	return T; 
-}
-
-D3DXVECTOR3	CObject::GetForward()
-{
-	D3DXVECTOR3 T( 0, 0, 1 );
-	D3DXVec3TransformNormal( &T, &T, &m_MatrixRelease );
-	return T; 
-}
-
-void CObject::SetChild( CObject* pObj )
-{
-	if( pObj )		
-	{
-		pObj->SetParent( this );
-		m_ObjectChild.push_back( pObj );
-	}
-}
-
-void CObject::Update( float fDT )
-{
-	if( m_pMeshObject )
-	{
-		if( !m_bUseMatrix )
-		{
-			D3DXMATRIX MatrixTrans;			
-			D3DXMatrixTranslation( &MatrixTrans, m_vPosition.x, m_vPosition.y, m_vPosition.z );
-
-			D3DXMATRIX MatrixRotateX, MatrixRotateY, MatrixRotateZ;
-			D3DXMatrixRotationX( &MatrixRotateX, m_AngleXYZ.x );
-			D3DXMatrixRotationY( &MatrixRotateY, m_AngleXYZ.y );
-			D3DXMatrixRotationZ( &MatrixRotateZ, m_AngleXYZ.z );
-			D3DXMATRIX MatrixRotate  = MatrixRotateX * MatrixRotateY * MatrixRotateZ;
-			m_MatrixRelease = MatrixRotate * MatrixTrans;
-
-			// если есть предок, то сначала берЄм его матрицу
-			if( m_pObjectParent )
-				m_MatrixRelease = m_MatrixRelease * m_pObjectParent->GetReleaseMatrix();
-		}		
-	}
-	
-	for( std::vector< CObject* >::iterator iter = m_ObjectChild.begin(); iter != m_ObjectChild.end(); ++iter )
-	{
-		(*iter)->Update( fDT );
-	}	
-}
-
-void CObject::Render( CameraDevice* pCamera, const CShader* pShader )
-{
-	if( IDirect3DDevice9* pD3DDevice = CD3DGraphic::GetDevice() )
-	{
-		if( m_pMeshObject )
-		{
-			D3DXVECTOR4	vOffset = m_pMeshObject->GetOffsetUV();
-			m_pMeshObject->SetOffsetUV( m_vOffetUV );
-			m_pMeshObject->RenderMesh( pCamera, m_MatrixRelease, pShader );
-			m_pMeshObject->SetOffsetUV( vOffset );
-		}
-	}
-}
-
-void CObject::SetMesh( CMesh3D* pMesh )
-{ 
-	if( pMesh )
-	{
-		m_pMeshObject = pMesh;
-		if( ID3DXMesh* Mesh = pMesh->GetMesh() )
-		{
-			m_BufVertices.clear();			
-			DWORD stride = D3DXGetFVFVertexSize( Mesh->GetFVF() );
-			BYTE* vbptr  = 0;
-			Mesh->LockVertexBuffer( 0, (LPVOID*)&vbptr );
-			int ii = -1;
-			m_dwNumVertices = Mesh->GetNumVertices();
-
-			for( DWORD i = 0; i < m_dwNumVertices; ++i )
-			{
-				ii++;
-				D3DXVECTOR3* pos = (D3DXVECTOR3*)vbptr;
-				m_BufVertices.push_back( pos->x );
-				m_BufVertices.push_back( pos->y );
-				m_BufVertices.push_back( pos->z );
-				vbptr += stride;
-			}
-
-			Mesh->UnlockVertexBuffer();
-
-			LPVOID* ppData = 0;
-			stride = sizeof( short );
-			BYTE* ibptr = 0;
-			m_dwNumNumFaces = Mesh->GetNumFaces();
-			short* indices = new short[ m_dwNumNumFaces * 3 ];
-			m_BufIndices.clear();			
-
-			Mesh->LockIndexBuffer( 0, (LPVOID*)&indices );
-			for( DWORD i = 0; i < m_dwNumNumFaces * 3; ++i )
-			{
-				m_BufIndices.push_back( indices[ i ] );
-			}
-
-			Mesh->UnlockIndexBuffer();			
-		}
-	}
-}
-
-bool CObject::CreateTriangleMesh( CPhysX const* pPhysX )
-{
-	bool bResult = false;
-	if( pPhysX && pPhysX->GetPhysics() && !m_BufVertices.empty() && !m_BufIndices.empty() )
-	{
-		uint NumVerticies = m_BufVertices.size() / 3;
-		uint NumTriangles = m_BufIndices.size()  / 3;
-
-		//Create pointer for vertices
-		physx::PxVec3* verts = new physx::PxVec3[ NumVerticies ];
-		int ii = -1;
-
-		for( uint i = 0; i < NumVerticies; ++i )
-		{
-			++ii;
-			verts[ i ].x = m_BufVertices[   ii ];
-			verts[ i ].y = m_BufVertices[ ++ii ];
-			verts[ i ].z = m_BufVertices[ ++ii ];
-		}
-
-		//Create pointer for indices
-		physx::PxU16 *tris = new physx::PxU16[ m_BufIndices.size() ];
-
-		for( uint i = 0; i < m_BufIndices.size(); ++i )		
-			tris[ i ] = m_BufIndices[ i ];
-
-		// Build physical model
-		physx::PxTriangleMeshDesc TriMeshDesc;
-
-		TriMeshDesc.points.count  = NumVerticies;		
-		TriMeshDesc.points.stride = sizeof(physx::PxVec3);
-		TriMeshDesc.points.data	  = verts;
-
-		TriMeshDesc.triangles.count  = NumTriangles;
-		TriMeshDesc.triangles.stride = 3 * sizeof(physx::PxU16);	
-		TriMeshDesc.triangles.data   = tris;
-		
-		TriMeshDesc.flags = physx::PxMeshFlag::e16_BIT_INDICES;// | physx::PxMeshFlag::eFLIPNORMALS;
-
-		PxToolkit::MemoryOutputStream writeBuffer;
-		PxCooking* pCooking = pPhysX->GetCooking();
-
-		if( pCooking && TriMeshDesc.isValid() )
-			if( pCooking->cookTriangleMesh( TriMeshDesc, writeBuffer ) )
-			{
-				PxToolkit::MemoryInputData readBuffer( writeBuffer.getData(), writeBuffer.getSize() );
-				m_pTriangleMesh = pPhysX->GetPhysics()->createTriangleMesh( readBuffer );
-				bResult = true;
-			}
-
-		delete[] verts;
-		delete[] tris;
-	}
-	
-	return bResult;
-}
-
 //------------------------------------------------------------------------------------------
+TankData::TankData():
+	m_nNumberWheels( 0 ),
+	m_fMassTank( 0.f ),
+	m_fMassWheel( 0.f ),
+	m_WheelWidths( 0.f ),
+	m_WheelRadius( 0.f ),
+	m_SuspensionMaxCompression( 0.f ),
+	m_SuspensionMaxDroop( 0.f ),
+	m_SuspensionSpringStrength( 0.f ),
+	m_SuspensionSpringDamperRate( 0.f ),
+	m_EnginePeakTorque( 0.f ),
+	m_EngineMaxOmega( 0.f ),
+	m_EngineDampingRateFullThrottle( 0.f ),
+	m_EngineDampingRateZeroThrottleClutchEngaged( 0.f ),
+	m_EngineDampingRateZeroThrottleClutchDisengaged( 0.f )
+{
+}
 
 CTank::CTank():
+	m_pTankData( 0 ),
 	m_pActor( 0 ),
 	m_bMoveForward( false ),
 	m_bMoveBack( false ),
 	m_bTurnLeft( false ),
-	m_bTurnRight( false ),	
-	m_pPhysX( 0 ),
+	m_bTurnRight( false ),		
 	m_fSpeedTank( 0.f )
 {
 }
@@ -453,12 +275,12 @@ void CTank::Update( float fDT )
 		D3DXMATRIX dxmat;				
 		memcpy( &dxmat._11, Matrix.front(), 4 * 4 * sizeof(float) );		
 
-		if( CObject* pBody = GetDetail( BODY ) )
+		if( GameObject* pBody = GetDetail( BODY ) )
 			pBody->SetReleaseMatrix( dxmat, true );			
 
-		if( m_pPhysX )
+		if( true )
 		{
-			if( PxVehicleWheels* pDriveTank = m_pPhysX->GetTank() )
+			if( PxVehicleWheels* pDriveTank = CPhysX::GetPhysX()->GetTank() )
 			{
 				PxShape* carShapes[ MAX_DETAIL ];
 				
@@ -472,7 +294,7 @@ void CTank::Update( float fDT )
 					D3DXMATRIX dxmatR;
 					memcpy( &dxmatR._11, MatrixR.front(), 4 * 4 * sizeof(float) );
 
-					if( CObject* pObj = GetDetail( (EDetailTank)i ) )
+					if( GameObject* pObj = GetDetail( (EDetailTank)i ) )
 						pObj->SetReleaseMatrix( dxmatR * dxmat, true );
 				}
 
@@ -534,38 +356,39 @@ void CTank::Update( float fDT )
 		}
 	}
 
-		if( CObject* pTankTrack = GetDetail( TRACK_L ) )					
+		if( GameObject* pTankTrack = GetDetail( TRACK_L ) )					
 			pTankTrack->SetOffsetUV( D3DXVECTOR4( 0.f, m_fSpeedTank*3, 0.f, 0.f ) );
 
-		if( CObject* pTankTrack = GetDetail( TRACK_R ) )					
+		if( GameObject* pTankTrack = GetDetail( TRACK_R ) )					
 			pTankTrack->SetOffsetUV( D3DXVECTOR4( 0.f, m_fSpeedTank*3, 0.f, 0.f ) );
 
-	for( std::map< EDetailTank, CObject* >::iterator iter = m_ObjectsTank.begin(), iter_end = m_ObjectsTank.end(); iter != iter_end; ++iter )
+	for( std::map< EDetailTank, GameObject* >::iterator iter = m_ObjectsTank.begin(), iter_end = m_ObjectsTank.end(); iter != iter_end; ++iter )
 	{
-		CObject* pObj = iter->second;
+		GameObject* pObj = iter->second;
 		pObj->Update( fDT );
 	}
 }
 
 void CTank::Render( CameraDevice* pCamera, const CShader* pShader )
 {
-	for( std::map< EDetailTank, CObject* >::iterator iter = m_ObjectsTank.begin(), iter_end = m_ObjectsTank.end(); iter != iter_end; ++iter )
+	for( std::map< EDetailTank, GameObject* >::iterator iter = m_ObjectsTank.begin(), iter_end = m_ObjectsTank.end(); iter != iter_end; ++iter )
 	{
-		CObject* pObj = iter->second;
+		GameObject* pObj = iter->second;
 		pObj->Render( pCamera, pShader );
 	}
 }
 
-CObject* CTank::GetDetail( EDetailTank detail )
+GameObject* CTank::GetDetail( EDetailTank detail )
 {
-	std::map< EDetailTank, CObject* >::iterator iter = m_ObjectsTank.find( detail );
+	std::map< EDetailTank, GameObject* >::iterator iter = m_ObjectsTank.find( detail );
+
 	if( iter != m_ObjectsTank.end() )
 		return iter->second;
 
 	return 0;
 }
 
-void CTank::SetDetail( EDetailTank detail, CObject* pObj )
+void CTank::SetDetail( EDetailTank detail, GameObject * pObj )
 {
 	m_ObjectsTank[ detail ] = pObj;
 }
@@ -592,7 +415,7 @@ void CTank::TurnLeft( bool bLeft )
 
 void CTank::RotateTurret( float fDT )
 {
-	if( CObject* pTurret = GetDetail( TURRET ) )
+	if( GameObject * pTurret = GetDetail( TURRET ) )
 	{
 		pTurret->RotateAxisY( fDT );
 	}
@@ -600,7 +423,7 @@ void CTank::RotateTurret( float fDT )
 
 void CTank::RotateGun( float fDT )
 {
-	if( CObject* pGun = GetDetail( GUN ) )
+	if( GameObject * pGun = GetDetail( GUN ) )
 	{
 		pGun->RotateAxisZ( fDT );
 	}
@@ -608,7 +431,7 @@ void CTank::RotateGun( float fDT )
 
 void CTank::SetPosition( const D3DXVECTOR3& vPos )
 {
-	if( CObject* pBody = GetDetail( BODY ) )
+	if( GameObject * pBody = GetDetail( BODY ) )
 		pBody->SetPosition( vPos );
 }
 
@@ -616,14 +439,27 @@ D3DXVECTOR3 CTank::GetForvard()
 {
 	D3DXVECTOR3 dir( 0.f, 0.f, 0.f );
 
-	if( CObject* pBody = GetDetail( BODY ) )
+	if( GameObject * pBody = GetDetail( BODY ) )
 		dir = pBody->GetForward();
 
 	return dir;
 }
 
+bool CTank::LoadData( const std::string & srPath )
+{
+	if( srPath.empty() )
+		return false;
+
+	lua_State * pLuaState = LuaScript::RunScript( srPath );
+
+	return true;
+}
+
 bool CTank::CreateTankActor( CPhysX * pPhysX )
 {
+	if( !LoadData( "InitShader.lua" ) )
+		return false;
+
 // 	CParamTank* pParamTank = new CParamTank;
 // 
 // 	if( !CLua::LoadParamTank( "", &pParamTank ) )
@@ -631,11 +467,10 @@ bool CTank::CreateTankActor( CPhysX * pPhysX )
 // 
 // 	}
 
-	if( CObject* pBody = GetDetail( BODY ) )
+	if( GameObject * pBody = GetDetail( BODY ) )
 	{
 		if ( pBody->CreateTriangleMesh( pPhysX ) )
-		{
-			m_pPhysX = pPhysX;
+		{			
 			pBody->Update( 0.f );
 			
 			PxTriangleMesh* triangleMesh = pBody->GetTriangleMesh();
@@ -812,11 +647,12 @@ bool CTank::CreateTankActor( CPhysX * pPhysX )
 			ackermann.mRearWidth	  = wheelCentreOffsets[ nWheels - 2 ].x - wheelCentreOffsets[ nWheels - 1 ].x;	// –ассто€ние между центральной точке два задних колеса
 			driveData.setAckermannGeometryData(ackermann);			
 			
-			PxTriangleMesh* pTriangleMesh = 0;
-			D3DXVECTOR3     vPosition;
-			if( CObject* pRoller = GetDetail( WHEEL_LEFT_1ST ) )
+			PxTriangleMesh * pTriangleMesh = 0;
+			D3DXVECTOR3      vPosition;
+
+			if( GameObject * pRoller = GetDetail( WHEEL_LEFT_1ST ) )
 			{
-				if ( pRoller->CreateTriangleMesh( pPhysX ) )
+				if( pRoller->CreateTriangleMesh( pPhysX ) )
 				{
 					pRoller->Update( 0.f );					
 					pTriangleMesh = pRoller->GetTriangleMesh();
