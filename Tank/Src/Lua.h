@@ -4,28 +4,6 @@
 #include <fstream>
 #include "PhysX.h"
 
-struct CParamTank
-{
-	int								m_nNumberWheels;									
-	float							m_fMassTank;									
-	float							m_fMassWheel;									
-	float							m_WheelWidths;										
-	float							m_WheelRadius;										
-	physx::PxVec3					m_vWheelMaterial;									
-	std::vector< physx::PxVec3 >	m_vecWheelCenter;
-	physx::PxVec3					m_vSuspensionTravelDirections;  					
-	float							m_SuspensionMaxCompression; 						
-	float							m_SuspensionMaxDroop;		 						
-	float							m_SuspensionSpringStrength; 						
-	float							m_SuspensionSpringDamperRate; 
-	float							m_EnginePeakTorque;								
-	float							m_EngineMaxOmega;									
-	float							m_EngineDampingRateFullThrottle;					
-	float							m_EngineDampingRateZeroThrottleClutchEngaged;		
-	float							m_EngineDampingRateZeroThrottleClutchDisengaged;
-	physx::PxVec3					m_vSizeBody;	
-};
-
 extern "C"
 {
 	#include "lua/lua.h"
@@ -33,16 +11,27 @@ extern "C"
 	#include "lua/lauxlib.h"
 }
 
-class CLua
+class LuaScript
 {
 public:
-	CLua();
-	~CLua();
+	
+	~LuaScript();
 
-	bool          lua_dobuffer( lua_State* Lua, void const* Buffer, int Size );
-	static bool	  LoadParamTank( const std::string& srPathScript, CParamTank** pParamTank );
+	static lua_State *				RunScript( const std::string & srPathScript );
+	static void						Clear();
+	static void						ReleaseLua();
 
-public:
-	lua_State*    m_LuaVM;
-	void*		  m_FileBuffer;		
+	template< typename T >
+	bool							GetValueParam( const std::string & srParam, T * pValue );
+	template<typename T>
+	T								GetLuaValue( const std::string & variableName )									{ return 0; }
+
+private:
+									LuaScript();
+	bool							LuaDoBuffer( lua_State * Lua, void const * Buffer, int Size );	
+
+private:
+	static LuaScript *				m_pThis;
+	static lua_State *				m_LuaState;
+	static char *					m_pFileBuffer;
 };

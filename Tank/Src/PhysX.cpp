@@ -73,6 +73,8 @@ static PxF32 gTireFrictionMultipliers[8][4] =
 	{0.80f,	0.80f,	0.80f,	0.80f}		//GRASS
 };
 
+CPhysX *	CPhysX::m_pThis = 0;
+
 CPhysX::CPhysX():
 	m_pPhysics( 0 ),
 	m_pScene( 0 ),
@@ -91,11 +93,18 @@ CPhysX::CPhysX():
 	m_Forvard = PxVec3( 0, 0, 0 );
 }
 
-CPhysX::~CPhysX()
+CPhysX * CPhysX::GetPhysX()
 {
+	if( !m_pThis )
+	{
+		m_pThis = new CPhysX;
+		m_pThis->InitPhisX();
+	}
+
+	return m_pThis;
 }
 
-PxVehicleWheels* CPhysX::GetTank()
+PxVehicleWheels * CPhysX::GetTank()
 { 
 	if( !m_Tanks.empty() ) 
 		return m_Tanks[ 0 ];
@@ -354,8 +363,11 @@ void CPhysX::Release()
 
 	for( std::vector< PxMaterial* >::iterator iter = m_Materials.begin(); iter != m_Materials.end(); ++iter )
 	{
-		(*iter)->release();
+		PxMaterial * pMat = *iter;
+		pMat->release();
 	}
+
+	m_Materials.clear();
 
 // 	for( std::vector< PxVehicleWheels* >::iterator iter = m_Tanks.begin(); iter != m_Tanks.end(); ++iter )
 // 	{		
@@ -369,4 +381,19 @@ void CPhysX::Release()
 	SAFE_RELEASE( m_pPhysics );	
 	SAFE_RELEASE( m_pProfileZoneManager );
 	SAFE_RELEASE( m_pFoundation );
+}
+
+void CPhysX::ReleasePhysics()
+{
+	if( m_pThis )
+	{
+		m_pThis->Release();
+		delete m_pThis;
+		m_pThis = 0;
+	}
+}
+
+CPhysX::~CPhysX()
+{
+	Release();
 }

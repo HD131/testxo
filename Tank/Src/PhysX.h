@@ -95,40 +95,48 @@ private:
 class CPhysX
 {
 public:
-	CPhysX();
-	~CPhysX();
+													
+													~CPhysX();
 
-	bool			InitPhisX();
-	void			Release();
-	void			Update( float fDT );
-	D3DXVECTOR3		GetPos() const													{ return m_vPos; }
-	void			SetForce( bool bForce, const PxVec3& vec )						{ m_bForce = bForce; m_Forvard = vec; }
-	void			ConvertToD3D9( D3DMATRIX &dxmat, const physx::PxMat44 &mat );
-	PxCooking*		GetCooking()const												{ return m_pCooking; }
-	PxPhysics*		GetPhysics()const												{ return m_pPhysics; }
-	void			PushActor( PxRigidActor * pActor )								{ m_Actors.push_back( pActor ); }
-	void			PushMaterial( PxMaterial * pMaterial )							{ m_Materials.push_back( pMaterial ); }
-	bool			AddActorScene( PxRigidActor* pActor );
-	void			AddTank( PxVehicleDriveTank* pTank )							{ m_Tanks.push_back( pTank ); }
-	PxVehicleWheels*GetTank();
+	static CPhysX *									GetPhysX();
+	static void										ReleasePhysics();
+
+public:
+	void											Release();
+	void											Update( float fDT );
+	D3DXVECTOR3										GetPos() const													{ return m_vPos; }
+	void											SetForce( bool bForce, const PxVec3& vec )						{ m_bForce = bForce; m_Forvard = vec; }
+	void											ConvertToD3D9( D3DMATRIX & dxmat, const physx::PxMat44 & mat );
+	physx::PxCooking *								GetCooking() const												{ return m_pCooking; }
+	physx::PxPhysics *								GetPhysics() const												{ return m_pPhysics; }
+	void											PushActor( PxRigidActor * pActor )								{ m_Actors.push_back( pActor ); }
+	void											PushMaterial( PxMaterial * pMaterial )							{ m_Materials.push_back( pMaterial ); }
+	bool											AddActorScene( PxRigidActor * pActor );
+	void											AddTank( PxVehicleDriveTank * pTank )							{ m_Tanks.push_back( pTank ); }
+	PxVehicleWheels *								GetTank();
+
+private:
+	bool											InitPhisX();
+													CPhysX();
 
 private:	
-	PxPhysics*										m_pPhysics;
-	PxScene*										m_pScene;
-	PxFoundation *									m_pFoundation;
-	PxCooking*										m_pCooking;
-	PxRigidStatic*									m_pEarth;
-	std::vector< PxMaterial* >						m_Materials;
-	PVD::PvdConnection* 							m_pPVD;
-	PxProfileZoneManager*							m_pProfileZoneManager;
-	PxRigidDynamic*									m_pBox;
+	static CPhysX *									m_pThis;
+	physx::PxPhysics *								m_pPhysics;
+	physx::PxScene *								m_pScene;
+	physx::PxFoundation *							m_pFoundation;
+	physx::PxCooking *								m_pCooking;
+	physx::PxRigidStatic *							m_pEarth;
+	std::vector< physx::PxMaterial* >				m_Materials;
+	PVD::PvdConnection * 							m_pPVD;
+	physx::PxProfileZoneManager *					m_pProfileZoneManager;
+	physx::PxRigidDynamic *							m_pBox;
 	D3DXVECTOR3										m_vPos;
 	bool											m_bForce;
 	PxVec3											m_Forvard;
 	std::vector< PxRigidActor* >					m_Actors;
 	physx::PxProfileZone*							m_pProfileZone;
 	std::vector< PxVehicleWheels* >					m_Tanks;
-	PxVehicleDrivableSurfaceToTireFrictionPairs*	m_pSurfaceTirePairs;
-	PxBatchQuery*									m_pSqWheelRaycastBatchQuery;
-	SampleVehicleSceneQueryData*					mSqData;
+	PxVehicleDrivableSurfaceToTireFrictionPairs *	m_pSurfaceTirePairs;
+	PxBatchQuery *									m_pSqWheelRaycastBatchQuery;
+	SampleVehicleSceneQueryData *					mSqData;
 };
